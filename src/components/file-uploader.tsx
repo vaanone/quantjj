@@ -12,7 +12,8 @@ interface FileUploaderProps {
   compact?: boolean;
 }
 
-const ALLOWED_EXTS = [".xlsx", ".xls", ".csv", ".tsv", ".txt"];
+// Only CSV files are accepted — per user requirement.
+const ALLOWED_EXTS = [".csv"];
 
 function isAllowedFile(name: string): boolean {
   const lower = name.toLowerCase();
@@ -126,7 +127,7 @@ export function FileUploader({ onLoaded, compact = false }: FileUploaderProps) {
           <span className="hidden sm:inline">Files</span>
         </Button>
 
-        {/* Folder button (pick a directory → all CSV/Excel inside) */}
+        {/* Folder button (pick a directory → all CSV files inside) */}
         <Button
           variant="outline"
           size="sm"
@@ -196,7 +197,7 @@ export function FileUploader({ onLoaded, compact = false }: FileUploaderProps) {
         </div>
         <div>
           <p className="text-sm font-medium text-white">
-            {loading ? "Parsing..." : "Drop MT5 Excel / CSV files here"}
+            {loading ? "Parsing..." : "Drop MT5 CSV files here"}
           </p>
           <p className="mt-1 text-xs text-white/50">
             Select multiple files or a whole folder — all loaded files appear in the dropdown
@@ -233,7 +234,7 @@ export function FileUploader({ onLoaded, compact = false }: FileUploaderProps) {
       </div>
       <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-white/40">
         <AlertCircle className="h-3 w-3" />
-        Required columns: Date, Open, High, Low, Close (Volume optional)
+        CSV only · Required: Date, Open, High, Low, Close (Volume optional)
       </p>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
-import { Loader2, Info, PanelRight } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
+import { Info, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -19,7 +19,6 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { detectSupportResistance, getTop6Levels, userLevelsToLines } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle, ParseResult } from "@/lib/excel-parser";
-import { loadDefaultFiles } from "@/lib/load-default-files";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -44,33 +43,7 @@ export default function Home() {
   const [files, setFiles] = useState<Map<string, LoadedFile>>(new Map());
   const [selectedFile, setSelectedFile] = useState<string>("");
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
-  const [defaultsLoading, setDefaultsLoading] = useState(true);
   const isLg = useMediaQuery("(min-width: 1024px)", true);
-
-  // Auto-load default data files from /public/data/ on first mount.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const defaults = await loadDefaultFiles();
-        if (cancelled || defaults.length === 0) return;
-        setFiles((prev) => {
-          const next = new Map(prev);
-          for (const { result, fileName } of defaults) {
-            const primarySymbol = result.symbol || result.symbols[0] || "";
-            next.set(fileName, { result, fileName, selectedSymbol: primarySymbol });
-          }
-          return next;
-        });
-        if (!cancelled && defaults.length > 0) {
-          setSelectedFile(defaults[0].fileName);
-        }
-      } finally {
-        if (!cancelled) setDefaultsLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
 
   const handleLoaded = useCallback(
     (result: ParseResult, fileName: string) => {
@@ -291,14 +264,7 @@ export default function Home() {
 
       {/* ============================================================== BODY */}
       <main className="flex-1 overflow-hidden">
-        {defaultsLoading ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
-              <p className="text-sm text-white/50">Loading default data…</p>
-            </div>
-          </div>
-        ) : candles.length === 0 ? (
+        {candles.length === 0 ? (
           <EmptyState onLoaded={handleLoaded} />
         ) : isLg ? (
           <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -386,7 +352,8 @@ function EmptyState({
         />
         <h2 className="text-2xl font-semibold">Vaan Pivot</h2>
         <p className="mt-2 max-w-md text-sm text-white/60">
-          Upload additional MT5 candlestick exports (Excel/CSV) to add them to the dropdown.
+          Upload MT5 candlestick CSV files to load them into the chart. Support &amp; resistance
+          levels are read from columns J–O.
         </p>
       </div>
       <div className="w-full max-w-xl">
