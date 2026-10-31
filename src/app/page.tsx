@@ -207,9 +207,6 @@ export default function Home() {
                     className="font-mono focus:bg-white/10"
                   >
                     {entry.symbol}
-                    {fileNames.length > 1 && (
-                      <span className="ml-2 text-[10px] text-white/40">{entry.fileName}</span>
-                    )}
                   </SelectItem>
                 ))}
               </SelectContent>
