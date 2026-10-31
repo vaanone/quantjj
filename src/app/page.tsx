@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { Info, PanelRight } from "lucide-react";
+import { PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -242,10 +242,11 @@ export default function Home() {
       {/* ============================================================ TOOLBAR */}
       {candles.length > 0 && (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-white/10 bg-[#0c0d12] px-4 py-1.5 text-[11px] text-white/70">
-          <div className="ml-auto hidden items-center gap-1 text-white/40 md:flex">
-            <Info className="h-3 w-3" />
-            <span>Hover the chart for OHLC · drag the panel divider to resize</span>
-          </div>
+          {/* Disclaimer — left side, small font */}
+          <p className="hidden text-[10px] leading-tight text-white/30 sm:block lg:max-w-md">
+            Daily Support &amp; Resistance levels are updated manually every morning for educational
+            and informational purposes only
+          </p>
           <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
             <SheetTrigger asChild>
               <Button
