@@ -16,18 +16,22 @@ import { toast } from "sonner";
 interface DriveFilePickerProps {
   /** Called once per successfully parsed file. */
   onLoaded: (result: ParseResult, fileName: string) => void;
+  /** Called with the newest file's modifiedTime (ISO string) whenever the
+   *  Drive folder is fetched. Used to display "last update" in the header. */
+  onLastUpdate?: (modifiedTime: string | null) => void;
   compact?: boolean;
 }
 
 interface DriveFile {
   id: string;
   name: string;
+  modifiedTime?: string | null;
 }
 
 // How often to poll the Drive folder for new files (ms).
 const POLL_INTERVAL = 30000; // 30 seconds
 
-export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerProps) {
+export function DriveFilePicker({ onLoaded, onLastUpdate, compact = false }: DriveFilePickerProps) {
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [loadingList, setLoadingList] = useState(false);
   const [loadingFile, setLoadingFile] = useState<string | null>(null);
@@ -62,6 +66,15 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
       }
       const newFiles: DriveFile[] = data.files || [];
       setFiles(newFiles);
+
+      // Find the newest file by modifiedTime and notify the parent.
+      if (onLastUpdate) {
+        const newest = newFiles
+          .filter((f) => f.modifiedTime)
+          .sort((a, b) => (b.modifiedTime! > a.modifiedTime! ? 1 : -1))[0];
+        onLastUpdate(newest?.modifiedTime ?? null);
+      }
+
       return newFiles;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
@@ -70,7 +83,7 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
     } finally {
       if (!silent) setLoadingList(false);
     }
-  }, [compact]);
+  }, [compact, onLastUpdate]);
 
   // Download and parse a single file. Returns true on success.
   const loadFile = useCallback(

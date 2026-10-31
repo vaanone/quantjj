@@ -11,6 +11,7 @@ interface DriveFile {
   id: string;
   name: string;
   mimeType: string;
+  modifiedTime?: string; // ISO 8601 timestamp from Drive API
 }
 
 /**
@@ -75,6 +76,7 @@ export async function GET() {
       files: csvFiles.map((f) => ({
         id: f.id,
         name: f.name,
+        modifiedTime: f.modifiedTime || null,
       })),
     });
   } catch (err) {

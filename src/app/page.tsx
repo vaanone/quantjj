@@ -43,6 +43,7 @@ export default function Home() {
   const [files, setFiles] = useState<Map<string, LoadedFile>>(new Map());
   const [selectedFile, setSelectedFile] = useState<string>("");
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const isLg = useMediaQuery("(min-width: 1024px)", true);
 
   const handleLoaded = useCallback(
@@ -221,8 +222,15 @@ export default function Home() {
             </Badge>
           )}
 
+          {/* Last file update date/time (e.g. "Aug 10th | 5:15 AM IST") */}
+          {lastUpdate && (
+            <span className="font-mono text-xs text-white/50">
+              {formatLastUpdate(lastUpdate)}
+            </span>
+          )}
+
           {/* Upload buttons: Files + Folder */}
-          <DriveFilePicker onLoaded={handleLoaded} compact />
+          <DriveFilePicker onLoaded={handleLoaded} onLastUpdate={setLastUpdate} compact />
         </div>
       </header>
 
@@ -361,4 +369,40 @@ function EmptyState({
       </div>
     </div>
   );
+}
+
+// Format an ISO timestamp as "Aug 10th | 5:15 AM IST".
+// Uses Asia/Kolkata (IST = UTC+5:30) regardless of the viewer's local
+// timezone, because the user's data source operates on IST.
+function formatLastUpdate(isoTime: string): string {
+  const d = new Date(isoTime);
+  if (isNaN(d.getTime())) return "";
+
+  // Force IST (Asia/Kolkata = UTC+5:30) so the time is consistent for all viewers.
+  const istFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Kolkata",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const parts = istFormatter.formatToParts(d);
+
+  const month = parts.find((p) => p.type === "month")?.value || "";
+  const day = parts.find((p) => p.type === "day")?.value || "";
+  const hour = parts.find((p) => p.type === "hour")?.value || "";
+  const minute = parts.find((p) => p.type === "minute")?.value || "";
+  const dayPeriod = parts.find((p) => p.type === "dayPeriod")?.value || "";
+
+  const dayNum = parseInt(day, 10);
+  const ordinal = getOrdinal(dayNum);
+
+  return `${month} ${day}${ordinal} | ${hour}:${minute} ${dayPeriod} IST`;
+}
+
+function getOrdinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
 }
