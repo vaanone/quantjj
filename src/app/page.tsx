@@ -123,7 +123,7 @@ export default function Home() {
   }, [candles]);
 
   // ---- Global symbol list: all symbols across ALL loaded files ----
-  // Each entry: { symbol, fileName }. Used to populate the symbol dropdown
+  // Each entry: { symbol, fileName }. Used to populate the unified dropdown
   // so the user can pick any symbol from any file directly.
   const allSymbols = useMemo(() => {
     const entries: { symbol: string; fileName: string }[] = [];
@@ -141,37 +141,28 @@ export default function Home() {
     return entries;
   }, [files]);
 
-  // When a symbol is picked from the global dropdown:
-  // 1. Find which file contains it (first match).
-  // 2. Switch to that file.
-  // 3. Set the file's selected symbol.
-  const selectGlobalSymbol = useCallback(
-    (symbol: string) => {
-      const match = allSymbols.find((e) => e.symbol === symbol);
-      if (!match) return;
+  // The dropdown's value encodes BOTH the file and symbol as `fileName::symbol`.
+  // This lets us disambiguate when the same symbol exists in multiple files.
+  const dropdownValue = selectedFile && selectedSymbol
+    ? `${selectedFile}::${selectedSymbol}`
+    : selectedFile;
+
+  const handleDropdownChange = useCallback(
+    (value: string) => {
+      const [fileName, ...symbolParts] = value.split("::");
+      const symbol = symbolParts.join("::");
       setFiles((prev) => {
         const next = new Map(prev);
-        const f = next.get(match.fileName);
-        if (f) next.set(match.fileName, { ...f, selectedSymbol: symbol });
+        const f = next.get(fileName);
+        if (f && symbol) next.set(fileName, { ...f, selectedSymbol: symbol });
         return next;
       });
-      setSelectedFile(match.fileName);
-    },
-    [allSymbols],
-  );
-
-  // When a file is picked from the file dropdown, also update the symbol
-  // dropdown to show that file's primary symbol.
-  const selectFile = useCallback(
-    (fileName: string) => {
       setSelectedFile(fileName);
     },
     [],
   );
 
   const fileNames = Array.from(files.keys());
-  const firstTime = candles.length > 0 ? candles[0].time : 0;
-  const lastTime = candles.length > 0 ? candles[candles.length - 1].time : 0;
   const lastClose = candles.length > 0 ? candles[candles.length - 1].close : 0;
   const firstClose = candles.length > 0 ? candles[0].close : 0;
   const totalChangePct = firstClose > 0 ? ((lastClose - firstClose) / firstClose) * 100 : 0;
@@ -199,45 +190,26 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Symbol + File dropdowns — always visible once data is loaded */}
+        {/* Single dropdown + upload + TF — all data access in one place */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Symbol dropdown — all symbols across all loaded files */}
+          {/* Unified dropdown: shows every loaded (symbol, file) pair. Picking
+              an entry switches both the active file and the active symbol. */}
           {activeSymbolValue && (
-            <Select value={activeSymbolValue} onValueChange={selectGlobalSymbol}>
-              <SelectTrigger className="h-8 w-auto min-w-[100px] gap-1.5 border-white/15 bg-white/5 px-2 font-mono text-sm font-bold tracking-wide text-white hover:bg-white/10">
+            <Select value={dropdownValue} onValueChange={handleDropdownChange}>
+              <SelectTrigger className="h-8 w-auto min-w-[110px] max-w-[220px] gap-1.5 border-white/15 bg-white/5 px-2 font-mono text-sm font-bold tracking-wide text-white hover:bg-white/10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="max-h-72 border-white/15 bg-[#15161d] text-white">
                 {allSymbols.map((entry) => (
                   <SelectItem
-                    key={`${entry.fileName}-${entry.symbol}`}
-                    value={entry.symbol}
+                    key={`${entry.fileName}::${entry.symbol}`}
+                    value={`${entry.fileName}::${entry.symbol}`}
                     className="font-mono focus:bg-white/10"
                   >
                     {entry.symbol}
                     {fileNames.length > 1 && (
                       <span className="ml-2 text-[10px] text-white/40">{entry.fileName}</span>
                     )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
-          {/* File dropdown */}
-          {fileNames.length > 1 && (
-            <Select value={selectedFile} onValueChange={selectFile}>
-              <SelectTrigger className="h-8 w-auto max-w-[160px] gap-1.5 border-white/15 bg-white/5 px-2 font-mono text-xs text-white hover:bg-white/10">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-72 border-white/15 bg-[#15161d] text-white">
-                {fileNames.map((name) => (
-                  <SelectItem
-                    key={name}
-                    value={name}
-                    className="font-mono text-xs focus:bg-white/10"
-                  >
-                    {name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -264,7 +236,14 @@ export default function Home() {
             </div>
           )}
 
-          {/* Upload buttons */}
+          {/* Timeframe badge */}
+          {timeframe && (
+            <Badge className="h-8 gap-1 border border-emerald-500/30 bg-emerald-500/10 px-2 font-mono text-sm font-bold text-emerald-400">
+              {timeframe.label}
+            </Badge>
+          )}
+
+          {/* Upload buttons: Files + Folder */}
           <FileUploader onLoaded={handleLoaded} compact />
         </div>
       </header>
@@ -272,18 +251,6 @@ export default function Home() {
       {/* ============================================================ TOOLBAR */}
       {candles.length > 0 && (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-white/10 bg-[#0c0d12] px-4 py-1.5 text-[11px] text-white/70">
-          {timeframe && (
-            <Stat
-              label="TF"
-              value={<span className="font-bold text-emerald-400">{timeframe.label}</span>}
-            />
-          )}
-          <Stat label="Candles" value={String(candles.length)} />
-          <Stat label="Range" value={`${formatDate(firstTime)} → ${formatDate(lastTime)}`} />
-          <Stat label="Levels" value={`${top6Lines.length}/6`} />
-          {fileNames.length > 1 && (
-            <Stat label="Files" value={String(fileNames.length)} />
-          )}
           <div className="ml-auto hidden items-center gap-1 text-white/40 md:flex">
             <Info className="h-3 w-3" />
             <span>Hover the chart for OHLC · drag the panel divider to resize</span>
@@ -421,22 +388,4 @@ function EmptyState({
       </div>
     </div>
   );
-}
-
-// ============================================================ HELPERS
-function Stat({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-white/40">{label}:</span>
-      <span className="font-mono text-white/90">{value}</span>
-    </div>
-  );
-}
-
-function formatDate(t: number): string {
-  if (!t) return "—";
-  const d = new Date(t * 1000);
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(
-    d.getUTCDate(),
-  ).padStart(2, "0")}`;
 }
