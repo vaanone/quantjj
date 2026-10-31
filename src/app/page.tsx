@@ -164,9 +164,9 @@ export default function Home() {
             className="h-9 w-9 rounded-md object-contain"
           />
           <div className="hidden sm:block">
-            <h1 className="text-sm font-semibold leading-tight">Vaan Pivot</h1>
+            <h1 className="text-sm font-semibold leading-tight">VaanPulse</h1>
             <p className="text-[10px] leading-tight text-white/40">
-              MT5 candle chart · auto S/R
+              Daily Support &amp; Resistance
             </p>
           </div>
         </div>
@@ -329,7 +329,7 @@ function ChartArea({
           )}
         </div>
         <div className="font-mono text-[10px] tracking-widest text-white/[0.05]">
-          VAAN PIVOT · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
+          VAANPULSE · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
         </div>
       </div>
     </div>
@@ -350,7 +350,7 @@ function EmptyState({
           alt="Vaan One"
           className="mx-auto mb-4 h-16 w-16 rounded-lg object-contain"
         />
-        <h2 className="text-2xl font-semibold">Vaan Pivot</h2>
+        <h2 className="text-2xl font-semibold">VaanPulse</h2>
         <p className="mt-2 max-w-md text-sm text-white/60">
           Upload MT5 candlestick CSV files to load them into the chart. Support &amp; resistance
           levels are read from columns H–O.
