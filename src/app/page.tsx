@@ -23,6 +23,7 @@ import { FileUploader } from "@/components/file-uploader";
 import { SRPanel } from "@/components/sr-panel";
 import { generateSampleData, SAMPLE_PRESETS } from "@/lib/sample-data";
 import { detectSupportResistance, type SRLevel } from "@/lib/support-resistance";
+import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle } from "@/lib/excel-parser";
 import {
   ResizableHandle,
@@ -51,6 +52,12 @@ export default function Home() {
       maxLevels: 12,
     });
   }, [candles, sensitivity, tolerancePct]);
+
+  // Detect candle timeframe (M1, M5, H1, D1, ...) from candle intervals.
+  const timeframe = useMemo(() => detectTimeframe(candles), [candles]);
+
+  // How many days of candles to show on initial load (default 10).
+  const VISIBLE_RANGE_DAYS = 10;
 
   // Track which level indices the user has explicitly HIDDEN (rather than which
   // are visible). This way the default "all visible" is implicit — no reset
@@ -221,8 +228,17 @@ export default function Home() {
       {/* ============================================================ TOOLBAR */}
       {candles.length > 0 && (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-white/10 bg-[#0c0d12] px-4 py-1.5 text-[11px] text-white/70">
+          {timeframe && (
+            <Stat
+              label="TF"
+              value={
+                <span className="font-bold text-emerald-400">{timeframe.label}</span>
+              }
+            />
+          )}
           <Stat label="Candles" value={String(candles.length)} />
           <Stat label="Range" value={`${formatDate(firstTime)} → ${formatDate(lastTime)}`} />
+          <Stat label="View" value={`last ${VISIBLE_RANGE_DAYS}d`} />
           <Stat
             label="S/R"
             value={
@@ -291,6 +307,8 @@ export default function Home() {
                 srLevels={srLevels}
                 visibleLevels={visibleLevels}
                 symbol={symbol}
+                timeframe={timeframe}
+                visibleRangeDays={VISIBLE_RANGE_DAYS}
               />
             </ResizablePanel>
             <ResizableHandle withHandle className="bg-white/10" />
@@ -315,6 +333,8 @@ export default function Home() {
             srLevels={srLevels}
             visibleLevels={visibleLevels}
             symbol={symbol}
+            timeframe={timeframe}
+            visibleRangeDays={VISIBLE_RANGE_DAYS}
           />
         )}
       </main>
@@ -327,11 +347,15 @@ function ChartArea({
   srLevels,
   visibleLevels,
   symbol,
+  timeframe,
+  visibleRangeDays,
 }: {
   candles: Candle[];
   srLevels: SRLevel[];
   visibleLevels: Set<number>;
   symbol: string;
+  timeframe: TimeframeInfo | null;
+  visibleRangeDays: number;
 }) {
   return (
     <div className="relative h-full w-full bg-[#0e0f14]">
@@ -340,12 +364,21 @@ function ChartArea({
         srLevels={srLevels}
         visibleLevels={visibleLevels}
         symbol={symbol}
+        timeframe={timeframe}
+        visibleRangeDays={visibleRangeDays}
       />
-      {/* Symbol watermark */}
+      {/* Symbol + timeframe watermark (top-left) */}
       <div className="pointer-events-none absolute left-4 top-3 select-none">
-        <div className="font-mono text-3xl font-bold text-white/[0.06]">{symbol || "—"}</div>
+        <div className="flex items-baseline gap-2">
+          <div className="font-mono text-3xl font-bold text-white/[0.06]">{symbol || "—"}</div>
+          {timeframe && (
+            <div className="font-mono text-xl font-bold text-emerald-400/15">
+              {timeframe.label}
+            </div>
+          )}
+        </div>
         <div className="font-mono text-[10px] tracking-widest text-white/[0.05]">
-          CANDLESCOPE · {candles.length} BARS
+          CANDLESCOPE · {candles.length} BARS · LAST {visibleRangeDays}D
         </div>
       </div>
     </div>
