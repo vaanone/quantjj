@@ -21,9 +21,9 @@ export function useOnlineCount(): OnlineStats {
 
   useEffect(() => {
     const sessionId =
-      sessionStorage.getItem("jjpivox-session") ||
+      sessionStorage.getItem("quantjj-session") ||
       `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    sessionStorage.setItem("jjpivox-session", sessionId);
+    sessionStorage.setItem("quantjj-session", sessionId);
 
     let cancelled = false;
 

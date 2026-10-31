@@ -166,7 +166,7 @@ export default function Home() {
             className="h-9 w-9 rounded-md object-contain"
           />
           <div className="hidden sm:block">
-            <h1 className="text-sm font-semibold leading-tight">JJPIVOX</h1>
+            <h1 className="text-sm font-semibold leading-tight">QUANTJJ</h1>
             <p className="text-[10px] leading-tight text-white/40">
               Daily Pivot Levels
             </p>
@@ -289,7 +289,7 @@ export default function Home() {
         {chartLoading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0a0b0f]">
             <div className="flex flex-col items-center gap-6">
-              <img src="/logo.png" alt="JJPIVOX" className="h-16 w-16 rounded-lg object-contain opacity-80" />
+              <img src="/logo.png" alt="QUANTJJ" className="h-16 w-16 rounded-lg object-contain opacity-80" />
               <LoadingDots />
             </div>
           </div>
@@ -359,7 +359,7 @@ function ChartArea({
           )}
         </div>
         <div className="font-mono text-[10px] tracking-widest text-white/[0.05]">
-          JJPIVOX · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
+          QUANTJJ · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
         </div>
       </div>
     </div>
@@ -380,7 +380,7 @@ function EmptyState({
           alt="Vaan One"
           className="mx-auto mb-4 h-16 w-16 rounded-lg object-contain"
         />
-        <h2 className="text-2xl font-semibold">JJPIVOX</h2>
+        <h2 className="text-2xl font-semibold">QUANTJJ</h2>
         <p className="mt-2 max-w-md text-sm text-white/60">
           Upload MT5 candlestick CSV files to load them into the chart. Pivot Levels
           are read from columns H–O.
