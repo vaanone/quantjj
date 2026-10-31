@@ -29,6 +29,10 @@ import {
 const SR_SENSITIVITY_BARS = 5;
 const SR_TOLERANCE_PCT = 0.15;
 const SR_MIN_TOUCHES = 2;
+/** Only the last N candles are shown on the chart — keeps the view "big zoom"
+ *  with each candle wide enough to read. The user can still scroll/zoom
+ *  afterwards. */
+const MAX_DISPLAY_CANDLES = 100;
 
 interface LoadedFile {
   result: ParseResult;
@@ -88,10 +92,19 @@ export default function Home() {
   const candles = useMemo(() => {
     if (!currentResult) return [];
     const syms = currentResult.symbols;
-    if (syms.length <= 1) return currentResult.candles;
-    return currentResult.candles.filter(
-      (c) => !c.symbol || c.symbol === selectedSymbol,
-    );
+    const filtered =
+      syms.length <= 1
+        ? currentResult.candles
+        : currentResult.candles.filter(
+            (c) => !c.symbol || c.symbol === selectedSymbol,
+          );
+    // Show only the last MAX_DISPLAY_CANDLES so each candle is wide and
+    // readable ("big zoom" view). The full history is still in memory if
+    // we ever need it.
+    if (filtered.length > MAX_DISPLAY_CANDLES) {
+      return filtered.slice(filtered.length - MAX_DISPLAY_CANDLES);
+    }
+    return filtered;
   }, [currentResult, selectedSymbol]);
 
   const timeframe = useMemo(() => detectTimeframe(candles), [candles]);
@@ -377,7 +390,7 @@ function ChartArea({
           )}
         </div>
         <div className="font-mono text-[10px] tracking-widest text-white/[0.05]">
-          CANDLESCOPE · {candles.length} BARS · FULL HISTORY
+          CANDLESCOPE · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
         </div>
       </div>
     </div>
