@@ -394,9 +394,12 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
   }
 
   // Try to infer symbol from filename when no ticker column.
+  // Strip common MT5 timeframe suffixes so "EURUSD_H1.csv" → "EURUSD".
   if (!symbol) {
     const base = filename.replace(/\.(xlsx|xls|csv|tsv|txt)$/i, "");
-    symbol = base.slice(0, 20);
+    symbol = base
+      .replace(/[_\-\s](H1|H2|H3|H4|H6|H8|H12|D1|W1|MN|MN1|M1|M2|M3|M5|M10|M15|M30|S1|S5|S10|S15|S30)$/i, "")
+      .slice(0, 20);
   }
 
   // If there was no ticker column, `symbols` is empty — synthesize a single

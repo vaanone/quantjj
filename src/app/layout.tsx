@@ -17,10 +17,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CandleScope — MT5 Chart with Auto S/R",
   description: "TradingView-style candlestick chart for MT5 Excel/CSV exports, with automatic support & resistance detection.",
-  keywords: ["trading", "MT5", "candlestick", "support resistance", "TradingView", "lightweight-charts"],
-  authors: [{ name: "Z.ai" }],
+  keywords: ["trading", "MT5", "candlestick", "support resistance", "lightweight-charts"],
+  authors: [{ name: "Vaan One" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.png",
   },
 };
 

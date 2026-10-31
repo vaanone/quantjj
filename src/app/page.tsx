@@ -1,15 +1,9 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
-import { CandlestickChart, Github, Info, PanelRight, Layers, FolderOpen, FileText } from "lucide-react";
+import { useMemo, useState, useCallback, useEffect } from "react";
+import { Loader2, Info, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   Select,
@@ -25,31 +19,54 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { detectSupportResistance, getTop6Levels } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle, ParseResult } from "@/lib/excel-parser";
+import { loadDefaultFiles } from "@/lib/load-default-files";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-// Fixed S/R detection settings (hidden from UI per "hide all other data").
-const SR_SENSITIVITY_BARS = 5;     // pivot window: 5 bars left + 5 right
-const SR_TOLERANCE_PCT = 0.15;     // cluster tolerance
+const SR_SENSITIVITY_BARS = 5;
+const SR_TOLERANCE_PCT = 0.15;
 const SR_MIN_TOUCHES = 2;
 
 interface LoadedFile {
   result: ParseResult;
   fileName: string;
-  /** Currently selected symbol within this file. */
   selectedSymbol: string;
 }
 
 export default function Home() {
-  // All loaded files, keyed by file name. Each upload/folder-pick adds to this
-  // map so the user can switch between loaded files via the dropdown.
   const [files, setFiles] = useState<Map<string, LoadedFile>>(new Map());
   const [selectedFile, setSelectedFile] = useState<string>("");
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [defaultsLoading, setDefaultsLoading] = useState(true);
   const isLg = useMediaQuery("(min-width: 1024px)", true);
+
+  // Auto-load default data files from /public/data/ on first mount.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const defaults = await loadDefaultFiles();
+        if (cancelled || defaults.length === 0) return;
+        setFiles((prev) => {
+          const next = new Map(prev);
+          for (const { result, fileName } of defaults) {
+            const primarySymbol = result.symbol || result.symbols[0] || "";
+            next.set(fileName, { result, fileName, selectedSymbol: primarySymbol });
+          }
+          return next;
+        });
+        if (!cancelled && defaults.length > 0) {
+          setSelectedFile(defaults[0].fileName);
+        }
+      } finally {
+        if (!cancelled) setDefaultsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleLoaded = useCallback(
     (result: ParseResult, fileName: string) => {
@@ -64,23 +81,21 @@ export default function Home() {
     [],
   );
 
-  // Resolve the currently active file + its candles (filtered by selected symbol).
   const currentFile = files.get(selectedFile);
   const currentResult = currentFile?.result;
-  const symbols = currentResult?.symbols ?? [];
   const selectedSymbol = currentFile?.selectedSymbol ?? "";
 
   const candles = useMemo(() => {
     if (!currentResult) return [];
-    if (symbols.length <= 1) return currentResult.candles;
+    const syms = currentResult.symbols;
+    if (syms.length <= 1) return currentResult.candles;
     return currentResult.candles.filter(
       (c) => !c.symbol || c.symbol === selectedSymbol,
     );
-  }, [currentResult, symbols, selectedSymbol]);
+  }, [currentResult, selectedSymbol]);
 
   const timeframe = useMemo(() => detectTimeframe(candles), [candles]);
 
-  // Detect all S/R levels, then keep only the top-6 (3 nearest R + 3 nearest S).
   const top6Lines = useMemo(() => {
     if (candles.length < 10) return [];
     const lastClose = candles[candles.length - 1].close;
@@ -94,139 +109,150 @@ export default function Home() {
     return getTop6Levels(allLevels, lastClose);
   }, [candles]);
 
-  const selectSymbol = useCallback(
+  // ---- Global symbol list: all symbols across ALL loaded files ----
+  // Each entry: { symbol, fileName }. Used to populate the symbol dropdown
+  // so the user can pick any symbol from any file directly.
+  const allSymbols = useMemo(() => {
+    const entries: { symbol: string; fileName: string }[] = [];
+    for (const [fileName, loaded] of files) {
+      for (const sym of loaded.result.symbols) {
+        entries.push({ symbol: sym, fileName });
+      }
+    }
+    // Sort by symbol name, then by file name for duplicates.
+    entries.sort((a, b) =>
+      a.symbol !== b.symbol
+        ? a.symbol.localeCompare(b.symbol)
+        : a.fileName.localeCompare(b.fileName),
+    );
+    return entries;
+  }, [files]);
+
+  // When a symbol is picked from the global dropdown:
+  // 1. Find which file contains it (first match).
+  // 2. Switch to that file.
+  // 3. Set the file's selected symbol.
+  const selectGlobalSymbol = useCallback(
     (symbol: string) => {
-      if (!selectedFile) return;
+      const match = allSymbols.find((e) => e.symbol === symbol);
+      if (!match) return;
       setFiles((prev) => {
         const next = new Map(prev);
-        const f = next.get(selectedFile);
-        if (f) next.set(selectedFile, { ...f, selectedSymbol: symbol });
+        const f = next.get(match.fileName);
+        if (f) next.set(match.fileName, { ...f, selectedSymbol: symbol });
         return next;
       });
+      setSelectedFile(match.fileName);
     },
-    [selectedFile],
+    [allSymbols],
   );
 
-  // Derived display values.
+  // When a file is picked from the file dropdown, also update the symbol
+  // dropdown to show that file's primary symbol.
+  const selectFile = useCallback(
+    (fileName: string) => {
+      setSelectedFile(fileName);
+    },
+    [],
+  );
+
+  const fileNames = Array.from(files.keys());
   const firstTime = candles.length > 0 ? candles[0].time : 0;
   const lastTime = candles.length > 0 ? candles[candles.length - 1].time : 0;
   const lastClose = candles.length > 0 ? candles[candles.length - 1].close : 0;
   const firstClose = candles.length > 0 ? candles[0].close : 0;
   const totalChangePct = firstClose > 0 ? ((lastClose - firstClose) / firstClose) * 100 : 0;
   const symbolLabel = selectedSymbol || currentResult?.symbol || "";
-  const fileNames = Array.from(files.keys());
+
+  // For the symbol dropdown value: the currently active symbol.
+  const activeSymbolValue = selectedSymbol || currentResult?.symbol || "";
 
   return (
     <div className="flex h-screen flex-col bg-[#0a0b0f] text-white">
       {/* ============================================================= HEADER */}
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#0c0d12] px-4 py-2.5">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#0c0d12] px-4 py-2">
+        {/* Logo + app name */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="rounded-md bg-emerald-500/15 p-1.5">
-              <CandlestickChart className="h-5 w-5 text-emerald-400" />
-            </div>
-            <div>
-              <h1 className="text-sm font-semibold leading-tight">CandleScope</h1>
-              <p className="text-[10px] leading-tight text-white/40">
-                MT5 candle chart · auto S/R
-              </p>
-            </div>
+          <img
+            src="/logo.png"
+            alt="Vaan One"
+            className="h-9 w-9 rounded-md object-contain"
+          />
+          <div className="hidden sm:block">
+            <h1 className="text-sm font-semibold leading-tight">CandleScope</h1>
+            <p className="text-[10px] leading-tight text-white/40">
+              MT5 candle chart · auto S/R
+            </p>
           </div>
-
-          {/* File dropdown — shows all loaded CSV/Excel files */}
-          {fileNames.length > 0 && (
-            <div className="ml-2 flex items-center gap-2 border-l border-white/10 pl-3">
-              {fileNames.length > 1 ? (
-                <Select value={selectedFile} onValueChange={setSelectedFile}>
-                  <SelectTrigger className="h-7 w-auto max-w-[180px] gap-1.5 border-white/15 bg-white/5 px-2 font-mono text-xs text-white hover:bg-white/10">
-                    <FileText className="h-3.5 w-3.5 text-emerald-400" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-72 border-white/15 bg-[#15161d] text-white">
-                    {fileNames.map((name) => (
-                      <SelectItem
-                        key={name}
-                        value={name}
-                        className="font-mono text-xs focus:bg-white/10"
-                      >
-                        {name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <span
-                  className="max-w-[180px] truncate font-mono text-xs text-white/70"
-                  title={selectedFile}
-                >
-                  {selectedFile}
-                </span>
-              )}
-
-              {/* Symbol dropdown — only when the selected file has multiple symbols */}
-              {symbols.length > 1 && (
-                <Select value={selectedSymbol} onValueChange={selectSymbol}>
-                  <SelectTrigger className="h-7 w-auto gap-1.5 border-white/15 bg-white/5 px-2 font-mono text-sm font-bold tracking-wide text-white hover:bg-white/10">
-                    <Layers className="h-3.5 w-3.5 text-emerald-400" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-72 border-white/15 bg-[#15161d] text-white">
-                    {symbols.map((s) => (
-                      <SelectItem key={s} value={s} className="font-mono focus:bg-white/10">
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
-              {/* Last close + change % */}
-              {candles.length > 0 && (
-                <>
-                  <span className="font-mono text-xs text-white/50">
-                    {lastClose >= 1000 ? lastClose.toFixed(2) : lastClose.toFixed(5)}
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className={`h-5 border-white/15 px-1.5 text-[10px] font-mono ${
-                      totalChangePct >= 0
-                        ? "bg-emerald-500/10 text-emerald-400"
-                        : "bg-red-500/10 text-red-400"
-                    }`}
-                  >
-                    {totalChangePct >= 0 ? "+" : ""}
-                    {totalChangePct.toFixed(2)}%
-                  </Badge>
-                </>
-              )}
-            </div>
-          )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <FileUploader onLoaded={handleLoaded} compact />
-
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-white/60 hover:text-white"
-                  asChild
-                >
-                  <a
-                    href="https://github.com/tradingview/lightweight-charts"
-                    target="_blank"
-                    rel="noreferrer"
+        {/* Symbol + File dropdowns — always visible once data is loaded */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Symbol dropdown — all symbols across all loaded files */}
+          {activeSymbolValue && (
+            <Select value={activeSymbolValue} onValueChange={selectGlobalSymbol}>
+              <SelectTrigger className="h-8 w-auto min-w-[100px] gap-1.5 border-white/15 bg-white/5 px-2 font-mono text-sm font-bold tracking-wide text-white hover:bg-white/10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-72 border-white/15 bg-[#15161d] text-white">
+                {allSymbols.map((entry) => (
+                  <SelectItem
+                    key={`${entry.fileName}-${entry.symbol}`}
+                    value={entry.symbol}
+                    className="font-mono focus:bg-white/10"
                   >
-                    <Github className="h-4 w-4" />
-                  </a>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">lightweight-charts</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                    {entry.symbol}
+                    {fileNames.length > 1 && (
+                      <span className="ml-2 text-[10px] text-white/40">{entry.fileName}</span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* File dropdown */}
+          {fileNames.length > 1 && (
+            <Select value={selectedFile} onValueChange={selectFile}>
+              <SelectTrigger className="h-8 w-auto max-w-[160px] gap-1.5 border-white/15 bg-white/5 px-2 font-mono text-xs text-white hover:bg-white/10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-72 border-white/15 bg-[#15161d] text-white">
+                {fileNames.map((name) => (
+                  <SelectItem
+                    key={name}
+                    value={name}
+                    className="font-mono text-xs focus:bg-white/10"
+                  >
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Last close + change % */}
+          {candles.length > 0 && (
+            <div className="flex items-center gap-1.5 border-l border-white/10 pl-2">
+              <span className="font-mono text-xs text-white/50">
+                {lastClose >= 1000 ? lastClose.toFixed(2) : lastClose.toFixed(5)}
+              </span>
+              <Badge
+                variant="outline"
+                className={`h-5 border-white/15 px-1.5 text-[10px] font-mono ${
+                  totalChangePct >= 0
+                    ? "bg-emerald-500/10 text-emerald-400"
+                    : "bg-red-500/10 text-red-400"
+                }`}
+              >
+                {totalChangePct >= 0 ? "+" : ""}
+                {totalChangePct.toFixed(2)}%
+              </Badge>
+            </div>
+          )}
+
+          {/* Upload buttons */}
+          <FileUploader onLoaded={handleLoaded} compact />
         </div>
       </header>
 
@@ -249,7 +275,6 @@ export default function Home() {
             <Info className="h-3 w-3" />
             <span>Hover the chart for OHLC · drag the panel divider to resize</span>
           </div>
-          {/* Mobile: open levels panel */}
           <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
             <SheetTrigger asChild>
               <Button
@@ -281,8 +306,15 @@ export default function Home() {
 
       {/* ============================================================== BODY */}
       <main className="flex-1 overflow-hidden">
-        {candles.length === 0 ? (
-          <EmptyState onLoaded={handleLoaded} fileCount={fileNames.length} />
+        {defaultsLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
+              <p className="text-sm text-white/50">Loading default data…</p>
+            </div>
+          </div>
+        ) : candles.length === 0 ? (
+          <EmptyState onLoaded={handleLoaded} />
         ) : isLg ? (
           <ResizablePanelGroup direction="horizontal" className="h-full">
             <ResizablePanel defaultSize={75} minSize={50}>
@@ -335,7 +367,6 @@ function ChartArea({
         symbol={symbol}
         timeframe={timeframe}
       />
-      {/* Symbol + timeframe watermark (top-left) */}
       <div className="pointer-events-none absolute left-4 top-3 select-none">
         <div className="flex items-baseline gap-2">
           <div className="font-mono text-3xl font-bold text-white/[0.06]">{symbol || "—"}</div>
@@ -356,69 +387,24 @@ function ChartArea({
 // ============================================================ EMPTY STATE
 function EmptyState({
   onLoaded,
-  fileCount,
 }: {
   onLoaded: (r: ParseResult, fileName: string) => void;
-  fileCount: number;
 }) {
   return (
     <div className="mx-auto flex h-full max-w-3xl flex-col items-center justify-center gap-8 px-6 py-10">
       <div className="text-center">
-        <div className="mx-auto mb-4 inline-flex rounded-xl bg-emerald-500/15 p-3">
-          <CandlestickChart className="h-8 w-8 text-emerald-400" />
-        </div>
+        <img
+          src="/logo.png"
+          alt="Vaan One"
+          className="mx-auto mb-4 h-16 w-16 rounded-lg object-contain"
+        />
         <h2 className="text-2xl font-semibold">CandleScope</h2>
         <p className="mt-2 max-w-md text-sm text-white/60">
-          Drop your MetaTrader 5 candlestick exports (Excel/CSV) and get a TradingView-style chart
-          with automatically-detected support &amp; resistance levels.
+          Upload additional MT5 candlestick exports (Excel/CSV) to add them to the dropdown.
         </p>
       </div>
-
       <div className="w-full max-w-xl">
         <FileUploader onLoaded={onLoaded} />
-      </div>
-
-      {fileCount > 0 && (
-        <p className="text-xs text-emerald-400">
-          {fileCount} file{fileCount > 1 ? "s" : ""} loaded — switch between them via the dropdown
-          in the header.
-        </p>
-      )}
-
-      <div className="w-full max-w-xl rounded-lg border border-white/10 bg-white/[0.02] p-4 text-xs text-white/60">
-        <p className="mb-2 font-semibold text-white/80">Supported file formats:</p>
-        <ul className="space-y-1.5">
-          <li className="flex gap-2">
-            <span className="text-emerald-400">●</span>
-            <span>
-              <span className="text-white/80">MT5 History Center</span> — tab-separated, columns
-              like{" "}
-              <code className="rounded bg-white/5 px-1 font-mono text-[10px]">
-                &lt;DATE&gt; &lt;TIME&gt; &lt;OPEN&gt; &lt;HIGH&gt; &lt;LOW&gt; &lt;CLOSE&gt;
-              </code>
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-emerald-400">●</span>
-            <span>
-              <span className="text-white/80">MT5 Save as CSV</span> — Date,Open,High,Low,Close,Volume
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-emerald-400">●</span>
-            <span>
-              <span className="text-white/80">Excel .xlsx / .xls</span> — same columns with header
-              row
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-emerald-400">●</span>
-            <span>
-              <span className="text-white/80">Folder upload</span> — pick a folder and all CSV/Excel
-              files inside are loaded at once
-            </span>
-          </li>
-        </ul>
       </div>
     </div>
   );
