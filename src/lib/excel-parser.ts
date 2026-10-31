@@ -26,12 +26,22 @@ export interface Candle {
   symbol?: string; // per-candle ticker (when the file has a <TICKER> column)
 }
 
+/** A pre-computed S/R level read from a specific column in the CSV/Excel file.
+ *  The user populates columns J–O with constant price values; we read the
+ *  first non-empty numeric value from each and draw it as a horizontal line. */
+export interface UserLevel {
+  name: string;   // header name (e.g. "R1") or Excel letter (e.g. "J")
+  price: number;
+  column: string; // Excel column letter: "J", "K", "L", "M", "N", "O"
+}
+
 export interface ParseResult {
   candles: Candle[];
   symbol: string;        // primary / first symbol found (for backward compat)
   symbols: string[];     // all unique tickers found in the file (sorted)
   detectedColumns: string[];
   warnings: string[];
+  userLevels: UserLevel[]; // pre-computed S/R levels from columns J–O
 }
 
 const HEADER_ALIASES: Record<string, string[]> = {
@@ -131,6 +141,74 @@ function formatNumericDateTime(value: unknown): string | undefined {
     return s.padStart(8, "0"); // date
   }
   return String(value).trim();
+}
+
+// Columns J through O (Excel letters) → 0-indexed positions.
+// The user puts pre-computed S/R price values in these columns. H & I are
+// intentionally ignored (per user instruction).
+const USER_LEVEL_COLUMNS: { letter: string; index: number }[] = [
+  { letter: "J", index: 9 },
+  { letter: "K", index: 10 },
+  { letter: "L", index: 11 },
+  { letter: "M", index: 12 },
+  { letter: "N", index: 13 },
+  { letter: "O", index: 14 },
+];
+
+/**
+ * Scans columns J–O of the raw rows and extracts the first non-empty numeric
+ * value from each. These are the user's pre-computed support/resistance levels
+ * (constant across all rows — S/R levels don't change per candle).
+ *
+ * If a header row exists, the header cell at each column index is used as the
+ * level's display name (e.g. "R1", "S1"). Otherwise the Excel letter is used.
+ */
+function extractUserLevels(
+  rows: unknown[][],
+  headerStart: number,
+): UserLevel[] {
+  const levels: UserLevel[] = [];
+  if (rows.length === 0) return levels;
+
+  for (const { letter, index } of USER_LEVEL_COLUMNS) {
+    // Skip if no row has this many columns.
+    const hasColumn = rows.some(
+      (r) => Array.isArray(r) && r.length > index,
+    );
+    if (!hasColumn) continue;
+
+    // Try to get a header name from the header row.
+    let name = letter;
+    if (headerStart > 0) {
+      const headerRow = rows[headerStart - 1];
+      if (headerRow && headerRow[index] != null) {
+        const headerVal = String(headerRow[index]).trim();
+        // Use the header text only if it's non-numeric (avoid using a data
+        // value as the name when there's no real header).
+        if (headerVal !== "" && toNumber(headerVal) === null) {
+          name = headerVal;
+        }
+      }
+    }
+
+    // Scan data rows for the first non-empty numeric value.
+    let price: number | null = null;
+    for (let i = headerStart; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.length <= index) continue;
+      const val = toNumber(row[index]);
+      if (val !== null && val > 0) {
+        price = val;
+        break;
+      }
+    }
+
+    if (price !== null) {
+      levels.push({ name, price, column: letter });
+    }
+  }
+
+  return levels;
 }
 
 interface ColumnMap {
@@ -254,7 +332,7 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
   });
 
   if (rows.length === 0) {
-    return { candles: [], symbol: "", symbols: [], detectedColumns: [], warnings: ["Empty file"] };
+    return { candles: [], symbol: "", symbols: [], detectedColumns: [], warnings: ["Empty file"], userLevels: [] };
   }
 
   const warnings: string[] = [];
@@ -285,6 +363,7 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
       warnings: [
         "Could not detect OHLC columns. Expected headers like Date,Open,High,Low,Close[,Volume] or MT5 tab-separated export.",
       ],
+      userLevels: [],
     };
   }
 
@@ -407,11 +486,15 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
   // value to display.
   const finalSymbols = symbols.length > 0 ? symbols : [symbol];
 
+  // Extract pre-computed S/R levels from columns J–O.
+  const userLevels = extractUserLevels(rows, headerStart);
+
   return {
     candles: dedup,
     symbol,
     symbols: finalSymbols,
     detectedColumns: detectedColumns.filter(Boolean),
     warnings,
+    userLevels,
   };
 }

@@ -57,14 +57,14 @@ export function LevelsPanel({ lines, lastClose, fileName, symbol }: LevelsPanelP
           </p>
         ) : (
           <div className="space-y-1.5">
-            {lines.map((line) => {
+            {lines.map((line, idx) => {
               const isResistance = line.type === "resistance";
               const distPct = lastClose > 0
                 ? ((line.price - lastClose) / lastClose) * 100
                 : 0;
               return (
                 <div
-                  key={`${line.type}-${line.tier}`}
+                  key={`${line.label}-${idx}`}
                   className={`flex items-center justify-between rounded-md border px-3 py-2 ${
                     isResistance
                       ? "border-emerald-500/30 bg-emerald-500/[0.06]"

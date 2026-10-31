@@ -23,7 +23,7 @@
 //      Only levels with at least `minTouches` touches (or very strong recency)
 //      are returned. Sorted by strength descending.
 
-import type { Candle } from "./excel-parser";
+import type { Candle, UserLevel } from "./excel-parser";
 
 export type SRType = "support" | "resistance";
 
@@ -244,4 +244,31 @@ export function getTop6Levels(levels: SRLevel[], lastClose: number): SRLine[] {
     }
   }
   return lines;
+}
+
+/**
+ * Convert user-defined levels (read from CSV columns J–O) into SRLine[] format
+ * so the chart and panel can render them with the same code path as auto-
+ * detected levels.
+ *
+ * The type (resistance/support) is determined by comparing the level price to
+ * the current close: above = resistance (green), below = support (red).
+ * The label is the column header name (or Excel letter if no header).
+ */
+export function userLevelsToLines(
+  userLevels: UserLevel[],
+  lastClose: number,
+): SRLine[] {
+  if (lastClose <= 0 || userLevels.length === 0) return [];
+
+  return userLevels.map((ul) => {
+    const type: SRType = ul.price >= lastClose ? "resistance" : "support";
+    return {
+      price: ul.price,
+      type,
+      tier: 1 as SRTier,
+      label: ul.name,
+      fullLabel: ul.name,
+    };
+  });
 }

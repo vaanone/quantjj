@@ -16,7 +16,7 @@ import { TradingChart } from "@/components/trading-chart";
 import { FileUploader } from "@/components/file-uploader";
 import { LevelsPanel } from "@/components/levels-panel";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { detectSupportResistance, getTop6Levels } from "@/lib/support-resistance";
+import { detectSupportResistance, getTop6Levels, userLevelsToLines } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle, ParseResult } from "@/lib/excel-parser";
 import { loadDefaultFiles } from "@/lib/load-default-files";
@@ -109,9 +109,17 @@ export default function Home() {
 
   const timeframe = useMemo(() => detectTimeframe(candles), [candles]);
 
-  const top6Lines = useMemo(() => {
+  // S/R lines: prefer user-defined levels from CSV columns J–O when present.
+  // Fall back to auto-detection only when the file has no user levels.
+  // Computed inline (not memoized) to avoid stale-closure issues when switching
+  // files — the computation is cheap enough.
+  const top6Lines = (() => {
     if (candles.length < 10) return [];
     const lastClose = candles[candles.length - 1].close;
+    const result = files.get(selectedFile)?.result;
+    if (result?.userLevels && result.userLevels.length > 0) {
+      return userLevelsToLines(result.userLevels, lastClose);
+    }
     const allLevels = detectSupportResistance(candles, {
       leftBars: SR_SENSITIVITY_BARS,
       rightBars: SR_SENSITIVITY_BARS,
@@ -120,7 +128,7 @@ export default function Home() {
       maxLevels: 20,
     });
     return getTop6Levels(allLevels, lastClose);
-  }, [candles]);
+  })();
 
   // ---- Global symbol list: all symbols across ALL loaded files ----
   // Each entry: { symbol, fileName }. Used to populate the unified dropdown
@@ -305,6 +313,7 @@ export default function Home() {
             <ResizableHandle withHandle className="bg-white/10" />
             <ResizablePanel defaultSize={25} minSize={18} maxSize={45}>
               <LevelsPanel
+                key={selectedFile}
                 lines={top6Lines}
                 lastClose={lastClose}
                 fileName={selectedFile}
