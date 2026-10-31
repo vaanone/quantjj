@@ -46,6 +46,7 @@ export default function Home() {
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
+  const onlineCount = useOnlineCount();
   const isLg = useMediaQuery("(min-width: 1024px)", true);
 
   const handleLoaded = useCallback(
@@ -224,7 +225,7 @@ export default function Home() {
             </Badge>
           )}
 
-          {/* Last file update date/time (e.g. "Aug 10th | 5:15 AM IST") */}
+          {/* Last file update date/time + Online count — same two-line format */}
           {lastUpdate && (
             <div className="flex flex-col items-start leading-tight">
               <span className="text-[9px] uppercase tracking-wider text-white/30">
@@ -235,6 +236,14 @@ export default function Home() {
               </span>
             </div>
           )}
+          <div className="flex flex-col items-start leading-tight">
+            <span className="text-[9px] uppercase tracking-wider text-white/30">
+              Online
+            </span>
+            <span className="font-mono text-xs text-white/50">
+              <span className="font-bold text-emerald-400">{onlineCount}</span> user{onlineCount !== 1 ? "s" : ""}
+            </span>
+          </div>
 
           {/* Upload buttons: Files + Folder */}
           <DriveFilePicker
@@ -342,7 +351,6 @@ function ChartArea({
   symbol: string;
   timeframe: TimeframeInfo | null;
 }) {
-  const onlineCount = useOnlineCount();
   return (
     <div className="relative h-full w-full bg-[#0e0f14]">
       <TradingChart
@@ -363,17 +371,6 @@ function ChartArea({
         <div className="font-mono text-[10px] tracking-widest text-white/[0.05]">
           VAANPULSE · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
         </div>
-      </div>
-      {/* Online users counter — bottom-right of the chart, positioned just
-          above the time axis so it's fully visible */}
-      <div className="pointer-events-none absolute bottom-8 right-4 flex items-center gap-1.5 rounded-md border border-white/10 bg-black/40 px-2 py-0.5 backdrop-blur-sm">
-        <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        </span>
-        <span className="font-mono text-[10px] text-white/70">
-          Online: <span className="font-bold text-emerald-400">{onlineCount}</span>
-        </span>
       </div>
     </div>
   );
