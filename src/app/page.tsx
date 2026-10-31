@@ -224,9 +224,14 @@ export default function Home() {
 
           {/* Last file update date/time (e.g. "Aug 10th | 5:15 AM IST") */}
           {lastUpdate && (
-            <span className="font-mono text-xs text-white/50">
-              {formatLastUpdate(lastUpdate)}
-            </span>
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-[9px] uppercase tracking-wider text-white/30">
+                Last Update @
+              </span>
+              <span className="font-mono text-xs text-white/50">
+                {formatLastUpdate(lastUpdate)}
+              </span>
+            </div>
           )}
 
           {/* Upload buttons: Files + Folder */}
