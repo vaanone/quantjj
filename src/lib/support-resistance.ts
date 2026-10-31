@@ -183,3 +183,65 @@ export function detectSupportResistance(
 
   return levels.slice(0, opts.maxLevels);
 }
+
+// ============================================================
+// Top-6 levels: 3 nearest resistances + 3 nearest supports.
+// ============================================================
+
+export type SRTier = 1 | 2 | 3; // I, II, III
+
+export interface SRLine {
+  price: number;
+  type: SRType;      // "support" | "resistance"
+  tier: SRTier;      // I=1, II=2, III=3 — distance rank from current price
+  label: string;     // short label for the chart axis: "R I", "S I", ...
+  fullLabel: string; // full label for the panel: "Resistance I", "Support I", ...
+}
+
+const ROMAN: string[] = ["I", "II", "III"];
+
+/**
+ * From all detected S/R levels, pick the 3 resistances closest ABOVE the
+ * current price (R I = nearest, R II = next, R III = next) and the 3 supports
+ * closest BELOW the current price (S I = nearest, S II = next, S III = next).
+ *
+ * Returns them interleaved as [R I, S I, R II, S II, R III, S III] so the
+ * panel can render them in that exact order. If fewer than 3 of either type
+ * exist, only the available ones are returned.
+ */
+export function getTop6Levels(levels: SRLevel[], lastClose: number): SRLine[] {
+  if (lastClose <= 0 || levels.length === 0) return [];
+
+  const resistances = levels
+    .filter((l) => l.type === "resistance" && l.price >= lastClose)
+    .sort((a, b) => a.price - b.price) // ascending: nearest (lowest) first
+    .slice(0, 3);
+
+  const supports = levels
+    .filter((l) => l.type === "support" && l.price <= lastClose)
+    .sort((a, b) => b.price - a.price) // descending: nearest (highest) first
+    .slice(0, 3);
+
+  const lines: SRLine[] = [];
+  for (let i = 0; i < 3; i++) {
+    if (resistances[i]) {
+      lines.push({
+        price: resistances[i].price,
+        type: "resistance",
+        tier: (i + 1) as SRTier,
+        label: `R ${ROMAN[i]}`,
+        fullLabel: `Resistance ${ROMAN[i]}`,
+      });
+    }
+    if (supports[i]) {
+      lines.push({
+        price: supports[i].price,
+        type: "support",
+        tier: (i + 1) as SRTier,
+        label: `S ${ROMAN[i]}`,
+        fullLabel: `Support ${ROMAN[i]}`,
+      });
+    }
+  }
+  return lines;
+}

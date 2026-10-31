@@ -13,13 +13,13 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts";
 import type { Candle } from "@/lib/excel-parser";
-import type { SRLevel } from "@/lib/support-resistance";
+import type { SRLine } from "@/lib/support-resistance";
 import type { TimeframeInfo } from "@/lib/timeframe";
 
 interface TradingChartProps {
   candles: Candle[];
-  srLevels: SRLevel[];
-  visibleLevels: Set<number>; // indices into srLevels that should be drawn
+  /** The S/R lines to draw on the chart — typically the top-6 (R I/II/III, S I/II/III). */
+  lines: SRLine[];
   symbol: string;
   timeframe?: TimeframeInfo | null;
 }
@@ -37,8 +37,7 @@ const COLORS = {
 
 export function TradingChart({
   candles,
-  srLevels,
-  visibleLevels,
+  lines,
   symbol,
   timeframe,
 }: TradingChartProps) {
@@ -213,7 +212,7 @@ export function TradingChart({
     chartRef.current.timeScale().fitContent();
   }, [candles]);
 
-  // -- Update S/R price lines -----------------------------------------------
+  // -- Update S/R price lines (only the top-6: R I/II/III + S I/II/III) -----
   useEffect(() => {
     if (!candleSeriesRef.current) return;
 
@@ -222,19 +221,18 @@ export function TradingChart({
     }
     priceLinesRef.current = [];
 
-    srLevels.forEach((level, idx) => {
-      if (!visibleLevels.has(idx)) return;
+    lines.forEach((srLine) => {
       const line = candleSeriesRef.current!.createPriceLine({
-        price: level.price,
-        color: level.type === "resistance" ? COLORS.resistance : COLORS.support,
+        price: srLine.price,
+        color: srLine.type === "resistance" ? COLORS.resistance : COLORS.support,
         lineWidth: 2,
         lineStyle: LineStyle.Solid,
         axisLabelVisible: true,
-        title: `${level.type === "resistance" ? "R" : "S"}${level.touches} (${level.strength})`,
+        title: srLine.label, // "R I", "S I", "R II", ...
       });
       priceLinesRef.current.push(line);
     });
-  }, [srLevels, visibleLevels]);
+  }, [lines]);
 
   void symbol;
 

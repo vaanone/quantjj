@@ -1,56 +1,72 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Upload, FileSpreadsheet, Loader2, AlertCircle } from "lucide-react";
+import { Upload, FolderOpen, FileSpreadsheet, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { parseFile, type ParseResult } from "@/lib/excel-parser";
 import { toast } from "sonner";
 
 interface FileUploaderProps {
+  /** Called once per successfully parsed file. */
   onLoaded: (result: ParseResult, fileName: string) => void;
   compact?: boolean;
+}
+
+const ALLOWED_EXTS = [".xlsx", ".xls", ".csv", ".tsv", ".txt"];
+
+function isAllowedFile(name: string): boolean {
+  const lower = name.toLowerCase();
+  return ALLOWED_EXTS.some((ext) => lower.endsWith(ext));
 }
 
 export function FileUploader({ onLoaded, compact = false }: FileUploaderProps) {
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback(
-    async (file: File) => {
-      const allowed = [".xlsx", ".xls", ".csv", ".tsv", ".txt"];
-      const lower = file.name.toLowerCase();
-      if (!allowed.some((ext) => lower.endsWith(ext))) {
-        toast.error("Unsupported file type", {
-          description: "Please upload .xlsx, .xls, .csv or .tsv",
+  const handleFiles = useCallback(
+    async (fileList: FileList | File[]) => {
+      const files = Array.from(fileList).filter((f) => isAllowedFile(f.name));
+      if (files.length === 0) {
+        toast.error("No supported files", {
+          description: `Allowed: ${ALLOWED_EXTS.join(", ")}`,
         });
         return;
       }
 
       setLoading(true);
-      try {
-        const result = await parseFile(file);
-        if (result.candles.length === 0) {
-          toast.error("No candles found", {
-            description: result.warnings[0] ?? "The file appears to be empty or unreadable.",
+      let successCount = 0;
+      let failCount = 0;
+
+      // Parse files sequentially to avoid blocking the UI on large folders.
+      for (const file of files) {
+        try {
+          const result = await parseFile(file);
+          if (result.candles.length === 0) {
+            failCount++;
+            toast.error(`No candles in ${file.name}`, {
+              description: result.warnings[0] ?? "File appears empty or unreadable.",
+            });
+            continue;
+          }
+          onLoaded(result, file.name);
+          successCount++;
+        } catch (err) {
+          failCount++;
+          console.error(`Failed to parse ${file.name}:`, err);
+          toast.error(`Failed: ${file.name}`, {
+            description: err instanceof Error ? err.message : "Unknown error",
           });
-          return;
         }
-        if (result.warnings.length > 0) {
-          toast.warning("Parsed with warnings", { description: result.warnings[0] });
-        }
-        onLoaded(result, file.name);
-        toast.success(`Loaded ${result.candles.length} candles`, {
-          description: `${result.symbol || file.name}`,
-        });
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to parse file", {
-          description: err instanceof Error ? err.message : "Unknown error",
-        });
-      } finally {
-        setLoading(false);
       }
+
+      if (successCount > 0) {
+        toast.success(`Loaded ${successCount} file${successCount > 1 ? "s" : ""}`, {
+          description: failCount > 0 ? `${failCount} failed` : undefined,
+        });
+      }
+      setLoading(false);
     },
     [onLoaded],
   );
@@ -59,41 +75,73 @@ export function FileUploader({ onLoaded, compact = false }: FileUploaderProps) {
     (e: React.DragEvent) => {
       e.preventDefault();
       setDragging(false);
-      const file = e.dataTransfer.files?.[0];
-      if (file) handleFile(file);
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) handleFiles(files);
     },
-    [handleFile],
+    [handleFiles],
   );
 
   if (compact) {
     return (
-      <>
+      <div className="flex items-center gap-2">
+        {/* Hidden inputs */}
         <input
           ref={inputRef}
           type="file"
-          accept=".xlsx,.xls,.csv,.tsv,.txt"
+          accept={ALLOWED_EXTS.join(",")}
+          multiple
           className="hidden"
           onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleFile(f);
+            if (e.target.files && e.target.files.length > 0) handleFiles(e.target.files);
             e.target.value = "";
           }}
         />
+        <input
+          ref={folderInputRef}
+          type="file"
+          // @ts-expect-error — non-standard attributes for directory upload
+          webkitdirectory=""
+          directory=""
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) handleFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
+
+        {/* Files button (multi-select) */}
         <Button
           variant="outline"
           size="sm"
           onClick={() => inputRef.current?.click()}
           disabled={loading}
-          className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white"
+          className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Upload className="h-4 w-4" />
           )}
-          Upload Excel/CSV
+          <span className="hidden sm:inline">Files</span>
         </Button>
-      </>
+
+        {/* Folder button (pick a directory → all CSV/Excel inside) */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => folderInputRef.current?.click()}
+          disabled={loading}
+          className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <FolderOpen className="h-4 w-4" />
+          )}
+          <span className="hidden sm:inline">Folder</span>
+        </Button>
+      </div>
     );
   }
 
@@ -117,11 +165,24 @@ export function FileUploader({ onLoaded, compact = false }: FileUploaderProps) {
       <input
         ref={inputRef}
         type="file"
-        accept=".xlsx,.xls,.csv,.tsv,.txt"
+        accept={ALLOWED_EXTS.join(",")}
+        multiple
         className="hidden"
         onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) handleFile(f);
+          if (e.target.files && e.target.files.length > 0) handleFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={folderInputRef}
+        type="file"
+        // @ts-expect-error — non-standard attributes for directory upload
+        webkitdirectory=""
+        directory=""
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files && e.target.files.length > 0) handleFiles(e.target.files);
           e.target.value = "";
         }}
       />
@@ -135,12 +196,40 @@ export function FileUploader({ onLoaded, compact = false }: FileUploaderProps) {
         </div>
         <div>
           <p className="text-sm font-medium text-white">
-            {loading ? "Parsing..." : "Drop your MT5 Excel / CSV file here"}
+            {loading ? "Parsing..." : "Drop MT5 Excel / CSV files here"}
           </p>
           <p className="mt-1 text-xs text-white/50">
-            Supports .xlsx, .xls, .csv — MT5 History Center &amp; standard exports
+            Select multiple files or a whole folder — all loaded files appear in the dropdown
           </p>
         </div>
+      </div>
+      <div className="mt-4 flex items-center justify-center gap-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            inputRef.current?.click();
+          }}
+          disabled={loading}
+          className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+        >
+          <Upload className="h-4 w-4" />
+          Choose Files
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            folderInputRef.current?.click();
+          }}
+          disabled={loading}
+          className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+        >
+          <FolderOpen className="h-4 w-4" />
+          Choose Folder
+        </Button>
       </div>
       <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-white/40">
         <AlertCircle className="h-3 w-3" />
