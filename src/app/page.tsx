@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { CandlestickChart, Sparkles, Github, Info, Zap, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { TradingChart } from "@/components/trading-chart";
 import { FileUploader } from "@/components/file-uploader";
 import { SRPanel } from "@/components/sr-panel";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { generateSampleData, SAMPLE_PRESETS } from "@/lib/sample-data";
 import { detectSupportResistance, type SRLevel } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
@@ -38,7 +39,11 @@ export default function Home() {
   const [sensitivity, setSensitivity] = useState<number>(50);
   const [tolerancePct, setTolerancePct] = useState<number>(0.15);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
-  const isLg = useMediaQuery("(min-width: 1024px)");
+  // Hydration-safe media query: SSR + first client render use `true` (desktop
+  // layout), then `useSyncExternalStore` switches to the actual viewport value
+  // after mount. This guarantees the server-rendered HTML matches the first
+  // client commit, eliminating React's hydration-mismatch warning.
+  const isLg = useMediaQuery("(min-width: 1024px)", true);
 
   // Detect S/R levels. Recomputes when candles or detection settings change.
   const srLevels: SRLevel[] = useMemo(() => {
@@ -475,18 +480,4 @@ function formatDate(t: number): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(
     d.getUTCDate(),
   ).padStart(2, "0")}`;
-}
-
-// Returns true while the viewport matches the given media query (e.g. "(min-width: 1024px)").
-// Defaults to true during SSR / first paint to avoid layout flashes on desktop.
-function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(true);
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    const onChange = () => setMatches(mql.matches);
-    onChange();
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, [query]);
-  return matches;
 }
