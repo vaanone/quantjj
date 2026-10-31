@@ -225,25 +225,17 @@ export default function Home() {
             </Badge>
           )}
 
-          {/* Last file update date/time + Online count — same two-line format */}
+          {/* Last file update date/time + Online count */}
           {lastUpdate && (
             <div className="flex flex-col items-start leading-tight">
               <span className="text-[9px] uppercase tracking-wider text-white/30">
-                Last Update @
+                Online: <span className="font-bold text-emerald-400">{onlineCount}</span>
               </span>
               <span className="font-mono text-xs text-white/50">
                 {formatLastUpdate(lastUpdate)}
               </span>
             </div>
           )}
-          <div className="flex flex-col items-start leading-tight">
-            <span className="text-[9px] uppercase tracking-wider text-white/30">
-              Online
-            </span>
-            <span className="font-mono text-xs text-white/50">
-              <span className="font-bold text-emerald-400">{onlineCount}</span> user{onlineCount !== 1 ? "s" : ""}
-            </span>
-          </div>
 
           {/* Upload buttons: Files + Folder */}
           <DriveFilePicker
