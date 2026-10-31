@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { CandlestickChart, Github, Info, PanelRight } from "lucide-react";
+import { CandlestickChart, Github, Info, PanelRight, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,6 +11,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TradingChart } from "@/components/trading-chart";
 import { FileUploader } from "@/components/file-uploader";
 import { SRPanel } from "@/components/sr-panel";
@@ -25,8 +32,12 @@ import {
 } from "@/components/ui/resizable";
 
 export default function Home() {
-  const [candles, setCandles] = useState<Candle[]>([]);
-  const [symbol, setSymbol] = useState<string>("");
+  // rawCandles holds ALL candles from the file (across all symbols).
+  // `candles` (derived below) is the filtered subset for the currently
+  // selected symbol.
+  const [rawCandles, setRawCandles] = useState<Candle[]>([]);
+  const [symbols, setSymbols] = useState<string[]>([]);
+  const [selectedSymbol, setSelectedSymbol] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
   const [sensitivity, setSensitivity] = useState<number>(50);
   const [tolerancePct, setTolerancePct] = useState<number>(0.15);
@@ -36,6 +47,17 @@ export default function Home() {
   // after mount. This guarantees the server-rendered HTML matches the first
   // client commit, eliminating React's hydration-mismatch warning.
   const isLg = useMediaQuery("(min-width: 1024px)", true);
+
+  // Filter candles to the selected symbol. When the file has only one symbol
+  // (or no ticker column at all), all candles pass through unchanged.
+  const candles = useMemo(() => {
+    if (symbols.length <= 1) return rawCandles;
+    return rawCandles.filter(
+      (c) => !c.symbol || c.symbol === selectedSymbol,
+    );
+  }, [rawCandles, symbols, selectedSymbol]);
+
+  const symbol = selectedSymbol;
 
   // Detect S/R levels. Recomputes when candles or detection settings change.
   const srLevels: SRLevel[] = useMemo(() => {
@@ -70,9 +92,10 @@ export default function Home() {
   }, [srLevels, hiddenLevels]);
 
   const handleLoaded = useCallback(
-    (result: { candles: Candle[]; symbol: string }, name: string) => {
-      setCandles(result.candles);
-      setSymbol(result.symbol || name.replace(/\.[^.]+$/, ""));
+    (result: { candles: Candle[]; symbol: string; symbols: string[] }, name: string) => {
+      setRawCandles(result.candles);
+      setSymbols(result.symbols);
+      setSelectedSymbol(result.symbol || result.symbols[0] || "");
       setFileName(name);
       // Reset hidden set so new data shows all levels by default.
       setHiddenLevels(new Set());
@@ -123,7 +146,35 @@ export default function Home() {
 
           {symbol && (
             <div className="ml-2 flex items-center gap-2 border-l border-white/10 pl-3">
-              <span className="font-mono text-sm font-bold tracking-wide">{symbol}</span>
+              {/* Symbol: dropdown when the file has multiple tickers, static
+                  span otherwise. */}
+              {symbols.length > 1 ? (
+                <Select
+                  value={selectedSymbol}
+                  onValueChange={(v) => {
+                    setSelectedSymbol(v);
+                    setHiddenLevels(new Set());
+                  }}
+                >
+                  <SelectTrigger className="h-7 w-auto gap-1.5 border-white/15 bg-white/5 px-2 font-mono text-sm font-bold tracking-wide text-white hover:bg-white/10">
+                    <Layers className="h-3.5 w-3.5 text-emerald-400" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72 border-white/15 bg-[#15161d] text-white">
+                    {symbols.map((s) => (
+                      <SelectItem
+                        key={s}
+                        value={s}
+                        className="font-mono focus:bg-white/10"
+                      >
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <span className="font-mono text-sm font-bold tracking-wide">{symbol}</span>
+              )}
               {candles.length > 0 && (
                 <span className="font-mono text-xs text-white/50">
                   {lastClose >= 1000 ? lastClose.toFixed(2) : lastClose.toFixed(5)}
@@ -188,9 +239,9 @@ export default function Home() {
             label="S/R"
             value={
               <span>
-                <span className="text-emerald-400">{supportsCount}S</span>
+                <span className="text-red-400">{supportsCount}S</span>
                 {" / "}
-                <span className="text-amber-400">{resistancesCount}R</span>
+                <span className="text-emerald-400">{resistancesCount}R</span>
               </span>
             }
           />
@@ -329,7 +380,7 @@ function ChartArea({
 function EmptyState({
   onLoaded,
 }: {
-  onLoaded: (r: { candles: Candle[]; symbol: string }, name: string) => void;
+  onLoaded: (r: { candles: Candle[]; symbol: string; symbols: string[] }, name: string) => void;
 }) {
   return (
     <div className="mx-auto flex h-full max-w-3xl flex-col items-center justify-center gap-8 px-6 py-10">

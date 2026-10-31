@@ -31,8 +31,8 @@ const COLORS = {
   border: "#262a36",
   up: "#26a69a",
   down: "#ef5350",
-  resistance: "#f59e0b",
-  support: "#10b981",
+  resistance: "#22c55e", // green — solid line
+  support: "#ef4444",    // red — solid line
 };
 
 export function TradingChart({
@@ -227,8 +227,8 @@ export function TradingChart({
       const line = candleSeriesRef.current!.createPriceLine({
         price: level.price,
         color: level.type === "resistance" ? COLORS.resistance : COLORS.support,
-        lineWidth: 1,
-        lineStyle: LineStyle.Dashed,
+        lineWidth: 2,
+        lineStyle: LineStyle.Solid,
         axisLabelVisible: true,
         title: `${level.type === "resistance" ? "R" : "S"}${level.touches} (${level.strength})`,
       });

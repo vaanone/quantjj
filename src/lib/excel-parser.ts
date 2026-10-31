@@ -23,11 +23,13 @@ export interface Candle {
   low: number;
   close: number;
   volume?: number;
+  symbol?: string; // per-candle ticker (when the file has a <TICKER> column)
 }
 
 export interface ParseResult {
   candles: Candle[];
-  symbol: string;
+  symbol: string;        // primary / first symbol found (for backward compat)
+  symbols: string[];     // all unique tickers found in the file (sorted)
   detectedColumns: string[];
   warnings: string[];
 }
@@ -108,6 +110,27 @@ function toNumber(value: unknown): number | null {
   if (cleaned === "") return null;
   const n = Number(cleaned);
   return isNaN(n) ? null : n;
+}
+
+// Converts a raw cell value (which XLSX may return as a number) into a
+// properly-padded string for date/time regex matching.
+//
+// XLSX with `raw: true` auto-converts numeric-looking strings:
+//   "20261001" → number 20261001  (String → "20261001" — already 8 digits, OK)
+//   "000000"   → number 0         (String → "0" — needs padding to "000000")
+//   "000500"   → number 500       (String → "500" — needs padding to "000500")
+//
+// We detect whether the value looks like an MT5 date (8 digits) or time
+// (6 digits) and pad accordingly. Non-numeric strings pass through unchanged.
+function formatNumericDateTime(value: unknown): string | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value === "number") {
+    const s = String(Math.abs(Math.trunc(value)));
+    // MT5 date format is YYYYMMDD (8 digits); time is HHMMSS (6 digits).
+    if (s.length <= 6) return s.padStart(6, "0"); // time
+    return s.padStart(8, "0"); // date
+  }
+  return String(value).trim();
 }
 
 interface ColumnMap {
@@ -231,7 +254,7 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
   });
 
   if (rows.length === 0) {
-    return { candles: [], symbol: "", detectedColumns: [], warnings: ["Empty file"] };
+    return { candles: [], symbol: "", symbols: [], detectedColumns: [], warnings: ["Empty file"] };
   }
 
   const warnings: string[] = [];
@@ -257,6 +280,7 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
     return {
       candles: [],
       symbol: "",
+      symbols: [],
       detectedColumns: [],
       warnings: [
         "Could not detect OHLC columns. Expected headers like Date,Open,High,Low,Close[,Volume] or MT5 tab-separated export.",
@@ -297,8 +321,11 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
       time = Math.floor(rawTimeVal.getTime() / 1000);
     } else {
       // String path: parse "2026.10.01" + "00:00" etc.
-      const dateStr = rawDateVal !== undefined ? String(rawDateVal ?? "") : undefined;
-      const timeStr = rawTimeVal !== undefined ? String(rawTimeVal ?? "") : undefined;
+      // When XLSX reads with `raw: true`, numeric-looking strings like
+      // "20261001" come back as numbers (20261001) and "000000" as 0. We
+      // pad them back to their canonical widths so the regexes match.
+      const dateStr = formatNumericDateTime(rawDateVal);
+      const timeStr = formatNumericDateTime(rawTimeVal);
       time = parseDateTimeParts(dateStr, timeStr);
     }
 
@@ -312,10 +339,13 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
 
     if (open === null || high === null || low === null || close === null) continue;
 
-    if (!symbol && columnMap.ticker !== undefined) {
-      const t = String(row[columnMap.ticker] ?? "").trim();
-      if (t) symbol = t;
+    // Per-row symbol: tag each candle with its own ticker so the UI can
+    // filter by symbol when the file contains multiple instruments.
+    let rowSymbol = "";
+    if (columnMap.ticker !== undefined) {
+      rowSymbol = String(row[columnMap.ticker] ?? "").trim();
     }
+    if (!symbol && rowSymbol) symbol = rowSymbol; // first symbol = primary
 
     candles.push({
       time,
@@ -324,20 +354,40 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
       low,
       close,
       ...(volume !== null && volume > 0 ? { volume } : undefined),
+      ...(rowSymbol ? { symbol: rowSymbol } : undefined),
     });
   }
+
+  // Collect all unique symbols (sorted) for the symbol-switcher dropdown.
+  const symbolSet = new Set<string>();
+  for (const c of candles) {
+    if (c.symbol) symbolSet.add(c.symbol);
+  }
+  const symbols = Array.from(symbolSet).sort();
 
   if (candles.length === 0) {
     warnings.push("No valid OHLC rows found after parsing.");
   }
 
-  // Sort ascending by time and dedupe (MT5 exports can sometimes have duplicates).
-  candles.sort((a, b) => a.time - b.time);
+  // Sort by (symbol, time) and dedupe. When the file contains multiple
+  // symbols, they share the same timestamps (e.g. all have an H1 candle at
+  // 00:00). Deduping on time alone would discard all but the last symbol's
+  // candle for each timestamp. We dedupe on (symbol, time) instead so each
+  // symbol keeps its own candle at each timestamp. Duplicates within the same
+  // symbol (genuine repeats in MT5 exports) are still collapsed.
+  candles.sort((a, b) => {
+    const sa = a.symbol ?? "";
+    const sb = b.symbol ?? "";
+    if (sa !== sb) return sa < sb ? -1 : 1;
+    return a.time - b.time;
+  });
   const dedup: Candle[] = [];
   for (const c of candles) {
     const last = dedup[dedup.length - 1];
-    if (last && last.time === c.time) {
-      dedup[dedup.length - 1] = c; // overwrite with later row
+    const lastSym = last?.symbol ?? "";
+    const curSym = c.symbol ?? "";
+    if (last && last.time === c.time && lastSym === curSym) {
+      dedup[dedup.length - 1] = c; // overwrite duplicate within same symbol
     } else {
       dedup.push(c);
     }
@@ -349,9 +399,15 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
     symbol = base.slice(0, 20);
   }
 
+  // If there was no ticker column, `symbols` is empty — synthesize a single
+  // entry from the inferred symbol so the UI's symbol dropdown still has a
+  // value to display.
+  const finalSymbols = symbols.length > 0 ? symbols : [symbol];
+
   return {
     candles: dedup,
     symbol,
+    symbols: finalSymbols,
     detectedColumns: detectedColumns.filter(Boolean),
     warnings,
   };

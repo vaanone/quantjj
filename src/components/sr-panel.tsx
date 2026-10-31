@@ -136,11 +136,11 @@ export function SRPanel({
           )}
         </div>
 
-        {/* Resistances first (above current price) */}
+        {/* Resistances first (above current price) — GREEN */}
         <LevelGroup
           label="Resistance (above)"
           icon={<TrendingUp className="h-3 w-3" />}
-          color="text-amber-400"
+          color="text-emerald-400"
           levels={resistances}
           fullLevels={levels}
           visible={visible}
@@ -150,11 +150,11 @@ export function SRPanel({
 
         <div className="my-2 h-px bg-white/5" />
 
-        {/* Supports (below current price) */}
+        {/* Supports (below current price) — RED */}
         <LevelGroup
           label="Support (below)"
           icon={<TrendingDown className="h-3 w-3" />}
-          color="text-emerald-400"
+          color="text-red-400"
           levels={supports}
           fullLevels={levels}
           visible={visible}
@@ -228,8 +228,8 @@ function LevelGroup({
                 transition-colors
                 ${isVisible
                   ? level.type === "resistance"
-                    ? "border-amber-500/30 bg-amber-500/[0.06]"
-                    : "border-emerald-500/30 bg-emerald-500/[0.06]"
+                    ? "border-emerald-500/30 bg-emerald-500/[0.06]"
+                    : "border-red-500/30 bg-red-500/[0.06]"
                   : "border-white/5 bg-white/[0.01]"}
               `}
             >
@@ -246,7 +246,7 @@ function LevelGroup({
                       {" · "}
                       <span
                         className={
-                          level.type === "resistance" ? "text-amber-400/70" : "text-emerald-400/70"
+                          level.type === "resistance" ? "text-emerald-400/70" : "text-red-400/70"
                         }
                       >
                         {distPct >= 0 ? "+" : ""}
