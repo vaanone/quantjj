@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TradingChart } from "@/components/trading-chart";
-import { FileUploader } from "@/components/file-uploader";
+import { DriveFilePicker } from "@/components/drive-file-picker";
 import { LevelsPanel } from "@/components/levels-panel";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { detectSupportResistance, getTop6Levels, userLevelsToLines } from "@/lib/support-resistance";
@@ -222,7 +222,7 @@ export default function Home() {
           )}
 
           {/* Upload buttons: Files + Folder */}
-          <FileUploader onLoaded={handleLoaded} compact />
+          <DriveFilePicker onLoaded={handleLoaded} compact />
         </div>
       </header>
 
@@ -357,7 +357,7 @@ function EmptyState({
         </p>
       </div>
       <div className="w-full max-w-xl">
-        <FileUploader onLoaded={onLoaded} />
+        <DriveFilePicker onLoaded={onLoaded} />
       </div>
     </div>
   );
