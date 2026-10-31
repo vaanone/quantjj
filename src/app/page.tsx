@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { CandlestickChart, Sparkles, Github, Info, Zap, PanelRight } from "lucide-react";
+import { CandlestickChart, Github, Info, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,19 +10,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { TradingChart } from "@/components/trading-chart";
 import { FileUploader } from "@/components/file-uploader";
 import { SRPanel } from "@/components/sr-panel";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { generateSampleData, SAMPLE_PRESETS } from "@/lib/sample-data";
 import { detectSupportResistance, type SRLevel } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle } from "@/lib/excel-parser";
@@ -61,9 +53,6 @@ export default function Home() {
   // Detect candle timeframe (M1, M5, H1, D1, ...) from candle intervals.
   const timeframe = useMemo(() => detectTimeframe(candles), [candles]);
 
-  // How many days of candles to show on initial load (default 10).
-  const VISIBLE_RANGE_DAYS = 10;
-
   // Track which level indices the user has explicitly HIDDEN (rather than which
   // are visible). This way the default "all visible" is implicit — no reset
   // effect needed when new data arrives — and toggling is a pure set operation.
@@ -90,15 +79,6 @@ export default function Home() {
     },
     [],
   );
-
-  const handleLoadSample = useCallback((presetIdx: number) => {
-    const preset = SAMPLE_PRESETS[presetIdx];
-    const data = generateSampleData(preset);
-    setCandles(data);
-    setSymbol(preset.symbol);
-    setFileName(`sample_${preset.symbol.toLowerCase()}_h1.csv`);
-    setHiddenLevels(new Set());
-  }, []);
 
   const toggleLevel = useCallback((idx: number) => {
     setHiddenLevels((prev) => {
@@ -167,43 +147,6 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-2">
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex">
-                  <Select onValueChange={(v) => handleLoadSample(Number(v))}>
-                    <SelectTrigger
-                      className="h-8 w-[150px] border-white/15 bg-white/5 text-xs text-white hover:bg-white/10"
-                      size="sm"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                        <SelectValue placeholder="Load sample" />
-                      </span>
-                    </SelectTrigger>
-                    <SelectContent className="border-white/15 bg-[#15161d] text-white">
-                      {SAMPLE_PRESETS.map((p, i) => (
-                        <SelectItem
-                          key={p.symbol}
-                          value={String(i)}
-                          className="focus:bg-white/10"
-                        >
-                          <span className="font-mono">{p.symbol}</span>
-                          <span className="ml-2 text-[10px] text-white/40">
-                            {p.bars} bars · H1
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                Try the chart instantly with synthetic OHLC data
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
           <FileUploader onLoaded={handleLoaded} compact />
 
           <TooltipProvider delayDuration={200}>
@@ -236,14 +179,11 @@ export default function Home() {
           {timeframe && (
             <Stat
               label="TF"
-              value={
-                <span className="font-bold text-emerald-400">{timeframe.label}</span>
-              }
+              value={<span className="font-bold text-emerald-400">{timeframe.label}</span>}
             />
           )}
           <Stat label="Candles" value={String(candles.length)} />
           <Stat label="Range" value={`${formatDate(firstTime)} → ${formatDate(lastTime)}`} />
-          <Stat label="View" value={`last ${VISIBLE_RANGE_DAYS}d`} />
           <Stat
             label="S/R"
             value={
@@ -303,7 +243,7 @@ export default function Home() {
       {/* ============================================================== BODY */}
       <main className="flex-1 overflow-hidden">
         {candles.length === 0 ? (
-          <EmptyState onLoadSample={handleLoadSample} onLoaded={handleLoaded} />
+          <EmptyState onLoaded={handleLoaded} />
         ) : isLg ? (
           <ResizablePanelGroup direction="horizontal" className="h-full">
             <ResizablePanel defaultSize={75} minSize={50}>
@@ -313,7 +253,6 @@ export default function Home() {
                 visibleLevels={visibleLevels}
                 symbol={symbol}
                 timeframe={timeframe}
-                visibleRangeDays={VISIBLE_RANGE_DAYS}
               />
             </ResizablePanel>
             <ResizableHandle withHandle className="bg-white/10" />
@@ -339,7 +278,6 @@ export default function Home() {
             visibleLevels={visibleLevels}
             symbol={symbol}
             timeframe={timeframe}
-            visibleRangeDays={VISIBLE_RANGE_DAYS}
           />
         )}
       </main>
@@ -353,14 +291,12 @@ function ChartArea({
   visibleLevels,
   symbol,
   timeframe,
-  visibleRangeDays,
 }: {
   candles: Candle[];
   srLevels: SRLevel[];
   visibleLevels: Set<number>;
   symbol: string;
   timeframe: TimeframeInfo | null;
-  visibleRangeDays: number;
 }) {
   return (
     <div className="relative h-full w-full bg-[#0e0f14]">
@@ -370,7 +306,6 @@ function ChartArea({
         visibleLevels={visibleLevels}
         symbol={symbol}
         timeframe={timeframe}
-        visibleRangeDays={visibleRangeDays}
       />
       {/* Symbol + timeframe watermark (top-left) */}
       <div className="pointer-events-none absolute left-4 top-3 select-none">
@@ -383,7 +318,7 @@ function ChartArea({
           )}
         </div>
         <div className="font-mono text-[10px] tracking-widest text-white/[0.05]">
-          CANDLESCOPE · {candles.length} BARS · LAST {visibleRangeDays}D
+          CANDLESCOPE · {candles.length} BARS · FULL HISTORY
         </div>
       </div>
     </div>
@@ -392,10 +327,8 @@ function ChartArea({
 
 // ============================================================ EMPTY STATE
 function EmptyState({
-  onLoadSample,
   onLoaded,
 }: {
-  onLoadSample: (idx: number) => void;
   onLoaded: (r: { candles: Candle[]; symbol: string }, name: string) => void;
 }) {
   return (
@@ -415,26 +348,6 @@ function EmptyState({
         <FileUploader onLoaded={onLoaded} />
       </div>
 
-      <div className="flex w-full max-w-xl items-center gap-3">
-        <div className="h-px flex-1 bg-white/10" />
-        <span className="text-[10px] uppercase tracking-wider text-white/40">or try instantly</span>
-        <div className="h-px flex-1 bg-white/10" />
-      </div>
-
-      <div className="grid w-full max-w-xl grid-cols-3 gap-2">
-        {SAMPLE_PRESETS.map((p, i) => (
-          <button
-            key={p.symbol}
-            onClick={() => onLoadSample(i)}
-            className="group flex flex-col items-center gap-1 rounded-lg border border-white/10 bg-white/[0.02] p-3 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/5"
-          >
-            <Zap className="h-4 w-4 text-amber-400" />
-            <span className="font-mono text-sm font-semibold">{p.symbol}</span>
-            <span className="text-[10px] text-white/40">{p.bars} bars · H1</span>
-          </button>
-        ))}
-      </div>
-
       <div className="w-full max-w-xl rounded-lg border border-white/10 bg-white/[0.02] p-4 text-xs text-white/60">
         <p className="mb-2 font-semibold text-white/80">Supported file formats:</p>
         <ul className="space-y-1.5">
@@ -442,7 +355,10 @@ function EmptyState({
             <span className="text-emerald-400">●</span>
             <span>
               <span className="text-white/80">MT5 History Center</span> — tab-separated, columns
-              like <code className="rounded bg-white/5 px-1 font-mono text-[10px]">&lt;DATE&gt; &lt;TIME&gt; &lt;OPEN&gt; &lt;HIGH&gt; &lt;LOW&gt; &lt;CLOSE&gt;</code>
+              like{" "}
+              <code className="rounded bg-white/5 px-1 font-mono text-[10px]">
+                &lt;DATE&gt; &lt;TIME&gt; &lt;OPEN&gt; &lt;HIGH&gt; &lt;LOW&gt; &lt;CLOSE&gt;
+              </code>
             </span>
           </li>
           <li className="flex gap-2">

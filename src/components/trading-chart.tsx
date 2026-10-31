@@ -22,7 +22,6 @@ interface TradingChartProps {
   visibleLevels: Set<number>; // indices into srLevels that should be drawn
   symbol: string;
   timeframe?: TimeframeInfo | null;
-  visibleRangeDays?: number; // show last N days on initial load (default 10)
 }
 
 const COLORS = {
@@ -36,16 +35,12 @@ const COLORS = {
   support: "#10b981",
 };
 
-const ONE_DAY = 86400;
-const TEN_DAYS = 10 * ONE_DAY;
-
 export function TradingChart({
   candles,
   srLevels,
   visibleLevels,
   symbol,
   timeframe,
-  visibleRangeDays = 10,
 }: TradingChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -197,7 +192,10 @@ export function TradingChart({
     };
   }, []);
 
-  // -- Update candle data + fit to last N days -------------------------------
+  // -- Update candle data: show the FULL loaded history ----------------------
+  // All candles from the CSV are rendered; the time scale fits to the entire
+  // dataset so the user sees their complete original data on first load. The
+  // user can still scroll/zoom freely afterwards.
   useEffect(() => {
     if (!candleSeriesRef.current || !chartRef.current) return;
     if (candles.length === 0) return;
@@ -211,34 +209,9 @@ export function TradingChart({
     }));
     candleSeriesRef.current.setData(candleData);
 
-    // Show last `visibleRangeDays` days by default. We use setVisibleRange so
-    // the user can still scroll/zoom back further if they want — the data is
-    // all there, only the initial viewport is constrained.
-    const lastTime = candles[candles.length - 1].time;
-    const rangeSeconds = visibleRangeDays * ONE_DAY;
-
-    // Walk backwards from the last candle to find the earliest candle still
-    // within the visible window. This handles weekends/gaps correctly (we want
-    // N days worth of *trading* candles, not N*24h of empty space).
-    let fromIdx = 0;
-    for (let i = candles.length - 1; i >= 0; i--) {
-      if (lastTime - candles[i].time > rangeSeconds) {
-        fromIdx = i + 1;
-        break;
-      }
-    }
-
-    if (fromIdx < candles.length - 1) {
-      const fromTime = candles[fromIdx].time as UTCTimestamp;
-      const toTime = lastTime as UTCTimestamp;
-      chartRef.current.timeScale().setVisibleRange({
-        from: fromTime,
-        to: toTime,
-      });
-    } else {
-      chartRef.current.timeScale().fitContent();
-    }
-  }, [candles, visibleRangeDays]);
+    // Show the entire loaded history — no arbitrary slice or last-N-days.
+    chartRef.current.timeScale().fitContent();
+  }, [candles]);
 
   // -- Update S/R price lines -----------------------------------------------
   useEffect(() => {

@@ -206,11 +206,23 @@ export async function parseFile(file: File): Promise<ParseResult> {
 }
 
 export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult {
-  const workbook = XLSX.read(buffer, { type: "array", cellDates: false });
+  // Read with `cellDates: true` so any date-looking cell is returned as a JS
+  // Date object instead of an Excel serial number. This is critical because
+  // MT5 CSV exports like "2026.10.01 00:00" otherwise get auto-parsed by XLSX
+  // into Excel serial numbers (e.g. 46296.04...) which my string-based date
+  // regexes can't handle — and the fallback `Date.parse("46296")` would
+  // silently produce year 46296 instead of erroring.
+  const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
 
   // array_of_arrays: each row is an array; first row is row 0.
+  // `raw: true` returns the underlying cell value (number, string, or Date
+  // when `cellDates: true`). For date-looking cells, XLSX returns a JS Date
+  // object — which we convert directly to unix seconds in the row loop below.
+  // For numeric cells (OHLC, volume), XLSX returns a number — which `toNumber`
+  // handles. For string cells (ticker, plain-text dates that XLSX didn't
+  // auto-detect as dates), XLSX returns the raw string.
   const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
     header: 1,
     raw: true,
@@ -269,9 +281,26 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
     const row = rows[i];
     if (!row || row.length === 0) continue;
 
-    const dateStr = columnMap.date !== undefined ? String(row[columnMap.date] ?? "") : undefined;
-    const timeStr = columnMap.time !== undefined ? String(row[columnMap.time] ?? "") : undefined;
-    const time = parseDateTimeParts(dateStr, timeStr);
+    // With `cellDates: true` + `raw: false`, date cells arrive as JS Date
+    // objects. Convert directly to unix seconds to avoid the string-parsing
+    // path (which can't handle Excel serial numbers and would silently
+    // produce wrong dates).
+    let time: number | null = null;
+    const rawDateVal = columnMap.date !== undefined ? row[columnMap.date] : undefined;
+    const rawTimeVal = columnMap.time !== undefined ? row[columnMap.time] : undefined;
+
+    if (rawDateVal instanceof Date) {
+      // Date object from a date-formatted cell — use directly.
+      time = Math.floor(rawDateVal.getTime() / 1000);
+    } else if (rawTimeVal instanceof Date) {
+      // Some exports put the full timestamp in the "time" column.
+      time = Math.floor(rawTimeVal.getTime() / 1000);
+    } else {
+      // String path: parse "2026.10.01" + "00:00" etc.
+      const dateStr = rawDateVal !== undefined ? String(rawDateVal ?? "") : undefined;
+      const timeStr = rawTimeVal !== undefined ? String(rawTimeVal ?? "") : undefined;
+      time = parseDateTimeParts(dateStr, timeStr);
+    }
 
     if (time === null) continue;
 
