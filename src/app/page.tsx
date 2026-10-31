@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,7 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<string>("");
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+  const [chartLoading, setChartLoading] = useState(true);
   const isLg = useMediaQuery("(min-width: 1024px)", true);
 
   const handleLoaded = useCallback(
@@ -235,7 +236,12 @@ export default function Home() {
           )}
 
           {/* Upload buttons: Files + Folder */}
-          <DriveFilePicker onLoaded={handleLoaded} onLastUpdate={setLastUpdate} compact />
+          <DriveFilePicker
+            onLoaded={handleLoaded}
+            onLastUpdate={setLastUpdate}
+            onLoadingChange={setChartLoading}
+            compact
+          />
         </div>
       </header>
 
@@ -277,8 +283,18 @@ export default function Home() {
       )}
 
       {/* ============================================================== BODY */}
-      <main className="flex-1 overflow-hidden">
-        {candles.length === 0 ? (
+      <main className="relative flex-1 overflow-hidden">
+        {/* Full-screen loading overlay — shown on first load while Drive files
+            are being fetched and parsed. */}
+        {chartLoading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0a0b0f]">
+            <div className="flex flex-col items-center gap-6">
+              <img src="/logo.png" alt="VaanPulse" className="h-16 w-16 rounded-lg object-contain opacity-80" />
+              <LoadingDots />
+            </div>
+          </div>
+        )}
+        {candles.length === 0 && !chartLoading ? (
           <EmptyState onLoaded={handleLoaded} />
         ) : isLg ? (
           <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -411,4 +427,23 @@ function getOrdinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
   return s[(v - 20) % 10] || s[v] || s[0];
+}
+
+// "Loading Chart" with animated dots that grow from . to .....
+// Uses a JS interval (250ms) so the animation works in all browsers
+// without relying on CSS @keyframes content animations.
+function LoadingDots() {
+  const [dotCount, setDotCount] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDotCount((prev) => (prev >= 5 ? 0 : prev + 1));
+    }, 250);
+    return () => clearInterval(interval);
+  }, []);
+  return (
+    <span className="font-mono text-2xl text-white/80">
+      Loading Chart
+      <span className="text-emerald-400">{".".repeat(dotCount)}</span>
+    </span>
+  );
 }

@@ -19,6 +19,10 @@ interface DriveFilePickerProps {
   /** Called with the newest file's modifiedTime (ISO string) whenever the
    *  Drive folder is fetched. Used to display "last update" in the header. */
   onLastUpdate?: (modifiedTime: string | null) => void;
+  /** Called whenever the loading state changes (fetching list or
+   *  auto-loading files). The parent uses this to show a full-screen
+   *  "Loading Chart..." overlay on first load. */
+  onLoadingChange?: (isLoading: boolean) => void;
   compact?: boolean;
 }
 
@@ -31,7 +35,7 @@ interface DriveFile {
 // How often to poll the Drive folder for new files (ms).
 const POLL_INTERVAL = 30000; // 30 seconds
 
-export function DriveFilePicker({ onLoaded, onLastUpdate, compact = false }: DriveFilePickerProps) {
+export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compact = false }: DriveFilePickerProps) {
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [loadingList, setLoadingList] = useState(false);
   const [loadingFile, setLoadingFile] = useState<string | null>(null);
@@ -47,6 +51,12 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, compact = false }: Dri
 
   useEffect(() => { filesRef.current = files; }, [files]);
   useEffect(() => { loadedIdsRef.current = loadedIds; }, [loadedIds]);
+
+  // Notify parent whenever the loading state changes so it can show a
+  // full-screen "Loading Chart..." overlay during the initial Drive fetch.
+  useEffect(() => {
+    onLoadingChange?.(loadingList || autoLoading);
+  }, [loadingList, autoLoading, onLoadingChange]);
 
   // Fetch the list of CSV files from our API route.
   const fetchFiles = useCallback(async (silent = false) => {
