@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 
-// In-memory online user tracking using a simple heartbeat approach.
-// Each browser pings this endpoint every 15 seconds with a unique session ID.
-// We prune sessions that haven't pinged in 45 seconds (3 missed heartbeats).
+// In-memory tracking of online users + total visits.
 //
-// This avoids the need for a separate WebSocket server — everything runs inside
-// the Next.js dev server (port 3000) which the browser CAN reach.
+// Online: each browser pings every 15s with a unique session ID. Sessions
+// that haven't pinged in 45s are pruned.
+//
+// Visits: a running counter of unique session IDs we've ever seen. It only
+// ever increases (new visitors add to it). This is in-memory, so it resets
+// when the server restarts — sufficient for a simple "Visited" indicator.
 
-// Map of sessionId → lastSeenTimestamp (ms).
 const sessions = new Map<string, number>();
-const HEARTBEAT_TIMEOUT_MS = 45_000; // prune after 3 missed 15s heartbeats
+const visitedSet = new Set<string>(); // all session IDs ever seen
+const HEARTBEAT_TIMEOUT_MS = 45_000;
 const CLEANUP_INTERVAL_MS = 10_000;
 
-// Periodically prune stale sessions.
 let lastCleanup = 0;
 function cleanup() {
   const now = Date.now();
@@ -31,12 +32,13 @@ export async function GET(request: Request) {
   const sessionId = searchParams.get("id");
 
   if (sessionId) {
-    // Heartbeat: update last-seen time.
     sessions.set(sessionId, Date.now());
+    visitedSet.add(sessionId);
   }
 
   return NextResponse.json({
     online: sessions.size,
+    visited: visitedSet.size,
     timestamp: Date.now(),
   });
 }
@@ -48,9 +50,10 @@ export async function POST(request: Request) {
 
   if (sessionId) {
     sessions.set(sessionId, Date.now());
+    visitedSet.add(sessionId);
   }
 
-  return NextResponse.json({ online: sessions.size });
+  return NextResponse.json({ online: sessions.size, visited: visitedSet.size });
 }
 
 export async function DELETE(request: Request) {
@@ -59,8 +62,9 @@ export async function DELETE(request: Request) {
 
   if (sessionId) {
     sessions.delete(sessionId);
+    // Note: we DON'T remove from visitedSet — visits are cumulative.
   }
 
   cleanup();
-  return NextResponse.json({ online: sessions.size });
+  return NextResponse.json({ online: sessions.size, visited: visitedSet.size });
 }

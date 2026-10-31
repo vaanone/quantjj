@@ -3,24 +3,23 @@
 import { useEffect, useState } from "react";
 
 /**
- * Tracks online users via the /api/online heartbeat endpoint.
+ * Tracks online users + total visits via the /api/online heartbeat endpoint.
  *
- * On mount, generates a unique session ID, registers it with the server,
- * then pings every 15 seconds to stay "alive". The server prunes sessions
- * that haven't pinged in 45 seconds. The current online count is polled
- * every 5 seconds so new users/joins are reflected without a full
- * WebSocket connection.
- *
- * Returns 0 while the first request is in flight, then the live count.
+ * - `online`: current live users (heartbeat-based, pruned after 45s of silence)
+ * - `visited`: cumulative unique visitors (ever-increasing, resets on server restart)
  */
 const HEARTBEAT_INTERVAL = 15_000; // 15s
 const POLL_INTERVAL = 5_000; // 5s
 
-export function useOnlineCount(): number {
-  const [count, setCount] = useState(0);
+export interface OnlineStats {
+  online: number;
+  visited: number;
+}
+
+export function useOnlineCount(): OnlineStats {
+  const [stats, setStats] = useState<OnlineStats>({ online: 0, visited: 0 });
 
   useEffect(() => {
-    // Stable per-tab session ID so reconnection after HMR doesn't inflate count.
     const sessionId =
       sessionStorage.getItem("vaanpulse-session") ||
       `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -28,40 +27,33 @@ export function useOnlineCount(): number {
 
     let cancelled = false;
 
-    // Register + fetch count.
     const ping = async () => {
       try {
         const res = await fetch(`/api/online?id=${sessionId}`);
         if (!cancelled && res.ok) {
           const data = await res.json();
-          setCount(data.online);
+          setStats({ online: data.online, visited: data.visited });
         }
       } catch {
-        // Network errors are non-fatal — we'll retry on the next interval.
+        // Network errors are non-fatal.
       }
     };
 
-    // Immediate ping on mount.
     ping();
-
-    // Heartbeat: keep our session alive.
     const heartbeat = setInterval(ping, HEARTBEAT_INTERVAL);
 
-    // Poll for the current count more frequently than the heartbeat so
-    // other users joining/leaving is reflected quickly.
     const poll = setInterval(async () => {
       try {
         const res = await fetch("/api/online");
         if (!cancelled && res.ok) {
           const data = await res.json();
-          setCount(data.online);
+          setStats({ online: data.online, visited: data.visited });
         }
       } catch {
         // ignore
       }
     }, POLL_INTERVAL);
 
-    // On unmount / page close, deregister so the count drops immediately.
     const handleUnload = () => {
       navigator.sendBeacon(`/api/online?id=${sessionId}`);
     };
@@ -72,10 +64,9 @@ export function useOnlineCount(): number {
       clearInterval(heartbeat);
       clearInterval(poll);
       window.removeEventListener("beforeunload", handleUnload);
-      // Best-effort deregistration.
       fetch(`/api/online?id=${sessionId}`, { method: "DELETE" }).catch(() => {});
     };
   }, []);
 
-  return count;
+  return stats;
 }

@@ -46,7 +46,7 @@ export default function Home() {
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
-  const onlineCount = useOnlineCount();
+  const onlineStats = useOnlineCount();
   const isLg = useMediaQuery("(min-width: 1024px)", true);
 
   const handleLoaded = useCallback(
@@ -225,16 +225,26 @@ export default function Home() {
             </Badge>
           )}
 
-          {/* Last file update date/time + Online count */}
+          {/* Last Update label + timestamp, then Visited count */}
           {lastUpdate && (
-            <div className="flex flex-col items-start leading-tight">
-              <span className="text-[9px] uppercase tracking-wider text-white/30">
-                Online: <span className="font-bold text-emerald-400">{onlineCount}</span>
-              </span>
-              <span className="font-mono text-xs text-white/50">
-                {formatLastUpdate(lastUpdate)}
-              </span>
-            </div>
+            <>
+              <div className="flex flex-col items-start leading-tight">
+                <span className="text-[9px] uppercase tracking-wider text-white/30">
+                  Last Update @
+                </span>
+                <span className="font-mono text-xs text-white/50">
+                  {formatLastUpdate(lastUpdate)}
+                </span>
+              </div>
+              <div className="flex flex-col items-start leading-tight">
+                <span className="text-[9px] uppercase tracking-wider text-white/30">
+                  Visited
+                </span>
+                <span className="font-mono text-xs text-white/50">
+                  <span className="font-bold text-emerald-400">{onlineStats.visited}</span>
+                </span>
+              </div>
+            </>
           )}
 
           {/* Upload buttons: Files + Folder */}
