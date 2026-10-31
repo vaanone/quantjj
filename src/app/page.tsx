@@ -16,6 +16,7 @@ import { TradingChart } from "@/components/trading-chart";
 import { DriveFilePicker } from "@/components/drive-file-picker";
 import { LevelsPanel } from "@/components/levels-panel";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useOnlineCount } from "@/hooks/use-online-count";
 import { detectSupportResistance, getTop6Levels, userLevelsToLines } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle, ParseResult } from "@/lib/excel-parser";
@@ -341,6 +342,7 @@ function ChartArea({
   symbol: string;
   timeframe: TimeframeInfo | null;
 }) {
+  const onlineCount = useOnlineCount();
   return (
     <div className="relative h-full w-full bg-[#0e0f14]">
       <TradingChart
@@ -361,6 +363,16 @@ function ChartArea({
         <div className="font-mono text-[10px] tracking-widest text-white/[0.05]">
           VAANPULSE · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
         </div>
+      </div>
+      {/* Online users counter — bottom-right of the chart */}
+      <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1.5 rounded-md border border-white/10 bg-black/40 px-2.5 py-1 backdrop-blur-sm">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        </span>
+        <span className="font-mono text-[11px] text-white/70">
+          Online: <span className="font-bold text-emerald-400">{onlineCount}</span>
+        </span>
       </div>
     </div>
   );
