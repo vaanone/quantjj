@@ -16,7 +16,6 @@ import { TradingChart } from "@/components/trading-chart";
 import { DriveFilePicker } from "@/components/drive-file-picker";
 import { LevelsPanel } from "@/components/levels-panel";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useOnlineCount } from "@/hooks/use-online-count";
 import { detectSupportResistance, getTop6Levels, userLevelsToLines } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle, ParseResult } from "@/lib/excel-parser";
@@ -46,7 +45,6 @@ export default function Home() {
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
-  const onlineStats = useOnlineCount();
   const isLg = useMediaQuery("(min-width: 1024px)", true);
 
   const handleLoaded = useCallback(
@@ -225,26 +223,16 @@ export default function Home() {
             </Badge>
           )}
 
-          {/* Last Update label + timestamp, then Visited count */}
+          {/* Last Update label + timestamp */}
           {lastUpdate && (
-            <>
-              <div className="flex flex-col items-start leading-tight">
-                <span className="text-[9px] uppercase tracking-wider text-white/30">
-                  Last Update @
-                </span>
-                <span className="font-mono text-xs text-white/50">
-                  {formatLastUpdate(lastUpdate)}
-                </span>
-              </div>
-              <div className="flex flex-col items-start leading-tight">
-                <span className="text-[9px] uppercase tracking-wider text-white/30">
-                  Visited
-                </span>
-                <span className="font-mono text-xs text-white/50">
-                  <span className="font-bold text-emerald-400">{onlineStats.visited}</span>
-                </span>
-              </div>
-            </>
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-[9px] uppercase tracking-wider text-white/30">
+                Last Update @
+              </span>
+              <span className="font-mono text-xs text-white/50">
+                {formatLastUpdate(lastUpdate)}
+              </span>
+            </div>
           )}
 
           {/* Upload buttons: Files + Folder */}
