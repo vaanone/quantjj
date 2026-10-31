@@ -364,13 +364,14 @@ function ChartArea({
           VAANPULSE · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
         </div>
       </div>
-      {/* Online users counter — bottom-right of the chart */}
-      <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1.5 rounded-md border border-white/10 bg-black/40 px-2.5 py-1 backdrop-blur-sm">
-        <span className="relative flex h-2 w-2">
+      {/* Online users counter — bottom-right of the chart, positioned just
+          above the time axis so it's fully visible */}
+      <div className="pointer-events-none absolute bottom-8 right-4 flex items-center gap-1.5 rounded-md border border-white/10 bg-black/40 px-2 py-0.5 backdrop-blur-sm">
+        <span className="relative flex h-1.5 w-1.5">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
         </span>
-        <span className="font-mono text-[11px] text-white/70">
+        <span className="font-mono text-[10px] text-white/70">
           Online: <span className="font-bold text-emerald-400">{onlineCount}</span>
         </span>
       </div>
