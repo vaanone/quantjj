@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import {
-  Cloud,
   Download,
   Loader2,
   RefreshCw,
@@ -11,7 +10,6 @@ import {
   FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { parseBuffer, type ParseResult } from "@/lib/excel-parser";
 import { toast } from "sonner";
 
@@ -35,9 +33,7 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
   const [loadingFile, setLoadingFile] = useState<string | null>(null);
   const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [autoLoading, setAutoLoading] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   // Track whether we've done the initial auto-load so we don't repeat it.
   const hasAutoLoadedRef = useRef(false);
   // Keep latest `files` and `loadedIds` in refs so the poll interval can read
@@ -164,17 +160,6 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
     return () => clearInterval(interval);
   }, [fetchFiles, autoLoadAll]);
 
-  // Close dropdown when clicking outside.
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
   // Manual "load all" button (re-loads any unloaded files).
   const loadAll = useCallback(async () => {
     const unloaded = filesRef.current.filter(
@@ -187,110 +172,32 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
     await autoLoadAll(unloaded);
   }, [autoLoadAll]);
 
-  // ====== Compact mode (header button + dropdown) ======
+  // ====== Compact mode (header — refresh button only) ======
+  // The Drive dropdown is hidden per user request. Auto-load + polling handle
+  // everything automatically. This button is the "emergency" manual refresh
+  // for when the user wants to force a re-fetch + re-load immediately.
   if (compact) {
     return (
-      <div className="relative" ref={dropdownRef}>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (files.length === 0 && !loadingList) fetchFiles();
-              setDropdownOpen(!dropdownOpen);
-            }}
-            disabled={loadingList || autoLoading}
-            className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-          >
-            {loadingList || autoLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Cloud className="h-4 w-4" />
-            )}
-            <span className="hidden sm:inline">Drive</span>
-            {files.length > 0 && (
-              <Badge className="ml-1 h-4 px-1 text-[9px] font-mono">
-                {loadedIds.size}/{files.length}
-              </Badge>
-            )}
-          </Button>
-          {files.length > 0 && loadedIds.size < files.length && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={loadAll}
-              disabled={loadingFile !== null}
-              className="h-8 px-2 text-[11px] text-white/60 hover:text-white"
-              title="Load remaining files"
-            >
-              {loadingFile ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Download className="h-3.5 w-3.5" />
-              )}
-            </Button>
-          )}
-        </div>
-
-        {/* Dropdown panel */}
-        {dropdownOpen && (
-          <div className="absolute right-0 top-full z-50 mt-1 w-72 rounded-lg border border-white/15 bg-[#15161d] p-2 shadow-xl">
-            <div className="mb-2 flex items-center justify-between px-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
-                Drive Files ({loadedIds.size}/{files.length})
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => fetchFiles()}
-                disabled={loadingList}
-                className="h-6 w-6 p-0 text-white/40 hover:text-white"
-              >
-                <RefreshCw className={`h-3 w-3 ${loadingList ? "animate-spin" : ""}`} />
-              </Button>
-            </div>
-
-            {error && (
-              <div className="rounded-md border border-red-500/20 bg-red-500/5 p-2 text-[11px] text-red-400">
-                <AlertCircle className="mb-1 h-3 w-3" />
-                {error.slice(0, 100)}
-              </div>
-            )}
-
-            <div className="max-h-64 overflow-y-auto">
-              {files.length === 0 && !loadingList && !error && (
-                <p className="py-4 text-center text-[11px] text-white/40">
-                  No CSV files found in the Drive folder.
-                </p>
-              )}
-              {files.map((file) => {
-                const isLoaded = loadedIds.has(file.id);
-                const isLoading = loadingFile === file.id;
-                return (
-                  <button
-                    key={file.id}
-                    onClick={() => loadFile(file)}
-                    disabled={isLoading}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-white/80 transition-colors hover:bg-white/10 disabled:opacity-50"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-emerald-400" />
-                    ) : isLoaded ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
-                    ) : (
-                      <FileText className="h-3.5 w-3.5 shrink-0 text-white/40" />
-                    )}
-                    <span className="flex-1 truncate font-mono">{file.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-2 border-t border-white/5 px-2 pt-2 text-[10px] text-white/30">
-              Auto-refreshes every 30s · new files load automatically
-            </p>
-          </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => fetchFiles().then((fileList) => {
+          // After a manual refresh, auto-load any files not yet loaded.
+          const unloaded = fileList.filter(
+            (f) => !loadedIdsRef.current.has(f.id),
+          );
+          if (unloaded.length > 0) autoLoadAll(unloaded);
+        })}
+        disabled={loadingList || autoLoading}
+        className="h-8 w-8 p-0 text-white/60 hover:bg-white/10 hover:text-white"
+        title="Refresh Drive files"
+      >
+        {loadingList || autoLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <RefreshCw className="h-4 w-4" />
         )}
-      </div>
+      </Button>
     );
   }
 
