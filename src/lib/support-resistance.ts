@@ -1,4 +1,4 @@
-// Support & Resistance detection.
+// Pivot Levels detection.
 //
 // Algorithm (industry-standard swing-pivot + clustering approach):
 //

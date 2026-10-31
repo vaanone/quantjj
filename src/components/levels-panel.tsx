@@ -48,7 +48,7 @@ export function LevelsPanel({ lines, lastClose, fileName, symbol }: LevelsPanelP
       {/* The 6 S/R levels — Resistance I, Support I, Resistance II, ... */}
       <section className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/60">
-          Support &amp; Resistance
+          Pivot Levels
         </h2>
 
         {lines.length === 0 ? (

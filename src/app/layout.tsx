@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VaanPulse — Daily Support & Resistance",
-  description: "TradingView-style candlestick chart for MT5 Excel/CSV exports, with automatic support & resistance detection.",
+  title: "JJPIVOX — Daily Pivot Levels",
+  description: "TradingView-style candlestick chart for MT5 Excel/CSV exports, with automatic pivot levels detection.",
   keywords: ["trading", "MT5", "candlestick", "support resistance", "lightweight-charts"],
   authors: [{ name: "Vaan One" }],
   icons: {
