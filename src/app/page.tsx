@@ -353,7 +353,7 @@ function EmptyState({
         <h2 className="text-2xl font-semibold">Vaan Pivot</h2>
         <p className="mt-2 max-w-md text-sm text-white/60">
           Upload MT5 candlestick CSV files to load them into the chart. Support &amp; resistance
-          levels are read from columns J–O.
+          levels are read from columns H–O.
         </p>
       </div>
       <div className="w-full max-w-xl">

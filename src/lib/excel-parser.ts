@@ -143,10 +143,11 @@ function formatNumericDateTime(value: unknown): string | undefined {
   return String(value).trim();
 }
 
-// Columns J through O (Excel letters) → 0-indexed positions.
-// The user puts pre-computed S/R price values in these columns. H & I are
-// intentionally ignored (per user instruction).
+// Columns H through O (Excel letters) → 0-indexed positions.
+// The user puts pre-computed S/R price values in these columns.
 const USER_LEVEL_COLUMNS: { letter: string; index: number }[] = [
+  { letter: "H", index: 7 },
+  { letter: "I", index: 8 },
   { letter: "J", index: 9 },
   { letter: "K", index: 10 },
   { letter: "L", index: 11 },
@@ -156,7 +157,7 @@ const USER_LEVEL_COLUMNS: { letter: string; index: number }[] = [
 ];
 
 /**
- * Scans columns J–O of the raw rows and extracts the first non-empty numeric
+ * Scans columns H–O of the raw rows and extracts the first non-empty numeric
  * value from each. These are the user's pre-computed support/resistance levels
  * (constant across all rows — S/R levels don't change per candle).
  *
