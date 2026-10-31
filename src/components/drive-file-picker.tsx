@@ -26,6 +26,9 @@ interface DriveFile {
   name: string;
 }
 
+// How often to poll the Drive folder for new files (ms).
+const POLL_INTERVAL = 30000; // 30 seconds
+
 export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerProps) {
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [loadingList, setLoadingList] = useState(false);
@@ -33,37 +36,133 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
   const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [autoLoading, setAutoLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  // Track whether we've done the initial auto-load so we don't repeat it.
+  const hasAutoLoadedRef = useRef(false);
+  // Keep latest `files` and `loadedIds` in refs so the poll interval can read
+  // fresh values without re-subscribing every render.
+  const filesRef = useRef<DriveFile[]>([]);
+  const loadedIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => { filesRef.current = files; }, [files]);
+  useEffect(() => { loadedIdsRef.current = loadedIds; }, [loadedIds]);
 
   // Fetch the list of CSV files from our API route.
-  const fetchFiles = useCallback(async () => {
-    setLoadingList(true);
+  const fetchFiles = useCallback(async (silent = false) => {
+    if (!silent) setLoadingList(true);
     setError(null);
     try {
       const res = await fetch("/api/drive-files");
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Failed to fetch files");
-        if (compact) {
+        if (compact && !silent) {
           toast.error("Drive API not configured", {
             description: data.error?.slice(0, 120),
           });
         }
-        return;
+        return [];
       }
-      setFiles(data.files || []);
+      const newFiles: DriveFile[] = data.files || [];
+      setFiles(newFiles);
+      return newFiles;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       setError(msg);
+      return [];
     } finally {
-      setLoadingList(false);
+      if (!silent) setLoadingList(false);
     }
   }, [compact]);
 
-  // Fetch the file list on first mount.
+  // Download and parse a single file. Returns true on success.
+  const loadFile = useCallback(
+    async (file: DriveFile): Promise<boolean> => {
+      setLoadingFile(file.id);
+      try {
+        const res = await fetch(
+          `/api/drive-file?id=${file.id}&name=${encodeURIComponent(file.name)}`,
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({ error: "Download failed" }));
+          throw new Error(data.error || `HTTP ${res.status}`);
+        }
+        const csvText = await res.text();
+        const encoder = new TextEncoder();
+        const buffer = encoder.encode(csvText).buffer;
+        const result = parseBuffer(buffer, file.name);
+        if (result.candles.length === 0) {
+          throw new Error(result.warnings[0] || "No candles found");
+        }
+        onLoaded(result, file.name);
+        setLoadedIds((prev) => {
+          const next = new Set(prev);
+          next.add(file.id);
+          return next;
+        });
+        return true;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        toast.error(`Failed: ${file.name}`, { description: msg.slice(0, 120) });
+        return false;
+      } finally {
+        setLoadingFile(null);
+      }
+    },
+    [onLoaded],
+  );
+
+  // Auto-load all currently-fetched files (used on mount + when new files
+  // appear during polling).
+  const autoLoadAll = useCallback(
+    async (fileList: DriveFile[]) => {
+      if (fileList.length === 0) return;
+      setAutoLoading(true);
+      let success = 0;
+      for (const file of fileList) {
+        if (loadedIdsRef.current.has(file.id)) continue;
+        const ok = await loadFile(file);
+        if (ok) success++;
+      }
+      if (success > 0) {
+        toast.success(`Auto-loaded ${success} file${success > 1 ? "s" : ""} from Drive`, {
+          description: `${fileList.length} total in folder`,
+        });
+      }
+      setAutoLoading(false);
+    },
+    [loadFile],
+  );
+
+  // ====== On mount: fetch file list, then auto-load ALL files ======
   useEffect(() => {
-    fetchFiles();
-  }, [fetchFiles]);
+    let cancelled = false;
+    (async () => {
+      const fileList = await fetchFiles();
+      if (cancelled || fileList.length === 0) return;
+      hasAutoLoadedRef.current = true;
+      await autoLoadAll(fileList);
+    })();
+    return () => { cancelled = true; };
+  }, [fetchFiles, autoLoadAll]);
+
+  // ====== Polling: check for new files every POLL_INTERVAL ms ======
+  // When new files appear (ones we haven't loaded yet), auto-load them.
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const fileList = await fetchFiles(true);
+      // Find files that exist in Drive but haven't been loaded yet.
+      const newFiles = fileList.filter(
+        (f) => !loadedIdsRef.current.has(f.id),
+      );
+      if (newFiles.length > 0) {
+        await autoLoadAll(newFiles);
+      }
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [fetchFiles, autoLoadAll]);
 
   // Close dropdown when clicking outside.
   useEffect(() => {
@@ -76,49 +175,17 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Download and parse a single file.
-  const loadFile = useCallback(
-    async (file: DriveFile) => {
-      setLoadingFile(file.id);
-      try {
-        const res = await fetch(
-          `/api/drive-file?id=${file.id}&name=${encodeURIComponent(file.name)}`,
-        );
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({ error: "Download failed" }));
-          throw new Error(data.error || `HTTP ${res.status}`);
-        }
-        const csvText = await res.text();
-        // Parse the CSV using the same parser as file uploads.
-        const encoder = new TextEncoder();
-        const buffer = encoder.encode(csvText).buffer;
-        const result = parseBuffer(buffer, file.name);
-        if (result.candles.length === 0) {
-          throw new Error(result.warnings[0] || "No candles found");
-        }
-        onLoaded(result, file.name);
-        setLoadedIds((prev) => new Set(prev).add(file.id));
-        toast.success(`Loaded ${file.name}`, {
-          description: `${result.candles.length} candles · ${result.symbol || "—"}`,
-        });
-        setDropdownOpen(false);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Unknown error";
-        toast.error(`Failed: ${file.name}`, { description: msg.slice(0, 120) });
-      } finally {
-        setLoadingFile(null);
-      }
-    },
-    [onLoaded],
-  );
-
-  // Load all files at once.
+  // Manual "load all" button (re-loads any unloaded files).
   const loadAll = useCallback(async () => {
-    for (const file of files) {
-      if (loadedIds.has(file.id)) continue;
-      await loadFile(file);
+    const unloaded = filesRef.current.filter(
+      (f) => !loadedIdsRef.current.has(f.id),
+    );
+    if (unloaded.length === 0) {
+      toast.info("All files already loaded");
+      return;
     }
-  }, [files, loadedIds, loadFile]);
+    await autoLoadAll(unloaded);
+  }, [autoLoadAll]);
 
   // ====== Compact mode (header button + dropdown) ======
   if (compact) {
@@ -132,27 +199,29 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
               if (files.length === 0 && !loadingList) fetchFiles();
               setDropdownOpen(!dropdownOpen);
             }}
-            disabled={loadingList}
+            disabled={loadingList || autoLoading}
             className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
           >
-            {loadingList ? (
+            {loadingList || autoLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Cloud className="h-4 w-4" />
             )}
             <span className="hidden sm:inline">Drive</span>
             {files.length > 0 && (
-              <Badge className="ml-1 h-4 px-1 text-[9px] font-mono">{files.length}</Badge>
+              <Badge className="ml-1 h-4 px-1 text-[9px] font-mono">
+                {loadedIds.size}/{files.length}
+              </Badge>
             )}
           </Button>
-          {files.length > 0 && (
+          {files.length > 0 && loadedIds.size < files.length && (
             <Button
               variant="ghost"
               size="sm"
               onClick={loadAll}
               disabled={loadingFile !== null}
               className="h-8 px-2 text-[11px] text-white/60 hover:text-white"
-              title="Load all files"
+              title="Load remaining files"
             >
               {loadingFile ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -168,12 +237,12 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
           <div className="absolute right-0 top-full z-50 mt-1 w-72 rounded-lg border border-white/15 bg-[#15161d] p-2 shadow-xl">
             <div className="mb-2 flex items-center justify-between px-2">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
-                Drive Files ({files.length})
+                Drive Files ({loadedIds.size}/{files.length})
               </span>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={fetchFiles}
+                onClick={() => fetchFiles()}
                 disabled={loadingList}
                 className="h-6 w-6 p-0 text-white/40 hover:text-white"
               >
@@ -216,6 +285,9 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
                 );
               })}
             </div>
+            <p className="mt-2 border-t border-white/5 px-2 pt-2 text-[10px] text-white/30">
+              Auto-refreshes every 30s · new files load automatically
+            </p>
           </div>
         )}
       </div>
@@ -228,18 +300,25 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
       <div className="w-full max-w-md rounded-xl border border-white/10 bg-white/[0.02] p-4">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
-            Google Drive Files ({files.length})
+            Google Drive ({loadedIds.size}/{files.length} loaded)
           </span>
           <Button
             variant="ghost"
             size="sm"
-            onClick={fetchFiles}
+            onClick={() => fetchFiles()}
             disabled={loadingList}
             className="h-6 w-6 p-0 text-white/40 hover:text-white"
           >
             <RefreshCw className={`h-3 w-3 ${loadingList ? "animate-spin" : ""}`} />
           </Button>
         </div>
+
+        {autoLoading && (
+          <div className="mb-3 flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-500/5 p-2 text-[11px] text-emerald-400">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Auto-loading files from Drive…
+          </div>
+        )}
 
         {error && (
           <div className="mb-3 rounded-md border border-red-500/20 bg-red-500/5 p-3 text-xs text-red-400">
@@ -290,10 +369,10 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
             variant="outline"
             size="sm"
             onClick={loadAll}
-            disabled={loadingFile !== null}
+            disabled={loadingFile !== null || autoLoading}
             className="mt-3 w-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
           >
-            {loadingFile ? (
+            {loadingFile || autoLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Download className="h-4 w-4" />
@@ -304,7 +383,8 @@ export function DriveFilePicker({ onLoaded, compact = false }: DriveFilePickerPr
       </div>
 
       <p className="text-[11px] text-white/40">
-        CSV files · Required: Date, Open, High, Low, Close (Volume optional)
+        Auto-loads on open · refreshes every 30s for new files · CSV files ·
+        Required: Date, Open, High, Low, Close (Volume optional)
       </p>
     </div>
   );
