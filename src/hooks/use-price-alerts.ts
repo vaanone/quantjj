@@ -82,18 +82,62 @@ export function usePriceAlerts(symbol: string, currentPrice: number) {
     });
   }, [currentPrice, symbol]);
 
-  // Fire a browser notification.
+  // Fire a browser notification + play an alert sound.
   const fireNotification = (alert: PriceAlert, price: number) => {
     const title = `${alert.symbol} alert: price touched ${alert.price}`;
     const body = `Current price: ${price}. Alert level ${alert.price} has been reached.`;
 
+    // Browser notification.
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
       new Notification(title, { body });
     }
 
+    // Toast notification.
     import("sonner").then(({ toast }) => {
       toast.success(title, { description: body, duration: 10000 });
     });
+
+    // Play an alert sound using the Web Audio API (no external file needed).
+    // Generates a simple double-beep tone — immediately audible even if
+    // the tab is in the background.
+    try {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+
+        // First beep (higher pitch).
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = "sine";
+        osc1.frequency.value = 880; // A5
+        gain1.gain.setValueAtTime(0, now);
+        gain1.gain.linearRampToValueAtTime(0.3, now + 0.02);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc1.connect(gain1).connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.3);
+
+        // Second beep (lower pitch) — plays right after the first.
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = "sine";
+        osc2.frequency.value = 660; // E5
+        gain2.gain.setValueAtTime(0, now + 0.35);
+        gain2.gain.linearRampToValueAtTime(0.3, now + 0.37);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.65);
+        osc2.connect(gain2).connect(ctx.destination);
+        osc2.start(now + 0.35);
+        osc2.stop(now + 0.65);
+
+        // Close the audio context after the sound finishes.
+        setTimeout(() => ctx.close(), 1000);
+      }
+    } catch {
+      // Audio not available (e.g. older browser) — silent fail.
+    }
   };
 
   const addAlert = useCallback(
