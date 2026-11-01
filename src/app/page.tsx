@@ -518,7 +518,10 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
             <br />
             <span className="text-white">Vaan Pivot</span>
           </h2>
-          <p className="mx-auto mt-6 max-w-xl text-sm text-white/60 sm:text-base">
+          <p className="mx-auto mt-4 max-w-xl text-lg font-medium text-amber-400 sm:text-xl">
+            Know Your Levels. Trade with Confidence.
+          </p>
+          <p className="mx-auto mt-4 max-w-xl text-sm text-white/60 sm:text-base">
             Daily support &amp; resistance levels auto-loaded from your MT5 data, drawn directly on a
             TradingView-style candlestick chart.
           </p>
