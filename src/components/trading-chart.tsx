@@ -225,7 +225,7 @@ export function TradingChart({
       const line = candleSeriesRef.current!.createPriceLine({
         price: srLine.price,
         color: srLine.type === "resistance" ? COLORS.resistance : COLORS.support,
-        lineWidth: 2,
+        lineWidth: 1,
         lineStyle: LineStyle.Solid,
         axisLabelVisible: true,
         title: srLine.label, // "R I", "S I", "R II", ...
