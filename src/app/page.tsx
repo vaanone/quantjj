@@ -19,8 +19,7 @@ import { AlertButton } from "@/components/alert-button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePriceAlerts } from "@/hooks/use-price-alerts";
 import { useLivePrice } from "@/hooks/use-live-price";
-import { isLiveSupported } from "@/lib/finnhub-symbols";
-import { detectSupportResistance, getTop6Levels, userLevelsToLines } from "@/lib/support-resistance";
+import { userLevelsToLines } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle, ParseResult } from "@/lib/excel-parser";
 import {
@@ -89,10 +88,9 @@ export default function Home() {
 
   const timeframe = useMemo(() => detectTimeframe(candles), [candles]);
 
-  // S/R lines: prefer user-defined levels from CSV columns J–O when present.
-  // Fall back to auto-detection only when the file has no user levels.
-  // Computed inline (not memoized) to avoid stale-closure issues when switching
-  // files — the computation is cheap enough.
+  // S/R lines: STRICTLY from CSV columns H–O (user-defined levels).
+  // No auto-detection fallback — only the user's CSV data is used.
+  // If the CSV has no S/R levels in columns H–O, no lines are drawn.
   const top6Lines = (() => {
     if (candles.length < 10) return [];
     const lastClose = candles[candles.length - 1].close;
@@ -100,14 +98,7 @@ export default function Home() {
     if (result?.userLevels && result.userLevels.length > 0) {
       return userLevelsToLines(result.userLevels, lastClose);
     }
-    const allLevels = detectSupportResistance(candles, {
-      leftBars: SR_SENSITIVITY_BARS,
-      rightBars: SR_SENSITIVITY_BARS,
-      tolerancePct: SR_TOLERANCE_PCT,
-      minTouches: SR_MIN_TOUCHES,
-      maxLevels: 20,
-    });
-    return getTop6Levels(allLevels, lastClose);
+    return [];
   })();
 
   // ---- Global symbol list: all symbols across ALL loaded files ----
