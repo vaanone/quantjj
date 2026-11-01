@@ -248,10 +248,9 @@ export default function Home() {
       {/* ============================================================ TOOLBAR */}
       {candles.length > 0 && (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-white/10 bg-[#0c0d12] px-4 py-1.5 text-[11px] text-white/70">
-          {/* Disclaimer — left side, small font */}
-          <p className="hidden text-[10px] leading-tight text-white/30 sm:block lg:max-w-md">
-            Daily Pivot Levels are updated manually every morning for educational
-            and informational purposes only
+          {/* Disclaimer — left side, small font, single line */}
+          <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
+            Daily QUANTJJ Levels are updated manually every morning for educational and informational purposes only.
           </p>
           <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
             <SheetTrigger asChild>
