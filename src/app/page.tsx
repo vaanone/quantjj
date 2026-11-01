@@ -521,10 +521,6 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           <p className="mx-auto mt-4 max-w-xl text-lg font-medium text-amber-400 sm:text-xl">
             Know Your Levels. Trade with Confidence.
           </p>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-white/60 sm:text-base">
-            Daily support &amp; resistance levels auto-loaded from your MT5 data, drawn directly on a
-            TradingView-style candlestick chart.
-          </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
               onClick={onOpenChart}
