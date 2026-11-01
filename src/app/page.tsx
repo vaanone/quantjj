@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { PanelRight, LayoutGrid } from "lucide-react";
+import { PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -261,40 +261,76 @@ export default function Home() {
 
         {/* All controls in one row, no wrapping */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Chart layout dropdown — 1/2/4 chart views */}
+          {/* Chart layout selector — window icons showing 1/2/4 views */}
           {candles.length > 0 && (
-            <Select
-              value={String(chartLayout)}
-              onValueChange={(v) => {
-                const n = Number(v) as 1 | 2 | 4;
-                setChartLayout(n);
-                // Auto-fill symbols for the selected layout.
-                if (n > 1) {
+            <div className="flex shrink-0 items-center gap-0.5 rounded-md border border-white/10 bg-white/5 p-0.5">
+              {/* 1 window icon */}
+              <button
+                onClick={() => setChartLayout(1)}
+                title="1 chart"
+                className={`flex h-6 w-6 items-center justify-center rounded transition-colors sm:h-7 sm:w-7 ${
+                  chartLayout === 1
+                    ? "bg-red-600/30 text-red-400"
+                    : "text-white/40 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                  <rect x="1" y="1" width="10" height="10" rx="1" />
+                </svg>
+              </button>
+              {/* 2 windows icon */}
+              <button
+                onClick={() => {
+                  setChartLayout(2);
                   setMultiSymbols((prev) => {
                     const next = { ...prev };
-                    const syms = Array.from(files.values()).flatMap(
-                      (f) => f.result.symbols,
-                    );
-                    for (let i = 1; i < n; i++) {
+                    const syms = Array.from(files.values()).flatMap((f) => f.result.symbols);
+                    for (let i = 1; i < 2; i++) {
                       if (!next[i] && syms[i]) next[i] = syms[i];
                     }
                     return next;
                   });
-                }
-              }}
-            >
-              <SelectTrigger className="h-7 w-auto shrink-0 gap-1 border-white/15 bg-white/5 px-1.5 text-white hover:bg-white/10 sm:h-8 sm:px-2">
-                <LayoutGrid className="h-3.5 w-3.5 text-white/60" />
-                <span className="hidden font-mono text-xs font-bold sm:inline">
-                  {chartLayout === 1 ? "1" : chartLayout === 2 ? "2" : "4"}
-                </span>
-              </SelectTrigger>
-              <SelectContent className="border-white/15 bg-[#15161d] text-white">
-                <SelectItem value="1" className="font-mono text-xs">1 Chart</SelectItem>
-                <SelectItem value="2" className="font-mono text-xs">2 Charts</SelectItem>
-                <SelectItem value="4" className="font-mono text-xs">4 Charts</SelectItem>
-              </SelectContent>
-            </Select>
+                }}
+                title="2 charts"
+                className={`flex h-6 w-6 items-center justify-center rounded transition-colors sm:h-7 sm:w-7 ${
+                  chartLayout === 2
+                    ? "bg-red-600/30 text-red-400"
+                    : "text-white/40 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                  <rect x="1" y="1" width="4.5" height="10" rx="1" />
+                  <rect x="6.5" y="1" width="4.5" height="10" rx="1" />
+                </svg>
+              </button>
+              {/* 4 windows icon */}
+              <button
+                onClick={() => {
+                  setChartLayout(4);
+                  setMultiSymbols((prev) => {
+                    const next = { ...prev };
+                    const syms = Array.from(files.values()).flatMap((f) => f.result.symbols);
+                    for (let i = 1; i < 4; i++) {
+                      if (!next[i] && syms[i]) next[i] = syms[i];
+                    }
+                    return next;
+                  });
+                }}
+                title="4 charts"
+                className={`flex h-6 w-6 items-center justify-center rounded transition-colors sm:h-7 sm:w-7 ${
+                  chartLayout === 4
+                    ? "bg-red-600/30 text-red-400"
+                    : "text-white/40 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                  <rect x="1" y="1" width="4.5" height="4.5" rx="1" />
+                  <rect x="6.5" y="1" width="4.5" height="4.5" rx="1" />
+                  <rect x="1" y="6.5" width="4.5" height="4.5" rx="1" />
+                  <rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" />
+                </svg>
+              </button>
+            </div>
           )}
 
           {/* Symbol dropdown — only shown in single-chart mode */}
@@ -582,73 +618,126 @@ function MultiChartGrid({
   lastUpdate?: string | null;
   slotSymbols: string[];
 }) {
-  // Auto-assign symbols to slots that don't have one yet.
+  // Grid layout — equal divisions, each chart gets the same screen space.
+  // Using flexbox for equal distribution so CMP is always visible.
+  const containerClass =
+    layout === 2
+      ? "flex flex-col sm:flex-row h-full"
+      : "flex flex-col h-full";
+
+  // For 4 charts: top half has 2 charts side by side, bottom half has 2 charts side by side.
+  if (layout === 4) {
+    const slots = Array.from({ length: 4 }, (_, i) => {
+      const sym = i === 0 ? slotSymbols[0] : multiSymbols[i] || allSymbols[i] || allSymbols[0] || "";
+      return { slot: i, symbol: sym };
+    });
+    return (
+      <div className="flex h-full flex-col gap-0.5">
+        {/* Top row — 2 charts */}
+        <div className="flex h-1/2 gap-0.5">
+          {slots.slice(0, 2).map(({ slot, symbol }) => (
+            <ChartSlot key={slot} slot={slot} symbol={symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
+          ))}
+        </div>
+        {/* Bottom row — 2 charts */}
+        <div className="flex h-1/2 gap-0.5">
+          {slots.slice(2, 4).map(({ slot, symbol }) => (
+            <ChartSlot key={slot} slot={slot} symbol={symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Layout 2 — side by side (desktop) or stacked (mobile).
   const slots = Array.from({ length: layout }, (_, i) => {
     const sym = i === 0 ? slotSymbols[0] : multiSymbols[i] || allSymbols[i] || allSymbols[0] || "";
     return { slot: i, symbol: sym };
   });
 
-  // Grid layout classes.
-  const gridClass =
-    layout === 2
-      ? "grid-cols-1 sm:grid-cols-2 grid-rows-2 sm:grid-rows-1"
-      : "grid-cols-1 sm:grid-cols-2 grid-rows-4 sm:grid-rows-2";
-
   return (
-    <div className={`grid h-full gap-0.5 ${gridClass}`}>
-      {slots.map(({ slot, symbol }) => {
-        const data = getSlotData(slot);
-        return (
-          <div key={slot} className="relative flex flex-col overflow-hidden border border-white/5 bg-[#100c00]">
-            {/* Per-chart symbol selector */}
-            <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-[#0d0a00] px-2 py-1">
-              <Select
-                value={symbol}
-                onValueChange={(v) => onSymbolChange(slot, v)}
-              >
-                <SelectTrigger className="h-6 w-auto min-w-[60px] max-w-[100px] gap-1 border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-bold text-white hover:bg-white/10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-60 border-white/15 bg-[#15161d] text-white">
-                  {allSymbols.map((s) => (
-                    <SelectItem key={s} value={s} className="font-mono text-xs focus:bg-white/10">
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex items-center gap-1.5">
-                {data.lastClose > 0 && (
-                  <span className="font-mono text-[10px] text-white/50">
-                    {data.lastClose >= 1000 ? data.lastClose.toFixed(2) : data.lastClose.toFixed(5)}
-                  </span>
-                )}
-                {timeframe && (
-                  <Badge className="h-4 px-1 font-mono text-[8px] font-bold text-amber-400">
-                    {timeframe.label}
-                  </Badge>
-                )}
-              </div>
-            </div>
-            {/* Chart area */}
-            <div className="relative flex-1">
-              {data.candles.length > 0 ? (
-                <ChartArea
-                  candles={data.candles}
-                  lines={data.lines}
-                  symbol={data.symbol}
-                  timeframe={timeframe}
-                  lastUpdate={lastUpdate}
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <span className="text-xs text-white/30">No data</span>
-                </div>
-              )}
-            </div>
+    <div className={containerClass}>
+      {slots.map(({ slot, symbol }) => (
+        <div key={slot} className="h-full flex-1">
+          <ChartSlot slot={slot} symbol={symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Individual chart slot — used in multi-chart layouts.
+function ChartSlot({
+  slot,
+  symbol,
+  getSlotData,
+  allSymbols,
+  onSymbolChange,
+  timeframe,
+  lastUpdate,
+}: {
+  slot: number;
+  symbol: string;
+  getSlotData: (slot: number) => {
+    candles: Candle[];
+    lines: ReturnType<typeof userLevelsToLines>;
+    symbol: string;
+    lastClose: number;
+  };
+  allSymbols: string[];
+  onSymbolChange: (slot: number, sym: string) => void;
+  timeframe: TimeframeInfo | null;
+  lastUpdate?: string | null;
+}) {
+  const data = getSlotData(slot);
+  return (
+    <div className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden border border-white/5 bg-[#100c00]">
+      {/* Per-chart header: symbol dropdown + price */}
+      <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-[#0d0a00] px-2 py-1">
+        <Select
+          value={symbol}
+          onValueChange={(v) => onSymbolChange(slot, v)}
+        >
+          <SelectTrigger className="h-6 w-auto min-w-[60px] max-w-[100px] gap-1 border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-bold text-white hover:bg-white/10">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="max-h-60 border-white/15 bg-[#15161d] text-white">
+            {allSymbols.map((s) => (
+              <SelectItem key={s} value={s} className="font-mono text-xs focus:bg-white/10">
+                {s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-1.5">
+          {data.lastClose > 0 && (
+            <span className="font-mono text-[10px] text-white/50">
+              {data.lastClose >= 1000 ? data.lastClose.toFixed(2) : data.lastClose.toFixed(5)}
+            </span>
+          )}
+          {timeframe && (
+            <Badge className="h-4 px-1 font-mono text-[8px] font-bold text-amber-400">
+              {timeframe.label}
+            </Badge>
+          )}
+        </div>
+      </div>
+      {/* Chart */}
+      <div className="relative min-h-0 flex-1">
+        {data.candles.length > 0 ? (
+          <ChartArea
+            candles={data.candles}
+            lines={data.lines}
+            symbol={data.symbol}
+            timeframe={timeframe}
+            lastUpdate={lastUpdate}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <span className="text-xs text-white/30">No data</span>
           </div>
-        );
-      })}
+        )}
+      </div>
     </div>
   );
 }
