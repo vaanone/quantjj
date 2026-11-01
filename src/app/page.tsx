@@ -177,29 +177,28 @@ export default function Home() {
   return (
     <div className="flex h-screen flex-col bg-[#0a0b0f] text-white">
       {/* ============================================================= HEADER */}
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#0c0d12] px-4 py-2">
-        {/* Logo + app name */}
-        <div className="flex items-center gap-3">
-          <img
-            src="/logo.png"
-            alt="Vaan One"
-            className="h-9 w-9 rounded-md object-contain"
-          />
-          <div className="hidden sm:block">
-            <h1 className="text-sm font-semibold leading-tight">QUANTJJ</h1>
-            <p className="text-[10px] leading-tight text-white/40">
-              Daily Pivot Levels
-            </p>
-          </div>
+      <header className="flex items-center gap-2 border-b border-white/10 bg-[#0c0d12] px-3 py-2">
+        {/* Logo (always visible, even on mobile) */}
+        <img
+          src="/logo.png"
+          alt="QUANTJJ"
+          className="h-7 w-7 shrink-0 rounded-md object-contain sm:h-9 sm:w-9"
+        />
+        {/* App name — hidden on mobile to save space */}
+        <div className="hidden shrink-0 sm:block">
+          <h1 className="text-sm font-semibold leading-tight">QUANTJJ</h1>
+          <p className="text-[10px] leading-tight text-white/40">Daily Pivot Levels</p>
         </div>
 
-        {/* Single dropdown + upload + TF — all data access in one place */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Unified dropdown: shows every loaded (symbol, file) pair. Picking
-              an entry switches both the active file and the active symbol. */}
+        {/* Spacer to push the rest to the right on desktop */}
+        <div className="flex-1" />
+
+        {/* All controls in one row, no wrapping */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Symbol dropdown — right next to logo */}
           {activeSymbolValue && (
             <Select value={dropdownValue} onValueChange={handleDropdownChange}>
-              <SelectTrigger className="h-8 w-auto min-w-[110px] max-w-[220px] gap-1.5 border-white/15 bg-white/5 px-2 font-mono text-sm font-bold tracking-wide text-white hover:bg-white/10">
+              <SelectTrigger className="h-7 w-auto min-w-[70px] max-w-[120px] gap-1 border-white/15 bg-white/5 px-1.5 font-mono text-xs font-bold tracking-wide text-white hover:bg-white/10 sm:h-8 sm:min-w-[110px] sm:max-w-[220px] sm:px-2 sm:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="max-h-72 border-white/15 bg-[#15161d] text-white">
@@ -216,15 +215,15 @@ export default function Home() {
             </Select>
           )}
 
-          {/* Last close + change % */}
+          {/* Last close + change % — same line, next to dropdown */}
           {candles.length > 0 && (
-            <div className="flex items-center gap-1.5 border-l border-white/10 pl-2">
-              <span className="font-mono text-xs text-white/50">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 sm:border-l sm:border-white/10 sm:pl-2">
+              <span className="font-mono text-[10px] text-white/50 sm:text-xs">
                 {lastClose >= 1000 ? lastClose.toFixed(2) : lastClose.toFixed(5)}
               </span>
               <Badge
                 variant="outline"
-                className={`h-5 border-white/15 px-1.5 text-[10px] font-mono ${
+                className={`h-5 border-white/15 px-1 text-[9px] font-mono sm:text-[10px] ${
                   totalChangePct >= 0
                     ? "bg-emerald-500/10 text-emerald-400"
                     : "bg-red-500/10 text-red-400"
@@ -236,32 +235,12 @@ export default function Home() {
             </div>
           )}
 
-          {/* Timeframe badge */}
+          {/* Timeframe badge — same line, next to percentage */}
           {timeframe && (
-            <Badge className="h-8 gap-1 border border-emerald-500/30 bg-emerald-500/10 px-2 font-mono text-sm font-bold text-emerald-400">
+            <Badge className="h-7 shrink-0 gap-1 border border-emerald-500/30 bg-emerald-500/10 px-1.5 font-mono text-xs font-bold text-emerald-400 sm:h-8 sm:px-2 sm:text-sm">
               {timeframe.label}
             </Badge>
           )}
-
-          {/* Last Update label + timestamp */}
-          {lastUpdate && (
-            <div className="flex flex-col items-start leading-tight">
-              <span className="text-[9px] uppercase tracking-wider text-white/30">
-                Last Update @
-              </span>
-              <span className="font-mono text-xs text-white/50">
-                {formatLastUpdate(lastUpdate)}
-              </span>
-            </div>
-          )}
-
-          {/* Upload buttons: Files + Folder */}
-          <DriveFilePicker
-            onLoaded={handleLoaded}
-            onLastUpdate={setLastUpdate}
-            onLoadingChange={setChartLoading}
-            compact
-          />
         </div>
       </header>
 
@@ -272,12 +251,31 @@ export default function Home() {
           <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
             Daily QUANTJJ Levels are updated manually every morning for educational and informational purposes only.
           </p>
+          {/* Last Update timestamp + refresh button — right side */}
+          <div className="ml-auto flex items-center gap-3">
+            {lastUpdate && (
+              <div className="flex flex-col items-start leading-tight">
+                <span className="text-[9px] uppercase tracking-wider text-white/30">
+                  Last Update @
+                </span>
+                <span className="font-mono text-xs text-white/50">
+                  {formatLastUpdate(lastUpdate)}
+                </span>
+              </div>
+            )}
+            <DriveFilePicker
+              onLoaded={handleLoaded}
+              onLastUpdate={setLastUpdate}
+              onLoadingChange={setChartLoading}
+              compact
+            />
+          </div>
           <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className="ml-auto h-7 gap-1.5 border-white/15 bg-white/5 px-2 text-[11px] text-white hover:bg-white/10 lg:hidden"
+                className="h-7 gap-1.5 border-white/15 bg-white/5 px-2 text-[11px] text-white hover:bg-white/10 lg:hidden"
               >
                 <PanelRight className="h-3.5 w-3.5" />
                 Levels
