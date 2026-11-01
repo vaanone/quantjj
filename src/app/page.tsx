@@ -490,6 +490,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           </div>
           <div className="flex items-center gap-4">
             <a href="#levels" className="hidden text-xs text-white/60 hover:text-white sm:block">Levels</a>
+            <a href="#faq" className="hidden text-xs text-white/60 hover:text-white sm:block">FAQ</a>
             <Button
               onClick={onOpenChart}
               size="sm"
@@ -514,11 +515,11 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
               backgroundSize: "60px 60px",
             }}
           />
-          {/* Glow orb 1 */}
+          {/* Glow orb 1 — gold */}
           <div className="animate-float-slow absolute -left-20 top-10 h-72 w-72 rounded-full bg-amber-500/8 blur-[80px]" />
-          {/* Glow orb 2 */}
-          <div className="animate-float-medium absolute -right-20 top-40 h-96 w-96 rounded-full bg-amber-600/6 blur-[100px]" />
-          {/* Glow orb 3 */}
+          {/* Glow orb 2 — red */}
+          <div className="animate-float-medium absolute -right-20 top-40 h-96 w-96 rounded-full bg-red-600/5 blur-[100px]" />
+          {/* Glow orb 3 — gold pulse */}
           <div className="animate-pulse-glow absolute bottom-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-400/5 blur-[90px]" />
         </div>
 
@@ -531,7 +532,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
             <span className="text-[10px] uppercase tracking-wider text-amber-400">Live Levels Updated Daily</span>
           </div>
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            <span className="bg-gradient-to-r from-amber-300 to-amber-700 bg-clip-text text-transparent">Vaan Pivot</span>
+            <span className="bg-gradient-to-r from-red-500 via-amber-400 to-amber-600 bg-clip-text text-transparent">Vaan Pivot</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg font-medium text-amber-400 sm:text-xl">
             Know Your Levels. Trade with Confidence.
@@ -550,9 +551,9 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           </div>
         </div>
 
-        {/* Animated chart mockup */}
+        {/* Sample equity curve card */}
         <div className="relative mx-auto mt-16 max-w-2xl">
-          <ChartMockup />
+          <EquityCurveCard />
         </div>
       </section>
 
@@ -645,6 +646,50 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
         </div>
       </section>
 
+      {/* ====== FAQ ====== */}
+      <section id="faq" className="border-t border-white/5 px-4 py-16">
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-10 text-center">
+            <span className="text-[10px] uppercase tracking-widest text-amber-400">FAQ</span>
+            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">Frequently Asked Questions</h3>
+          </div>
+          <div className="space-y-3">
+            <FaqItem
+              q="What are Vaan Pivot Levels?"
+              a="Vaan Pivot Levels are daily support and resistance price levels calculated using a customized pivot methodology. They identify potential intraday reversal zones for trading instruments like XAUUSD, EURUSD, GBPUSD, and USDCHF."
+            />
+            <FaqItem
+              q="When are the levels updated?"
+              a="Levels are manually updated every morning at 5:30 AM IST (Indian Standard Time), before the major trading sessions open."
+            />
+            <FaqItem
+              q="How accurate are the levels?"
+              a="We claim up to 80% accuracy. However, accuracy is not guaranteed — these levels are for educational and informational purposes only and should not be considered investment advice."
+            />
+            <FaqItem
+              q="Is there a cost to use Vaan Pivot?"
+              a="Currently FREE! You can access all available levels at no cost for now."
+            />
+            <FaqItem
+              q="Which trading symbols are available?"
+              a="XAUUSD (Gold), EURUSD (Euro / US Dollar), GBPUSD (British Pound / US Dollar), and USDCHF (US Dollar / Swiss Franc)."
+            />
+            <FaqItem
+              q="How do I view the live chart?"
+              a="Click the 'Launch Chart' button on this page. The chart auto-loads the latest pivot levels from our data source — no login or upload required."
+            />
+            <FaqItem
+              q="Are these levels trading recommendations?"
+              a="No. Vaan Pivot Levels are provided for educational and informational purposes only. They are not investment advice or trading recommendations. Always do your own research and manage your risk."
+            />
+            <FaqItem
+              q="How can I contact you?"
+              a="Email us at valan@outlook.com for any questions, feedback, or collaboration inquiries."
+            />
+          </div>
+        </div>
+      </section>
+
       {/* ====== FOOTER ====== */}
       <footer className="border-t border-white/10 px-4 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 text-center">
@@ -677,53 +722,95 @@ function FeatureCard({ title, desc }: { title: string; desc: string }) {
   );
 }
 
-/** Animated chart mockup — candlestick bars + pivot level lines drawn with SVG */
-function ChartMockup() {
-  // Generate 20 candle heights for the mockup
-  const candles = [
-    { h: 40, up: true }, { h: 55, up: false }, { h: 35, up: true }, { h: 60, up: true },
-    { h: 45, up: false }, { h: 70, up: true }, { h: 50, up: false }, { h: 65, up: true },
-    { h: 80, up: true }, { h: 55, up: false }, { h: 75, up: true }, { h: 60, up: false },
-    { h: 85, up: true }, { h: 70, up: false }, { h: 90, up: true }, { h: 75, up: false },
-    { h: 95, up: true }, { h: 65, up: false }, { h: 80, up: true }, { h: 70, up: false },
+/** Sample equity curve card — mimics a backtest performance chart */
+function EquityCurveCard() {
+  // Generate an upward-trending equity curve path (SVG points)
+  const points = [
+    80, 75, 78, 70, 72, 65, 68, 60, 58, 62, 55, 50, 48, 52, 45, 42, 38, 40, 35, 30, 25, 20,
   ];
+  const w = 400;
+  const h = 160;
+  const stepX = w / (points.length - 1);
+  const maxVal = 90;
+  const pathD = points
+    .map((p, i) => {
+      const x = i * stepX;
+      const y = h - (p / maxVal) * h;
+      return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+  const areaD = `${pathD} L ${w} ${h} L 0 ${h} Z`;
+
   return (
-    <div className="rounded-xl border border-amber-500/20 bg-[#100c00]/80 p-4 backdrop-blur-sm">
-      {/* Header bar */}
-      <div className="mb-3 flex items-center justify-between border-b border-white/5 pb-2">
+    <div className="shimmer-border overflow-hidden rounded-xl border border-amber-500/20 bg-[#100c00]/80 backdrop-blur-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-amber-500" />
-          <span className="font-mono text-xs text-white/60">XAUUSD · M15</span>
+          <img src="/logo.png" alt="Vaan.One" className="h-5 w-5 rounded object-contain" />
+          <span className="font-mono text-xs font-semibold text-white/80">
+            Master Equity Curve · XAUUSD
+          </span>
         </div>
-        <span className="font-mono text-xs text-amber-400">2,330.45</span>
+        <span className="rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-400">
+          Simulated
+        </span>
       </div>
-      {/* Chart body */}
-      <div className="relative h-48">
-        {/* Resistance line (gold) */}
-        <div className="absolute left-0 right-0 top-6 flex items-center gap-2">
-          <div className="h-px flex-1 bg-amber-500/60" style={{ borderTop: "1px solid #d4af37" }} />
-          <span className="font-mono text-[8px] text-amber-400">RI 2,380</span>
-        </div>
-        {/* Support line (red) */}
-        <div className="absolute left-0 right-0 bottom-8 flex items-center gap-2">
-          <div className="h-px flex-1" style={{ borderTop: "1px solid #ef4444" }} />
-          <span className="font-mono text-[8px] text-red-400">SI 2,280</span>
-        </div>
-        {/* Candlestick bars */}
-        <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-1">
-          {candles.map((c, i) => (
-            <div
-              key={i}
-              className="animate-bar-rise w-full rounded-sm"
-              style={{
-                height: `${c.h}%`,
-                backgroundColor: c.up ? "#26a69a" : "#ef5350",
-                animationDelay: `${i * 0.1}s`,
-              }}
-            />
+      {/* Equity curve SVG */}
+      <div className="relative p-2">
+        <svg viewBox={`0 0 ${w} ${h}`} className="h-40 w-full" preserveAspectRatio="none">
+          {/* Grid lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map((g) => (
+            <line key={g} x1="0" y1={h * g} x2={w} y2={h * g} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
           ))}
+          {/* Gradient fill under curve */}
+          <defs>
+            <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#d4af37" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#d4af37" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={areaD} fill="url(#equityGrad)" />
+          {/* Curve line */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke="#d4af37"
+            strokeWidth="2"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            className="animate-draw-line"
+          />
+        </svg>
+      </div>
+      {/* Footer stats */}
+      <div className="flex items-center justify-between border-t border-white/5 px-4 py-2">
+        <div className="flex gap-4">
+          <div>
+            <span className="text-[9px] uppercase text-white/30">Net Profit</span>
+            <p className="font-mono text-xs font-bold text-amber-400">+$24,580</p>
+          </div>
+          <div>
+            <span className="text-[9px] uppercase text-white/30">Win Rate</span>
+            <p className="font-mono text-xs font-bold text-white/80">72%</p>
+          </div>
+        </div>
+        <div>
+          <span className="text-[9px] uppercase text-white/30">Max DD</span>
+          <p className="font-mono text-xs font-bold text-red-400">-8.3%</p>
         </div>
       </div>
     </div>
+  );
+}
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  return (
+    <details className="group rounded-lg border border-white/10 bg-white/[0.02] p-4 transition-colors hover:border-amber-500/20">
+      <summary className="flex cursor-pointer items-center justify-between text-sm font-medium text-white/80 [&::-webkit-details-marker]:hidden">
+        {q}
+        <span className="ml-2 text-amber-400 transition-transform group-open:rotate-45">+</span>
+      </summary>
+      <p className="mt-3 text-xs leading-relaxed text-white/50">{a}</p>
+    </details>
   );
 }
