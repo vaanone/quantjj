@@ -29,6 +29,11 @@ interface TradingChartProps {
   visibleCount?: number;
   /** Active price alert levels to draw on the chart (dashed orange lines). */
   alertPrices?: { price: number; condition: string; triggered: boolean }[];
+  /** Live price from Finnhub streaming. When provided, the last candle
+   *  updates in real-time as new ticks arrive. */
+  livePrice?: number;
+  /** Whether the live stream is connected (WebSocket). Shows LIVE badge. */
+  isLive?: boolean;
 }
 
 const COLORS = {
@@ -49,6 +54,8 @@ export function TradingChart({
   timeframe,
   visibleCount,
   alertPrices,
+  livePrice,
+  isLive,
 }: TradingChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -323,11 +330,81 @@ export function TradingChart({
     }
   }, [alertPrices]);
 
+  // -- Live price update: update the last candle in real-time --------------
+  // When a new live price tick arrives, we either update the current candle
+  // (if the tick falls within the same timeframe period) or create a new one.
+  const currentCandleRef = useRef<{ time: number; open: number; high: number; low: number; close: number } | null>(null);
+
+  useEffect(() => {
+    if (!candleSeriesRef.current || !livePrice || livePrice <= 0) return;
+    if (candles.length === 0) return;
+
+    const tfSeconds = timeframe?.seconds ?? 3600; // default to H1
+    const now = Math.floor(Date.now() / 1000);
+    // Floor to the current candle period.
+    const candleTime = Math.floor(now / tfSeconds) * tfSeconds;
+
+    // Initialize the current candle from the last CSV candle if not set.
+    if (!currentCandleRef.current) {
+      const last = candles[candles.length - 1];
+      currentCandleRef.current = {
+        time: last.time,
+        open: last.open,
+        high: last.high,
+        low: last.low,
+        close: last.close,
+      };
+    }
+
+    const current = currentCandleRef.current;
+
+    if (candleTime > current.time) {
+      // New candle period — push a new candle starting at the live price.
+      currentCandleRef.current = {
+        time: candleTime as UTCTimestamp,
+        open: livePrice,
+        high: livePrice,
+        low: livePrice,
+        close: livePrice,
+      };
+    } else {
+      // Same candle period — update OHLC.
+      current.close = livePrice;
+      if (livePrice > current.high) current.high = livePrice;
+      if (livePrice < current.low) current.low = livePrice;
+    }
+
+    // Update the chart — series.update() replaces the bar at the given time
+    // if it exists, or adds a new bar if the time is new.
+    candleSeriesRef.current.update({
+      time: currentCandleRef.current.time as UTCTimestamp,
+      open: currentCandleRef.current.open,
+      high: currentCandleRef.current.high,
+      low: currentCandleRef.current.low,
+      close: currentCandleRef.current.close,
+    });
+  }, [livePrice, candles, timeframe]);
+
+  // Reset the current candle ref when candles change (new file loaded).
+  useEffect(() => {
+    currentCandleRef.current = null;
+  }, [candles]);
+
   void symbol;
 
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
+      {/* LIVE badge (top-right) — shows when streaming is active */}
+      {isLive && (
+        <div className="pointer-events-none absolute right-2 top-12 z-10 flex items-center gap-1.5 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 backdrop-blur-sm">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500" />
+          </span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-red-400">LIVE</span>
+        </div>
+      )}
       {/* Timeframe badge (top-right, just under the price scale) */}
       {timeframe && (
         <div className="pointer-events-none absolute right-2 top-2 select-none rounded-md border border-white/10 bg-black/40 px-2 py-1 backdrop-blur-sm">

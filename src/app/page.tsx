@@ -18,6 +18,8 @@ import { LevelsPanel } from "@/components/levels-panel";
 import { AlertButton } from "@/components/alert-button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePriceAlerts } from "@/hooks/use-price-alerts";
+import { useLivePrice } from "@/hooks/use-live-price";
+import { isLiveSupported } from "@/lib/finnhub-symbols";
 import { detectSupportResistance, getTop6Levels, userLevelsToLines } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle, ParseResult } from "@/lib/excel-parser";
@@ -177,6 +179,10 @@ export default function Home() {
   // Price alerts — monitors current price and fires notifications.
   const { alerts, addAlert, removeAlert, clearAll } = usePriceAlerts(symbolLabel, lastClose);
 
+  // Live price streaming via Finnhub (WebSocket + REST polling fallback).
+  // Only activates when the symbol is supported and we're in chart view.
+  const liveData = useLivePrice(view === "chart" ? symbolLabel : "");
+
   // For the symbol dropdown value: the currently active symbol.
   const activeSymbolValue = selectedSymbol || currentResult?.symbol || "";
 
@@ -230,8 +236,19 @@ export default function Home() {
           {/* Last close + change % — same line, next to dropdown */}
           {candles.length > 0 && (
             <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 sm:border-l sm:border-white/10 sm:pl-2">
+              {/* Show live price if streaming, otherwise last close from CSV */}
+              {liveData.isLive && (
+                <span className="flex items-center gap-0.5">
+                  <span className="relative flex h-1 w-1">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                    <span className="relative inline-flex h-1 w-1 rounded-full bg-red-500" />
+                  </span>
+                </span>
+              )}
               <span className="font-mono text-[10px] text-white/50 sm:text-xs">
-                {lastClose >= 1000 ? lastClose.toFixed(2) : lastClose.toFixed(5)}
+                {(liveData.price > 0 ? liveData.price : lastClose) >= 1000
+                  ? (liveData.price > 0 ? liveData.price : lastClose).toFixed(2)
+                  : (liveData.price > 0 ? liveData.price : lastClose).toFixed(5)}
               </span>
               <Badge
                 variant="outline"
@@ -350,6 +367,8 @@ export default function Home() {
                 alertPrices={alerts
                   .filter((a) => a.symbol === symbolLabel)
                   .map((a) => ({ price: a.price, condition: a.condition, triggered: a.triggered }))}
+                livePrice={liveData.price}
+                isLive={liveData.isLive}
               />
             </ResizablePanel>
             <ResizableHandle withHandle className="bg-white/10" />
@@ -371,6 +390,8 @@ export default function Home() {
             alertPrices={alerts
               .filter((a) => a.symbol === symbolLabel)
               .map((a) => ({ price: a.price, condition: a.condition, triggered: a.triggered }))}
+            livePrice={liveData.price}
+            isLive={liveData.isLive}
           />
         )}
       </main>
@@ -384,12 +405,16 @@ function ChartArea({
   symbol,
   timeframe,
   alertPrices,
+  livePrice,
+  isLive,
 }: {
   candles: Candle[];
   lines: ReturnType<typeof getTop6Levels>;
   symbol: string;
   timeframe: TimeframeInfo | null;
   alertPrices?: { price: number; condition: string; triggered: boolean }[];
+  livePrice?: number;
+  isLive?: boolean;
 }) {
   return (
     <div className="relative h-full w-full bg-[#100c00]">
@@ -400,6 +425,8 @@ function ChartArea({
         timeframe={timeframe}
         visibleCount={VISIBLE_CANDLES}
         alertPrices={alertPrices}
+        livePrice={livePrice}
+        isLive={isLive}
       />
       <div className="pointer-events-none absolute left-4 top-3 select-none">
         <div className="flex items-baseline gap-2">
