@@ -101,14 +101,14 @@ export function TradingChart({
         autoScale: true,
         // Increased margins so candles don't touch the top/bottom edges —
         // the current price line and S/R lines have more breathing room.
-        scaleMargins: { top: 0.2, bottom: 0.2 },
+        scaleMargins: { top: 0.25, bottom: 0.25 },
       },
       timeScale: {
         borderColor: COLORS.border,
         // Add right offset so the last candle (live price) isn't flush against
         // the price scale — gives space between the chart area and the price
         // labels on the right.
-        rightOffset: 8,
+        rightOffset: 15,
         timeVisible: true,
         secondsVisible: false,
         // Zoom out by default — reduces the bar width so more candles fit
