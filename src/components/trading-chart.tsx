@@ -99,10 +99,16 @@ export function TradingChart({
         // This ensures EURUSD (~1.12) and XAUUSD (~3900) both display properly
         // with the last price centered in the chart when switching symbols.
         autoScale: true,
-        scaleMargins: { top: 0.15, bottom: 0.15 },
+        // Increased margins so candles don't touch the top/bottom edges —
+        // the current price line and S/R lines have more breathing room.
+        scaleMargins: { top: 0.2, bottom: 0.2 },
       },
       timeScale: {
         borderColor: COLORS.border,
+        // Add right offset so the last candle (live price) isn't flush against
+        // the price scale — gives space between the chart area and the price
+        // labels on the right.
+        rightOffset: 8,
         timeVisible: true,
         secondsVisible: false,
         // Zoom out by default — reduces the bar width so more candles fit
