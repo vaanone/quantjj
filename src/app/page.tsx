@@ -360,6 +360,7 @@ export default function Home() {
                   .map((a) => ({ price: a.price, triggered: a.triggered }))}
                 livePrice={liveData.price}
                 isLive={liveData.isConnected}
+                lastUpdate={lastUpdate}
               />
             </ResizablePanel>
             <ResizableHandle withHandle className="bg-white/10" />
@@ -383,6 +384,7 @@ export default function Home() {
               .map((a) => ({ price: a.price, triggered: a.triggered }))}
             livePrice={liveData.price}
             isLive={liveData.isConnected}
+            lastUpdate={lastUpdate}
           />
         )}
       </main>
@@ -398,6 +400,7 @@ function ChartArea({
   alertPrices,
   livePrice,
   isLive,
+  lastUpdate,
 }: {
   candles: Candle[];
   lines: ReturnType<typeof getTop6Levels>;
@@ -406,6 +409,7 @@ function ChartArea({
   alertPrices?: { price: number; triggered: boolean }[];
   livePrice?: number;
   isLive?: boolean;
+  lastUpdate?: string | null;
 }) {
   return (
     <div className="relative h-full w-full bg-[#100c00]">
@@ -432,6 +436,14 @@ function ChartArea({
           Vaan.One · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
         </div>
       </div>
+      {/* Pivot line update timestamp — bottom-left of chart */}
+      {lastUpdate && (
+        <div className="pointer-events-none absolute bottom-8 left-3 select-none">
+          <span className="font-mono text-[10px] text-white/40">
+            Vaan.One Pivot line Updated at {formatLastUpdate(lastUpdate)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -490,7 +502,7 @@ function formatLastUpdate(isoTime: string): string {
   const dayNum = parseInt(day, 10);
   const ordinal = getOrdinal(dayNum);
 
-  return `${month} ${day}${ordinal} | ${hour}:${minute} ${dayPeriod} IST`;
+  return `${month} ${day}${ordinal} ${hour}:${minute} ${dayPeriod} (IST)`;
 }
 
 function getOrdinal(n: number): string {
