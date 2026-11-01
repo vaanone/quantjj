@@ -6,7 +6,6 @@ export interface PriceAlert {
   id: string;
   symbol: string;
   price: number;
-  condition: "above" | "below";
   triggered: boolean;
   createdAt: number;
 }
@@ -15,11 +14,10 @@ export interface PriceAlert {
  * Manages price alerts for the chart.
  *
  * Alerts are stored in localStorage so they persist across page reloads.
- * Each alert monitors the current price — when the condition is met
- * (price crosses above/below the alert price), a browser notification
- * is fired and the alert is marked as triggered.
+ * An alert fires when the live price touches (crosses) the alert price —
+ * from either direction. No "above" or "below" condition needed.
  *
- * Alerts only fire once (one-shot), matching TradingView behavior.
+ * Alerts only fire once (one-shot).
  */
 export function usePriceAlerts(symbol: string, currentPrice: number) {
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
@@ -46,8 +44,8 @@ export function usePriceAlerts(symbol: string, currentPrice: number) {
     }
   }, [alerts]);
 
-  // Check alerts against the current price. Fires notifications when
-  // a condition is met.
+  // Check alerts against the current price. Fires when price touches
+  // the alert level (crosses from either direction).
   useEffect(() => {
     if (currentPrice <= 0) return;
     const prevPrice = lastPriceRef.current;
@@ -58,13 +56,19 @@ export function usePriceAlerts(symbol: string, currentPrice: number) {
       const updated = prev.map((alert) => {
         if (alert.triggered || alert.symbol !== symbol) return alert;
 
+        // Trigger when price crosses the alert level from either direction.
         let hit = false;
-        if (alert.condition === "above" && currentPrice >= alert.price) {
-          // Only trigger if the price actually crossed (was below, now at/above).
-          if (prevPrice === 0 || prevPrice < alert.price) hit = true;
-        }
-        if (alert.condition === "below" && currentPrice <= alert.price) {
-          if (prevPrice === 0 || prevPrice > alert.price) hit = true;
+        if (prevPrice > 0) {
+          // Crossed from below to above, or from above to below.
+          if ((prevPrice < alert.price && currentPrice >= alert.price) ||
+              (prevPrice > alert.price && currentPrice <= alert.price)) {
+            hit = true;
+          }
+        } else {
+          // First price update — trigger if already at/very close to alert.
+          if (Math.abs(currentPrice - alert.price) / alert.price < 0.001) {
+            hit = true;
+          }
         }
 
         if (hit) {
@@ -80,33 +84,29 @@ export function usePriceAlerts(symbol: string, currentPrice: number) {
 
   // Fire a browser notification.
   const fireNotification = (alert: PriceAlert, price: number) => {
-    const title = `${alert.symbol} alert: ${alert.condition} ${alert.price}`;
-    const body = `Current price: ${price}. ${alert.condition === "above" ? "Price crossed above" : "Price crossed below"} ${alert.price}.`;
+    const title = `${alert.symbol} alert: price touched ${alert.price}`;
+    const body = `Current price: ${price}. Alert level ${alert.price} has been reached.`;
 
-    // Try browser notification.
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
       new Notification(title, { body });
     }
 
-    // Also show a toast (imported dynamically to avoid circular deps).
     import("sonner").then(({ toast }) => {
       toast.success(title, { description: body, duration: 10000 });
     });
   };
 
   const addAlert = useCallback(
-    (price: number, condition: "above" | "below") => {
+    (price: number) => {
       const alert: PriceAlert = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         symbol,
         price,
-        condition,
         triggered: false,
         createdAt: Date.now(),
       };
       setAlerts((prev) => [...prev, alert]);
 
-      // Request notification permission if not already granted.
       if (typeof Notification !== "undefined" && Notification.permission === "default") {
         Notification.requestPermission();
       }

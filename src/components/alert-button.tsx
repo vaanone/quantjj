@@ -20,7 +20,7 @@ interface AlertButtonProps {
   symbol: string;
   currentPrice: number;
   alerts: PriceAlert[];
-  onAddAlert: (price: number, condition: "above" | "below") => void;
+  onAddAlert: (price: number) => void;
   onRemoveAlert: (id: string) => void;
   onClearAll: () => void;
 }
@@ -35,7 +35,6 @@ export function AlertButton({
 }: AlertButtonProps) {
   const [open, setOpen] = useState(false);
   const [price, setPrice] = useState("");
-  const [condition, setCondition] = useState<"above" | "below">("above");
 
   const activeAlerts = alerts.filter((a) => a.symbol === symbol && !a.triggered);
   const triggeredAlerts = alerts.filter((a) => a.symbol === symbol && a.triggered);
@@ -43,7 +42,7 @@ export function AlertButton({
   const handleAdd = () => {
     const p = parseFloat(price);
     if (isNaN(p) || p <= 0) return;
-    onAddAlert(p, condition);
+    onAddAlert(p);
     setPrice("");
     setOpen(false);
   };
@@ -88,35 +87,9 @@ export function AlertButton({
             </p>
           </div>
 
-          {/* Set new alert */}
+          {/* Set new alert — just a price, no above/below */}
           <div className="space-y-2">
-            <Label className="text-xs text-white/60">Set Alert When Price Goes:</Label>
-            <div className="flex gap-2">
-              <Button
-                variant={condition === "above" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCondition("above")}
-                className={
-                  condition === "above"
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                    : "border-white/15 text-white/60 hover:text-white"
-                }
-              >
-                Above
-              </Button>
-              <Button
-                variant={condition === "below" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCondition("below")}
-                className={
-                  condition === "below"
-                    ? "bg-red-600 text-white hover:bg-red-700"
-                    : "border-white/15 text-white/60 hover:text-white"
-                }
-              >
-                Below
-              </Button>
-            </div>
+            <Label className="text-xs text-white/60">Alert Price (trigger on touch)</Label>
             <div className="flex gap-2">
               <Input
                 type="number"
@@ -155,10 +128,7 @@ export function AlertButton({
                   className="flex items-center justify-between rounded-md border border-white/5 bg-white/[0.01] px-3 py-2"
                 >
                   <span className="font-mono text-xs text-white/80">
-                    <span className={alert.condition === "above" ? "text-emerald-400" : "text-red-400"}>
-                      {alert.condition === "above" ? "▲" : "▼"}
-                    </span>{" "}
-                    {alert.price}
+                    <span className="text-amber-400">●</span> {alert.price}
                   </span>
                   <Button
                     variant="ghost"
@@ -183,10 +153,7 @@ export function AlertButton({
                   className="flex items-center justify-between rounded-md border border-white/5 bg-white/[0.01] px-3 py-2 opacity-50"
                 >
                   <span className="font-mono text-xs text-white/60">
-                    <span className="text-white/40">
-                      {alert.condition === "above" ? "▲" : "▼"}
-                    </span>{" "}
-                    {alert.price}
+                    <span className="text-white/40">✓</span> {alert.price}
                   </span>
                   <Button
                     variant="ghost"
@@ -203,7 +170,7 @@ export function AlertButton({
 
           {activeAlerts.length === 0 && triggeredAlerts.length === 0 && (
             <p className="py-4 text-center text-xs text-white/30">
-              No alerts set. Create one above to get notified when price hits your target.
+              No alerts set. Enter a price above to get notified when price touches it.
             </p>
           )}
 

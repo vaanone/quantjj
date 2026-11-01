@@ -28,7 +28,7 @@ interface TradingChartProps {
    *  last N. The user can scroll left to see older candles. */
   visibleCount?: number;
   /** Active price alert levels to draw on the chart (dashed orange lines). */
-  alertPrices?: { price: number; condition: string; triggered: boolean }[];
+  alertPrices?: { price: number; triggered: boolean }[];
   /** Live price from Finnhub streaming. When provided, the last candle
    *  updates in real-time as new ticks arrive. */
   livePrice?: number;
@@ -330,8 +330,8 @@ export function TradingChart({
           lineStyle: LineStyle.Dashed,
           axisLabelVisible: true,
           title: alert.triggered
-            ? `⚡ ${alert.condition} ${alert.price}`
-            : `🔔 ${alert.condition} ${alert.price}`,
+            ? `⚡ ${alert.price}`
+            : `🔔 ${alert.price}`,
         });
         alertLinesRef.current.push(line);
       });

@@ -357,7 +357,7 @@ export default function Home() {
                 timeframe={timeframe}
                 alertPrices={alerts
                   .filter((a) => a.symbol === symbolLabel)
-                  .map((a) => ({ price: a.price, condition: a.condition, triggered: a.triggered }))}
+                  .map((a) => ({ price: a.price, triggered: a.triggered }))}
                 livePrice={liveData.price}
                 isLive={liveData.isConnected}
               />
@@ -380,7 +380,7 @@ export default function Home() {
             timeframe={timeframe}
             alertPrices={alerts
               .filter((a) => a.symbol === symbolLabel)
-              .map((a) => ({ price: a.price, condition: a.condition, triggered: a.triggered }))}
+              .map((a) => ({ price: a.price, triggered: a.triggered }))}
             livePrice={liveData.price}
             isLive={liveData.isConnected}
           />
@@ -403,7 +403,7 @@ function ChartArea({
   lines: ReturnType<typeof getTop6Levels>;
   symbol: string;
   timeframe: TimeframeInfo | null;
-  alertPrices?: { price: number; condition: string; triggered: boolean }[];
+  alertPrices?: { price: number; triggered: boolean }[];
   livePrice?: number;
   isLive?: boolean;
 }) {
