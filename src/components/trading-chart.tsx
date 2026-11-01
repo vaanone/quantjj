@@ -139,6 +139,10 @@ export function TradingChart({
       borderDownColor: COLORS.down,
       wickUpColor: COLORS.up,
       wickDownColor: COLORS.down,
+      // Current market price line — dashed grey.
+      priceLineColor: "#9ca3af",
+      priceLineStyle: LineStyle.Dashed,
+      priceLineWidth: 1,
     });
     candleSeriesRef.current = candleSeries;
 
