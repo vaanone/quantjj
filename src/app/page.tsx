@@ -492,8 +492,6 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           </div>
           <div className="flex items-center gap-4">
             <a href="#levels" className="hidden text-xs text-white/60 hover:text-white sm:block">Levels</a>
-            <a href="#copytrade" className="hidden text-xs text-white/60 hover:text-white sm:block">Copy Trade</a>
-            <a href="#quant" className="hidden text-xs text-white/60 hover:text-white sm:block">Quant</a>
             <Button
               onClick={onOpenChart}
               size="sm"
@@ -521,8 +519,8 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
             <span className="text-white">Vaan Pivot</span>
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-sm text-white/60 sm:text-base">
-            Daily support &amp; resistance levels auto-loaded from your MT5 data, with copy trading
-            signals and custom quant programming for MT5 and Amibroker.
+            Daily support &amp; resistance levels auto-loaded from your MT5 data, drawn directly on a
+            TradingView-style candlestick chart.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
@@ -531,12 +529,6 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
             >
               Launch Chart →
             </Button>
-            <a
-              href="#copytrade"
-              className="rounded-lg border border-white/15 bg-white/5 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              Copy Trade
-            </a>
           </div>
         </div>
       </section>
@@ -574,74 +566,6 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
             >
               View Live Chart →
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* ====== COPY TRADE ====== */}
-      <section id="copytrade" className="border-t border-white/5 bg-[#0d0a00] px-4 py-16">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-10 text-center">
-            <span className="text-[10px] uppercase tracking-widest text-amber-400">02 — Trading</span>
-            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">Copy Trade</h3>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
-              Follow verified pivot-level trades. Every signal is based on the daily VAAN levels
-              — entries, stop-losses, and targets are pre-calculated from the support/resistance zones.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <FeatureCard
-              title="Signal Alerts"
-              desc="Real-time alerts when price touches Resistance I or Support I — the highest-probability reversal zones."
-            />
-            <FeatureCard
-              title="Pre-Set Entries"
-              desc="Each signal includes entry price, stop-loss (beyond RII/SII), and target (next pivot level)."
-            />
-            <FeatureCard
-              title="Risk-Adjusted"
-              desc="Position sizing calculated per trade so risk stays consistent across all signals."
-            />
-          </div>
-          <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.02] p-6 text-center">
-            <p className="text-sm text-white/70">
-              💡 <span className="font-semibold text-white">Copy trade signals</span> are generated from
-              the same pivot levels you see on the chart — what you see is what you trade.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ====== QUANT PROGRAMMING ====== */}
-      <section id="quant" className="border-t border-white/5 px-4 py-16">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-10 text-center">
-            <span className="text-[10px] uppercase tracking-widest text-amber-400">03 — Development</span>
-            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">Quant Programming — MT5 / Amibroker</h3>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
-              Custom algorithmic trading systems built for MetaTrader 5 and Amibroker. From pivot-level
-              EAs to full automated strategies with backtesting.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-6">
-              <h4 className="mb-3 font-mono text-lg font-bold text-amber-400">MetaTrader 5 (MQL5)</h4>
-              <ul className="space-y-2 text-sm text-white/60">
-                <li>• Expert Advisors (EAs) for automated trading</li>
-                <li>• Custom indicators for pivot-level detection</li>
-                <li>• Strategy backtesting &amp; optimization</li>
-                <li>• Multi-symbol and multi-timeframe systems</li>
-              </ul>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-6">
-              <h4 className="mb-3 font-mono text-lg font-bold text-amber-400">Amibroker (AFL)</h4>
-              <ul className="space-y-2 text-sm text-white/60">
-                <li>• AFL formulas for scanning &amp; screening</li>
-                <li>• Custom chart templates with pivot overlays</li>
-                <li>• Backtesting with historical data</li>
-                <li>• Automated exploration &amp; alerts</li>
-              </ul>
-            </div>
           </div>
         </div>
       </section>
