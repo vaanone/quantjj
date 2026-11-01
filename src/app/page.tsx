@@ -237,7 +237,7 @@ export default function Home() {
           {candles.length > 0 && (
             <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 sm:border-l sm:border-white/10 sm:pl-2">
               {/* Show live price if streaming, otherwise last close from CSV */}
-              {liveData.isLive && (
+              {liveData.isConnected && (
                 <span className="flex items-center gap-0.5">
                   <span className="relative flex h-1 w-1">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
@@ -368,7 +368,7 @@ export default function Home() {
                   .filter((a) => a.symbol === symbolLabel)
                   .map((a) => ({ price: a.price, condition: a.condition, triggered: a.triggered }))}
                 livePrice={liveData.price}
-                isLive={liveData.isLive}
+                isLive={liveData.isConnected}
               />
             </ResizablePanel>
             <ResizableHandle withHandle className="bg-white/10" />
@@ -391,7 +391,7 @@ export default function Home() {
               .filter((a) => a.symbol === symbolLabel)
               .map((a) => ({ price: a.price, condition: a.condition, triggered: a.triggered }))}
             livePrice={liveData.price}
-            isLive={liveData.isLive}
+            isLive={liveData.isConnected}
           />
         )}
       </main>
