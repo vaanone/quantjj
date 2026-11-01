@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { PanelRight, Square, Columns2, Columns3, Grid2x2 } from "lucide-react";
+import { PanelRight, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -49,7 +49,7 @@ export default function Home() {
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
-  const [chartLayout, setChartLayout] = useState<1 | 2 | 3 | 4>(1);
+  const [chartLayout, setChartLayout] = useState<1 | 2 | 4>(1);
   // Per-chart symbol selections (for multi-chart layouts).
   // Index 0 = first chart (uses the main selectedFile), 1-3 = additional charts.
   const [multiSymbols, setMultiSymbols] = useState<Record<number, string>>({});
@@ -261,32 +261,43 @@ export default function Home() {
 
         {/* All controls in one row, no wrapping */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Chart layout selector — 1/2/3/4 chart views */}
+          {/* Chart layout dropdown — 1/2/4 chart views */}
           {candles.length > 0 && (
-            <div className="flex shrink-0 items-center gap-0.5 rounded-md border border-white/10 bg-white/5 p-0.5">
-              {([
-                { count: 1, icon: Square, label: "1 chart" },
-                { count: 2, icon: Columns2, label: "2 charts" },
-                { count: 3, icon: Columns3, label: "3 charts" },
-                { count: 4, icon: Grid2x2, label: "4 charts" },
-              ] as const).map(({ count, icon: Icon, label }) => (
-                <button
-                  key={count}
-                  onClick={() => setChartLayout(count)}
-                  title={label}
-                  className={`flex h-6 w-6 items-center justify-center rounded transition-colors sm:h-7 sm:w-7 ${
-                    chartLayout === count
-                      ? "bg-red-600/30 text-red-400"
-                      : "text-white/40 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                </button>
-              ))}
-            </div>
+            <Select
+              value={String(chartLayout)}
+              onValueChange={(v) => {
+                const n = Number(v) as 1 | 2 | 4;
+                setChartLayout(n);
+                // Auto-fill symbols for the selected layout.
+                if (n > 1) {
+                  setMultiSymbols((prev) => {
+                    const next = { ...prev };
+                    const syms = Array.from(files.values()).flatMap(
+                      (f) => f.result.symbols,
+                    );
+                    for (let i = 1; i < n; i++) {
+                      if (!next[i] && syms[i]) next[i] = syms[i];
+                    }
+                    return next;
+                  });
+                }
+              }}
+            >
+              <SelectTrigger className="h-7 w-auto shrink-0 gap-1 border-white/15 bg-white/5 px-1.5 text-white hover:bg-white/10 sm:h-8 sm:px-2">
+                <LayoutGrid className="h-3.5 w-3.5 text-white/60" />
+                <span className="hidden font-mono text-xs font-bold sm:inline">
+                  {chartLayout === 1 ? "1" : chartLayout === 2 ? "2" : "4"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="border-white/15 bg-[#15161d] text-white">
+                <SelectItem value="1" className="font-mono text-xs">1 Chart</SelectItem>
+                <SelectItem value="2" className="font-mono text-xs">2 Charts</SelectItem>
+                <SelectItem value="4" className="font-mono text-xs">4 Charts</SelectItem>
+              </SelectContent>
+            </Select>
           )}
 
-          {/* Symbol dropdown — right next to layout icons */}
+          {/* Symbol dropdown — only shown in single-chart mode */}
           {activeSymbolValue && chartLayout === 1 && (
             <Select value={dropdownValue} onValueChange={handleDropdownChange}>
               <SelectTrigger className="h-7 w-auto min-w-[70px] max-w-[120px] gap-1 border-white/15 bg-white/5 px-1.5 font-mono text-xs font-bold tracking-wide text-white hover:bg-white/10 sm:h-8 sm:min-w-[110px] sm:max-w-[220px] sm:px-2 sm:text-sm">
@@ -557,7 +568,7 @@ function MultiChartGrid({
   lastUpdate,
   slotSymbols,
 }: {
-  layout: 2 | 3 | 4;
+  layout: 2 | 4;
   allSymbols: string[];
   multiSymbols: Record<number, string>;
   onSymbolChange: (slot: number, sym: string) => void;
@@ -581,8 +592,6 @@ function MultiChartGrid({
   const gridClass =
     layout === 2
       ? "grid-cols-1 sm:grid-cols-2 grid-rows-2 sm:grid-rows-1"
-      : layout === 3
-      ? "grid-cols-1 sm:grid-cols-2 grid-rows-3 sm:grid-rows-2"
       : "grid-cols-1 sm:grid-cols-2 grid-rows-4 sm:grid-rows-2";
 
   return (
