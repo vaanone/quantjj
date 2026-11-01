@@ -247,13 +247,14 @@ export function getTop6Levels(levels: SRLevel[], lastClose: number): SRLine[] {
 }
 
 /**
- * Convert user-defined levels (read from CSV columns J–O) into SRLine[] format
- * so the chart and panel can render them with the same code path as auto-
- * detected levels.
+ * Convert user-defined levels (read from CSV columns H–O) into SRLine[] format.
  *
- * The type (resistance/support) is determined by comparing the level price to
- * the current close: above = resistance (green), below = support (red).
- * The label is the column header name (or Excel letter if no header).
+ * The type (resistance/support) is determined by the LEVEL NAME, NOT by the
+ * price position relative to the current close. This is forced — any level
+ * whose name starts with "R" (R1, R2, R3, Resistance I/II/III) is ALWAYS
+ * green (resistance), and any level whose name starts with "S" (S1, S2, S3,
+ * Support I/II/III) is ALWAYS red (support). This prevents misclassification
+ * when a resistance level happens to sit below the current price.
  */
 export function userLevelsToLines(
   userLevels: UserLevel[],
@@ -262,7 +263,9 @@ export function userLevelsToLines(
   if (lastClose <= 0 || userLevels.length === 0) return [];
 
   return userLevels.map((ul) => {
-    const type: SRType = ul.price >= lastClose ? "resistance" : "support";
+    // Force: name starts with R → resistance (green), S → support (red).
+    const nameUpper = ul.name.toUpperCase().trim();
+    const type: SRType = nameUpper.startsWith("R") ? "resistance" : "support";
     return {
       price: ul.price,
       type,
