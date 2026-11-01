@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QUANTJJ — Daily Pivot Levels",
+  title: "PIVOTJJ — PRECISION TRADING LEVELS",
   description: "TradingView-style candlestick chart for MT5 Excel/CSV exports, with automatic pivot levels detection.",
   keywords: ["trading", "MT5", "candlestick", "support resistance", "lightweight-charts"],
   authors: [{ name: "Vaan One" }],

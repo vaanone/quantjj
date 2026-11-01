@@ -181,13 +181,13 @@ export default function Home() {
         {/* Logo (always visible, even on mobile) */}
         <img
           src="/logo.png"
-          alt="QUANTJJ"
+          alt="PIVOTJJ"
           className="h-7 w-7 shrink-0 rounded-md object-contain sm:h-9 sm:w-9"
         />
         {/* App name — hidden on mobile to save space */}
         <div className="hidden shrink-0 sm:block">
-          <h1 className="text-sm font-semibold leading-tight">QUANTJJ</h1>
-          <p className="text-[10px] leading-tight text-white/40">Daily Pivot Levels</p>
+          <h1 className="text-sm font-semibold leading-tight">PIVOTJJ</h1>
+          <p className="text-[10px] leading-tight text-white/40">PRECISION TRADING LEVELS</p>
         </div>
 
         {/* Spacer to push the rest to the right on desktop */}
@@ -258,7 +258,7 @@ export default function Home() {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-white/10 bg-[#0c0d12] px-4 py-1.5 text-[11px] text-white/70">
           {/* Disclaimer — left side, small font, single line */}
           <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
-            Daily QUANTJJ Levels are updated manually every morning for educational and informational purposes only.
+            Daily PIVOTJJ Levels are updated manually every morning for educational and informational purposes only.
           </p>
           {/* Last Update timestamp — right side */}
           <div className="ml-auto flex items-center gap-3">
@@ -309,7 +309,7 @@ export default function Home() {
         {chartLoading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0a0b0f]">
             <div className="flex flex-col items-center gap-6">
-              <img src="/logo.png" alt="QUANTJJ" className="h-16 w-16 rounded-lg object-contain opacity-80" />
+              <img src="/logo.png" alt="PIVOTJJ" className="h-16 w-16 rounded-lg object-contain opacity-80" />
               <LoadingDots />
             </div>
           </div>
@@ -380,7 +380,7 @@ function ChartArea({
           )}
         </div>
         <div className="font-mono text-[10px] tracking-widest text-white/[0.05]">
-          QUANTJJ · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
+          PIVOTJJ · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
         </div>
       </div>
     </div>
@@ -401,7 +401,7 @@ function EmptyState({
           alt="Vaan One"
           className="mx-auto mb-4 h-16 w-16 rounded-lg object-contain"
         />
-        <h2 className="text-2xl font-semibold">QUANTJJ</h2>
+        <h2 className="text-2xl font-semibold">PIVOTJJ</h2>
         <p className="mt-2 max-w-md text-sm text-white/60">
           Upload MT5 candlestick CSV files to load them into the chart. Pivot Levels
           are read from columns H–O.
