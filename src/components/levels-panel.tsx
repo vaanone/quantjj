@@ -5,7 +5,6 @@ import type { SRLine } from "@/lib/support-resistance";
 interface LevelsPanelProps {
   lines: SRLine[];
   lastClose: number;
-  fileName: string;
   symbol: string;
 }
 
@@ -17,7 +16,7 @@ interface LevelsPanelProps {
  * The lines list arrives pre-sorted as [R I, S I, R II, S II, R III, S III]
  * (skipping any tier that wasn't detected).
  */
-export function LevelsPanel({ lines, lastClose, fileName, symbol }: LevelsPanelProps) {
+export function LevelsPanel({ lines, lastClose, symbol }: LevelsPanelProps) {
   return (
     <aside className="flex h-full w-full flex-col gap-4 overflow-y-auto bg-[#0d0a00] p-4 text-white">
       {/* Compact file summary */}
@@ -26,12 +25,6 @@ export function LevelsPanel({ lines, lastClose, fileName, symbol }: LevelsPanelP
           Active Symbol
         </h2>
         <div className="mt-2 space-y-1 text-xs">
-          <div className="flex justify-between">
-            <span className="text-white/50">File</span>
-            <span className="max-w-[180px] truncate font-mono text-white/90" title={fileName}>
-              {fileName || "—"}
-            </span>
-          </div>
           <div className="flex justify-between">
             <span className="text-white/50">Symbol</span>
             <span className="font-mono text-white/90">{symbol || "—"}</span>

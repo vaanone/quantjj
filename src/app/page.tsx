@@ -301,7 +301,6 @@ export default function Home() {
               <LevelsPanel
                 lines={top6Lines}
                 lastClose={lastClose}
-                fileName={selectedFile}
                 symbol={symbolLabel}
               />
             </SheetContent>
@@ -339,7 +338,6 @@ export default function Home() {
                 key={selectedFile}
                 lines={top6Lines}
                 lastClose={lastClose}
-                fileName={selectedFile}
                 symbol={symbolLabel}
               />
             </ResizablePanel>
