@@ -540,29 +540,65 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
             <span className="text-[10px] uppercase tracking-widest text-amber-400">01 — Chart</span>
             <h3 className="mt-2 text-2xl font-bold sm:text-3xl">VAAN Levels on Chart</h3>
             <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
-              Automatically loads your MT5 CSV files from Google Drive and draws 6 precision pivot
-              levels — Resistance I/II/III (green) and Support I/II/III (red) — directly on a
-              TradingView-style candlestick chart.
+              Get daily Pivot Points and Support &amp; Resistance levels for your favourite trading
+              instruments.
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
+
+          {/* Key facts */}
+          <div className="mb-10 grid gap-4 sm:grid-cols-3">
             <FeatureCard
-              title="Auto-Load from Drive"
-              desc="CSV files in your Google Drive folder are fetched and parsed automatically — no manual upload."
+              title="Daily Updates"
+              desc="VAAN Pivot levels are manually updated every morning at 5:30 AM IST."
             />
             <FeatureCard
-              title="6 Pivot Levels"
-              desc="Resistance I, II, III (green) and Support I, II, III (red) drawn as solid lines on the chart."
+              title="Claimed Accuracy"
+              desc="Up to 80%"
             />
             <FeatureCard
-              title="Last 200 Candles"
-              desc="Zoomed view showing the latest 100 candles with day-separation vertical lines."
+              title="Currently FREE!"
+              desc="Access all available levels at no cost for now."
             />
           </div>
-          <div className="mt-8 text-center">
+
+          {/* Available symbols */}
+          <div className="mb-8 rounded-xl border border-white/10 bg-white/[0.02] p-6">
+            <h4 className="mb-4 text-center text-sm font-semibold uppercase tracking-wider text-amber-400">
+              Available Trading Symbols
+            </h4>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[
+                { sym: "XAUUSD", name: "Gold" },
+                { sym: "EURUSD", name: "Euro / US Dollar" },
+                { sym: "GBPUSD", name: "British Pound / US Dollar" },
+                { sym: "USDCHF", name: "US Dollar / Swiss Franc" },
+              ].map((s) => (
+                <div
+                  key={s.sym}
+                  className="flex items-center justify-between rounded-md border border-white/5 bg-white/[0.01] px-4 py-2.5"
+                >
+                  <span className="font-mono text-sm font-bold text-amber-400">{s.sym}</span>
+                  <span className="text-xs text-white/60">{s.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Disclaimer */}
+          <div className="mb-8 rounded-xl border border-amber-500/15 bg-amber-500/[0.03] p-5">
+            <p className="text-xs leading-relaxed text-white/50">
+              <span className="font-semibold text-amber-400">Disclaimer:</span>{" "}
+              VAAN Levels are provided for educational and informational purposes only. These levels
+              are manually calculated and updated daily. Accuracy is not guaranteed. They are not
+              investment advice or trading recommendations. Always do your own research and manage your
+              risk.
+            </p>
+          </div>
+
+          <div className="text-center">
             <Button
               onClick={onOpenChart}
-              className="bg-amber-500/15 font-mono text-sm text-amber-400 hover:bg-amber-500/25"
+              className="bg-amber-500 px-8 py-3 text-sm font-semibold text-white hover:bg-amber-600"
             >
               View Live Chart →
             </Button>
@@ -587,15 +623,22 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
       </section>
 
       {/* ====== FOOTER ====== */}
-      <footer className="border-t border-white/10 px-4 py-6">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
+      <footer className="border-t border-white/10 px-4 py-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 text-center">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="VAAN" className="h-6 w-6 rounded-md object-contain" />
             <span className="text-xs font-mono text-white/40">VAAN — Vaan Pivot</span>
           </div>
           <p className="text-[10px] text-white/30">
-            Daily QUANTJJ Levels are updated manually every morning for educational and informational purposes only.
+            Daily Vaan Pivot Levels are updated manually every morning for educational and
+            informational purposes only.
           </p>
+          <a
+            href="mailto:valan@outlook.com"
+            className="text-xs text-amber-400 transition-colors hover:text-amber-300"
+          >
+            contact: valan@outlook.com
+          </a>
         </div>
       </footer>
     </div>
