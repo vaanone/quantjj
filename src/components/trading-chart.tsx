@@ -325,7 +325,7 @@ export function TradingChart({
       alertPrices.forEach((alert) => {
         const line = candleSeriesRef.current!.createPriceLine({
           price: alert.price,
-          color: alert.triggered ? "#6b7280" : "#f97316", // orange for active, gray for triggered
+          color: alert.triggered ? "#6b7280" : "#00ffff", // aqua for active, gray for triggered
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           axisLabelVisible: true,
