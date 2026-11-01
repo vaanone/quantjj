@@ -95,8 +95,11 @@ export function TradingChart({
       },
       rightPriceScale: {
         borderColor: COLORS.border,
-        // Volume overlay removed — chart now uses full vertical extent.
-        scaleMargins: { top: 0.08, bottom: 0.08 },
+        // Auto-scale: the price axis fits to the visible candles automatically.
+        // This ensures EURUSD (~1.12) and XAUUSD (~3900) both display properly
+        // with the last price centered in the chart when switching symbols.
+        autoScale: true,
+        scaleMargins: { top: 0.15, bottom: 0.15 },
       },
       timeScale: {
         borderColor: COLORS.border,
@@ -247,6 +250,11 @@ export function TradingChart({
     }));
     candleSeriesRef.current.setData(candleData);
 
+    // Reset the price scale so it auto-fits to the new symbol's price range.
+    // Without this, switching from XAUUSD (~3900) to EURUSD (~1.12) keeps
+    // the old price range and the candles appear squished at the bottom.
+    chartRef.current.priceScale("right").applyOptions({ autoScale: true });
+
     // Day-separation vertical lines: insert a vertical line marker at the
     // first candle of each new UTC day. This visually separates trading days.
     const dayMarkers = [];
@@ -269,16 +277,16 @@ export function TradingChart({
       createSeriesMarkers(candleSeriesRef.current, dayMarkers);
     }
 
+    // First fit ALL content (resets both time + price scales), then zoom
+    // the time axis to show only the last N candles.
+    chartRef.current.timeScale().fitContent();
+
     // Set the visible range to show only the last `visibleCount` candles.
-    // The full dataset (up to 200) is loaded so the user can scroll left,
-    // but the initial viewport is zoomed to show only the most recent N.
     if (visibleCount && visibleCount < candles.length) {
       const fromIdx = candles.length - visibleCount;
       const fromTime = candles[fromIdx].time as UTCTimestamp;
       const toTime = candles[candles.length - 1].time as UTCTimestamp;
       chartRef.current.timeScale().setVisibleRange({ from: fromTime, to: toTime });
-    } else {
-      chartRef.current.timeScale().fitContent();
     }
   }, [candles, visibleCount]);
 
