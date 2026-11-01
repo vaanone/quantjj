@@ -96,8 +96,9 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
   }, [compact, onLastUpdate]);
 
   // Download and parse a single file. Returns true on success.
+  // `silent` suppresses toast notifications (used during initial auto-load).
   const loadFile = useCallback(
-    async (file: DriveFile): Promise<boolean> => {
+    async (file: DriveFile, silent = false): Promise<boolean> => {
       setLoadingFile(file.id);
       try {
         const res = await fetch(
@@ -123,7 +124,9 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
         return true;
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Unknown error";
-        toast.error(`Failed: ${file.name}`, { description: msg.slice(0, 120) });
+        if (!silent) {
+          toast.error(`Failed: ${file.name}`, { description: msg.slice(0, 120) });
+        }
         return false;
       } finally {
         setLoadingFile(null);
@@ -133,18 +136,18 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
   );
 
   // Auto-load all currently-fetched files (used on mount + when new files
-  // appear during polling).
+  // appear during polling). `silent` suppresses the "Auto-loaded" toast.
   const autoLoadAll = useCallback(
-    async (fileList: DriveFile[]) => {
+    async (fileList: DriveFile[], silent = false) => {
       if (fileList.length === 0) return;
       setAutoLoading(true);
       let success = 0;
       for (const file of fileList) {
         if (loadedIdsRef.current.has(file.id)) continue;
-        const ok = await loadFile(file);
+        const ok = await loadFile(file, silent);
         if (ok) success++;
       }
-      if (success > 0) {
+      if (success > 0 && !silent) {
         toast.success(`Auto-loaded ${success} file${success > 1 ? "s" : ""} from Drive`, {
           description: `${fileList.length} total in folder`,
         });
@@ -161,7 +164,7 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
       const fileList = await fetchFiles();
       if (cancelled || fileList.length === 0) return;
       hasAutoLoadedRef.current = true;
-      await autoLoadAll(fileList);
+      await autoLoadAll(fileList, true); // silent=true — no toasts during initial load
     })();
     return () => { cancelled = true; };
   }, [fetchFiles, autoLoadAll]);

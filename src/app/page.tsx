@@ -15,7 +15,9 @@ import {
 import { TradingChart } from "@/components/trading-chart";
 import { DriveFilePicker } from "@/components/drive-file-picker";
 import { LevelsPanel } from "@/components/levels-panel";
+import { AlertButton } from "@/components/alert-button";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { usePriceAlerts } from "@/hooks/use-price-alerts";
 import { detectSupportResistance, getTop6Levels, userLevelsToLines } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle, ParseResult } from "@/lib/excel-parser";
@@ -172,6 +174,9 @@ export default function Home() {
   const totalChangePct = todayOpen > 0 ? ((lastClose - todayOpen) / todayOpen) * 100 : 0;
   const symbolLabel = selectedSymbol || currentResult?.symbol || "";
 
+  // Price alerts — monitors current price and fires notifications.
+  const { alerts, addAlert, removeAlert, clearAll } = usePriceAlerts(symbolLabel, lastClose);
+
   // For the symbol dropdown value: the currently active symbol.
   const activeSymbolValue = selectedSymbol || currentResult?.symbol || "";
 
@@ -247,6 +252,18 @@ export default function Home() {
             <Badge className="h-7 shrink-0 gap-1 border border-amber-500/30 bg-amber-500/10 px-1.5 font-mono text-xs font-bold text-amber-400 sm:h-8 sm:px-2 sm:text-sm">
               {timeframe.label}
             </Badge>
+          )}
+
+          {/* Price alert button — set alerts like TradingView */}
+          {candles.length > 0 && (
+            <AlertButton
+              symbol={symbolLabel}
+              currentPrice={lastClose}
+              alerts={alerts}
+              onAddAlert={addAlert}
+              onRemoveAlert={removeAlert}
+              onClearAll={clearAll}
+            />
           )}
 
           {/* Drive refresh button — always rendered (even before candles load)
@@ -330,6 +347,9 @@ export default function Home() {
                 lines={top6Lines}
                 symbol={symbolLabel}
                 timeframe={timeframe}
+                alertPrices={alerts
+                  .filter((a) => a.symbol === symbolLabel)
+                  .map((a) => ({ price: a.price, condition: a.condition, triggered: a.triggered }))}
               />
             </ResizablePanel>
             <ResizableHandle withHandle className="bg-white/10" />
@@ -348,6 +368,9 @@ export default function Home() {
             lines={top6Lines}
             symbol={symbolLabel}
             timeframe={timeframe}
+            alertPrices={alerts
+              .filter((a) => a.symbol === symbolLabel)
+              .map((a) => ({ price: a.price, condition: a.condition, triggered: a.triggered }))}
           />
         )}
       </main>
@@ -360,11 +383,13 @@ function ChartArea({
   lines,
   symbol,
   timeframe,
+  alertPrices,
 }: {
   candles: Candle[];
   lines: ReturnType<typeof getTop6Levels>;
   symbol: string;
   timeframe: TimeframeInfo | null;
+  alertPrices?: { price: number; condition: string; triggered: boolean }[];
 }) {
   return (
     <div className="relative h-full w-full bg-[#100c00]">
@@ -374,6 +399,7 @@ function ChartArea({
         symbol={symbol}
         timeframe={timeframe}
         visibleCount={VISIBLE_CANDLES}
+        alertPrices={alertPrices}
       />
       <div className="pointer-events-none absolute left-4 top-3 select-none">
         <div className="flex items-baseline gap-2">

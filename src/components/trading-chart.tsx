@@ -27,6 +27,8 @@ interface TradingChartProps {
    *  The full `candles` array is loaded; the viewport is just zoomed to the
    *  last N. The user can scroll left to see older candles. */
   visibleCount?: number;
+  /** Active price alert levels to draw on the chart (dashed orange lines). */
+  alertPrices?: { price: number; condition: string; triggered: boolean }[];
 }
 
 const COLORS = {
@@ -46,11 +48,13 @@ export function TradingChart({
   symbol,
   timeframe,
   visibleCount,
+  alertPrices,
 }: TradingChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const priceLinesRef = useRef<IPriceLine[]>([]);
+  const alertLinesRef = useRef<IPriceLine[]>([]);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   // -- Create chart once -----------------------------------------------------
@@ -292,6 +296,32 @@ export function TradingChart({
       priceLinesRef.current.push(line);
     });
   }, [lines]);
+
+  // -- Update alert price lines (dashed, orange/gray for triggered) ----------
+  useEffect(() => {
+    if (!candleSeriesRef.current) return;
+
+    for (const line of alertLinesRef.current) {
+      candleSeriesRef.current.removePriceLine(line);
+    }
+    alertLinesRef.current = [];
+
+    if (alertPrices && alertPrices.length > 0) {
+      alertPrices.forEach((alert) => {
+        const line = candleSeriesRef.current!.createPriceLine({
+          price: alert.price,
+          color: alert.triggered ? "#6b7280" : "#f97316", // orange for active, gray for triggered
+          lineWidth: 1,
+          lineStyle: LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: alert.triggered
+            ? `⚡ ${alert.condition} ${alert.price}`
+            : `🔔 ${alert.condition} ${alert.price}`,
+        });
+        alertLinesRef.current.push(line);
+      });
+    }
+  }, [alertPrices]);
 
   void symbol;
 
