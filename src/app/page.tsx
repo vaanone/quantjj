@@ -189,10 +189,10 @@ export default function Home() {
           className="flex shrink-0 items-center gap-1.5 rounded-md px-1 py-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
           title="Back to home"
         >
-          <img src="/logo.png" alt="VAAN" className="h-7 w-7 rounded-md object-contain sm:h-9 sm:w-9" />
+          <img src="/logo.png" alt="Vaan.One" className="h-7 w-7 rounded-md object-contain sm:h-9 sm:w-9" />
         {/* App name — hidden on mobile to save space */}
         <div className="hidden shrink-0 sm:block">
-          <h1 className="text-sm font-semibold leading-tight">VAAN</h1>
+          <h1 className="text-sm font-semibold leading-tight">Vaan.One</h1>
           <p className="text-[10px] leading-tight text-white/40">Vaan Pivot</p>
         </div>
         </button>
@@ -265,7 +265,7 @@ export default function Home() {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-white/10 bg-[#0d0a00] px-4 py-1.5 text-[11px] text-white/70">
           {/* Disclaimer — left side, small font, single line */}
           <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
-            Daily VAAN Levels are updated manually every morning for educational and informational purposes only.
+            Daily Vaan.One Levels are updated manually every morning for educational and informational purposes only.
           </p>
           {/* Last Update timestamp — right side */}
           <div className="ml-auto flex items-center gap-3">
@@ -315,7 +315,7 @@ export default function Home() {
         {chartLoading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#000000]">
             <div className="flex flex-col items-center gap-6">
-              <img src="/logo.png" alt="VAAN" className="h-16 w-16 rounded-lg object-contain opacity-80" />
+              <img src="/logo.png" alt="Vaan.One" className="h-16 w-16 rounded-lg object-contain opacity-80" />
               <LoadingDots />
             </div>
           </div>
@@ -385,7 +385,7 @@ function ChartArea({
           )}
         </div>
         <div className="font-mono text-[10px] tracking-widest text-white/[0.05]">
-          VAAN · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
+          Vaan.One · {candles.length} BARS · LAST {MAX_DISPLAY_CANDLES}
         </div>
       </div>
     </div>
@@ -406,7 +406,7 @@ function EmptyState({
           alt="Vaan One"
           className="mx-auto mb-4 h-16 w-16 rounded-lg object-contain"
         />
-        <h2 className="text-2xl font-semibold">VAAN</h2>
+        <h2 className="text-2xl font-semibold">Vaan.One</h2>
         <p className="mt-2 max-w-md text-sm text-white/60">
           Upload MT5 candlestick CSV files to load them into the chart. Pivot Levels
           are read from columns H–O.
@@ -482,9 +482,9 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0d0a00]/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="VAAN" className="h-8 w-8 rounded-md object-contain" />
+            <img src="/logo.png" alt="Vaan.One" className="h-8 w-8 rounded-md object-contain" />
             <div>
-              <h1 className="text-sm font-bold leading-tight">VAAN</h1>
+              <h1 className="text-sm font-bold leading-tight">Vaan.One</h1>
               <p className="text-[9px] leading-tight text-white/40">Vaan Pivot</p>
             </div>
           </div>
@@ -512,15 +512,13 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
             <span className="text-[10px] uppercase tracking-wider text-amber-400">Live Levels Updated Daily</span>
           </div>
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            <span className="bg-gradient-to-r from-amber-300 to-amber-700 bg-clip-text text-transparent">VAAN</span>
-            <br />
-            <span className="text-white">Vaan Pivot</span>
+            <span className="bg-gradient-to-r from-amber-300 to-amber-700 bg-clip-text text-transparent">Vaan Pivot</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg font-medium text-amber-400 sm:text-xl">
             Know Your Levels. Trade with Confidence.
           </p>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base">
-            VAAN Pivot Levels are calculated using a customized pivot calculation method, designed to
+            Vaan.One Pivot Levels are calculated using a customized pivot calculation method, designed to
             identify potential intraday support and resistance zones.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -534,12 +532,12 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
         </div>
       </section>
 
-      {/* ====== VAAN LEVELS ====== */}
+      {/* ====== Vaan.One LEVELS ====== */}
       <section id="levels" className="border-t border-white/5 px-4 py-16">
         <div className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">
             <span className="text-[10px] uppercase tracking-widest text-amber-400">01 — Chart</span>
-            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">VAAN Levels on Chart</h3>
+            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">Vaan.One Levels on Chart</h3>
             <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
               Get daily Pivot Points and Support &amp; Resistance levels for your favourite trading
               instruments.
@@ -550,7 +548,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           <div className="mb-10 grid gap-4 sm:grid-cols-3">
             <FeatureCard
               title="Daily Updates"
-              desc="VAAN Pivot levels are manually updated every morning at 5:30 AM IST."
+              desc="Vaan.One Pivot levels are manually updated every morning at 5:30 AM IST."
             />
             <FeatureCard
               title="Claimed Accuracy"
@@ -589,7 +587,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           <div className="mb-8 rounded-xl border border-amber-500/15 bg-amber-500/[0.03] p-5">
             <p className="text-xs leading-relaxed text-white/50">
               <span className="font-semibold text-amber-400">Disclaimer:</span>{" "}
-              VAAN Levels are provided for educational and informational purposes only. These levels
+              Vaan.One Levels are provided for educational and informational purposes only. These levels
               are manually calculated and updated daily. Accuracy is not guaranteed. They are not
               investment advice or trading recommendations. Always do your own research and manage your
               risk.
@@ -618,7 +616,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
             onClick={onOpenChart}
             className="mt-6 bg-amber-500 px-8 py-3 text-sm font-semibold text-white hover:bg-amber-600"
           >
-            Launch VAAN Chart →
+            Launch Vaan.One Chart →
           </Button>
         </div>
       </section>
@@ -627,8 +625,8 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
       <footer className="border-t border-white/10 px-4 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 text-center">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="VAAN" className="h-6 w-6 rounded-md object-contain" />
-            <span className="text-xs font-mono text-white/40">VAAN — Vaan Pivot</span>
+            <img src="/logo.png" alt="Vaan.One" className="h-6 w-6 rounded-md object-contain" />
+            <span className="text-xs font-mono text-white/40">Vaan.One — Vaan Pivot</span>
           </div>
           <p className="text-[10px] text-white/30">
             Daily Vaan Pivot Levels are updated manually every morning for educational and
