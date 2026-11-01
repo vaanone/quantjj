@@ -261,76 +261,67 @@ export default function Home() {
 
         {/* All controls in one row, no wrapping */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Chart layout selector — window icons showing 1/2/4 views */}
+          {/* Chart layout dropdown — select 1/2/4 chart views */}
           {candles.length > 0 && (
-            <div className="flex shrink-0 items-center gap-0.5 rounded-md border border-white/10 bg-white/5 p-0.5">
-              {/* 1 window icon */}
-              <button
-                onClick={() => setChartLayout(1)}
-                title="1 chart"
-                className={`flex h-6 w-6 items-center justify-center rounded transition-colors sm:h-7 sm:w-7 ${
-                  chartLayout === 1
-                    ? "bg-red-600/30 text-red-400"
-                    : "text-white/40 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                  <rect x="1" y="1" width="10" height="10" rx="1" />
-                </svg>
-              </button>
-              {/* 2 windows icon */}
-              <button
-                onClick={() => {
-                  setChartLayout(2);
+            <Select
+              value={String(chartLayout)}
+              onValueChange={(v) => {
+                const n = Number(v) as 1 | 2 | 4;
+                setChartLayout(n);
+                if (n > 1) {
                   setMultiSymbols((prev) => {
                     const next = { ...prev };
                     const syms = Array.from(files.values()).flatMap((f) => f.result.symbols);
-                    for (let i = 1; i < 2; i++) {
+                    for (let i = 1; i < n; i++) {
                       if (!next[i] && syms[i]) next[i] = syms[i];
                     }
                     return next;
                   });
-                }}
-                title="2 charts"
-                className={`flex h-6 w-6 items-center justify-center rounded transition-colors sm:h-7 sm:w-7 ${
-                  chartLayout === 2
-                    ? "bg-red-600/30 text-red-400"
-                    : "text-white/40 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                  <rect x="1" y="1" width="4.5" height="10" rx="1" />
-                  <rect x="6.5" y="1" width="4.5" height="10" rx="1" />
+                }
+              }}
+            >
+              <SelectTrigger className="h-7 w-auto shrink-0 gap-1 border-white/15 bg-white/5 px-1.5 text-white hover:bg-white/10 sm:h-8 sm:px-2">
+                {/* Show the window icon for the current layout */}
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-white/60">
+                  {chartLayout === 1 && <rect x="1" y="1" width="10" height="10" rx="1" />}
+                  {chartLayout === 2 && (<><rect x="1" y="1" width="4.5" height="10" rx="1" /><rect x="6.5" y="1" width="4.5" height="10" rx="1" /></>)}
+                  {chartLayout === 4 && (<><rect x="1" y="1" width="4.5" height="4.5" rx="1" /><rect x="6.5" y="1" width="4.5" height="4.5" rx="1" /><rect x="1" y="6.5" width="4.5" height="4.5" rx="1" /><rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" /></>)}
                 </svg>
-              </button>
-              {/* 4 windows icon */}
-              <button
-                onClick={() => {
-                  setChartLayout(4);
-                  setMultiSymbols((prev) => {
-                    const next = { ...prev };
-                    const syms = Array.from(files.values()).flatMap((f) => f.result.symbols);
-                    for (let i = 1; i < 4; i++) {
-                      if (!next[i] && syms[i]) next[i] = syms[i];
-                    }
-                    return next;
-                  });
-                }}
-                title="4 charts"
-                className={`flex h-6 w-6 items-center justify-center rounded transition-colors sm:h-7 sm:w-7 ${
-                  chartLayout === 4
-                    ? "bg-red-600/30 text-red-400"
-                    : "text-white/40 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                  <rect x="1" y="1" width="4.5" height="4.5" rx="1" />
-                  <rect x="6.5" y="1" width="4.5" height="4.5" rx="1" />
-                  <rect x="1" y="6.5" width="4.5" height="4.5" rx="1" />
-                  <rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" />
-                </svg>
-              </button>
-            </div>
+                <span className="hidden font-mono text-xs font-bold text-white/60 sm:inline">
+                  {chartLayout}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="border-white/15 bg-[#15161d] text-white">
+                <SelectItem value="1" className="font-mono text-xs">
+                  <span className="flex items-center gap-2">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                      <rect x="1" y="1" width="10" height="10" rx="1" />
+                    </svg>
+                    1 Chart
+                  </span>
+                </SelectItem>
+                <SelectItem value="2" className="font-mono text-xs">
+                  <span className="flex items-center gap-2">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                      <rect x="1" y="1" width="4.5" height="10" rx="1" />
+                      <rect x="6.5" y="1" width="4.5" height="10" rx="1" />
+                    </svg>
+                    2 Charts
+                  </span>
+                </SelectItem>
+                <SelectItem value="4" className="font-mono text-xs">
+                  <span className="flex items-center gap-2">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                      <rect x="1" y="1" width="4.5" height="4.5" rx="1" />
+                      <rect x="6.5" y="1" width="4.5" height="4.5" rx="1" />
+                      <rect x="1" y="6.5" width="4.5" height="4.5" rx="1" />
+                      <rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" />
+                    </svg>
+                    4 Charts
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           )}
 
           {/* Symbol dropdown — only shown in single-chart mode */}
