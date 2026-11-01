@@ -175,7 +175,7 @@ export default function Home() {
   const { alerts, addAlert, removeAlert, clearAll } = usePriceAlerts(symbolLabel, lastClose);
 
   // Auto S/R level touch alerts — fires when price crosses any S/R line.
-  useSRLevelAlerts(symbolLabel, lastClose, top6Lines);
+  useSRLevelAlerts(symbolLabel, candles, top6Lines);
 
   // No live price streaming — chart uses CSV data only.
 

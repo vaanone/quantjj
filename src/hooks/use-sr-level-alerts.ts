@@ -2,61 +2,86 @@
 
 import { useEffect, useRef } from "react";
 import type { SRLine } from "@/lib/support-resistance";
+import type { Candle } from "@/lib/excel-parser";
 
 /**
- * Monitors the current price and fires an alert when it touches (crosses)
- * any S/R level — similar to TradingView's "price touches line" alert.
+ * Monitors the chart's candles and fires an alert when any candle's
+ * high or low actually touches (crosses) an S/R level.
  *
- * Each S/R level can fire only once per session (one-shot). After firing,
- * the level is added to a "triggered" set so it doesn't spam repeated alerts.
+ * This checks the FULL candle range (high/low), not just the close —
+ * so if a candle's wick touches a level, the alert fires.
  *
- * Uses the same notification system as the price alerts: browser notification +
- * toast + sound.
+ * Each S/R level fires only once per symbol session (one-shot).
+ *
+ * Uses: browser notification + toast + double-beep sound.
  */
 export function useSRLevelAlerts(
   symbol: string,
-  currentPrice: number,
+  candles: Candle[],
   srLines: SRLine[],
 ) {
-  const lastPriceRef = useRef<number>(0);
+  // Track which candles we've already checked (by timestamp) so we don't
+  // re-fire on candles we've already scanned.
+  const lastCheckedTimeRef = useRef<number>(0);
   const triggeredRef = useRef<Set<string>>(new Set());
+  // Track whether we've done the initial scan for this symbol.
+  const initializedRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (currentPrice <= 0 || srLines.length === 0) return;
+    if (candles.length === 0 || srLines.length === 0) return;
 
-    const prevPrice = lastPriceRef.current;
-    lastPriceRef.current = currentPrice;
+    // Find candles we haven't checked yet (newer than lastCheckedTime).
+    const newCandles = candles.filter((c) => c.time > lastCheckedTimeRef.current);
 
-    for (const line of srLines) {
-      const key = `${symbol}-${line.label}-${line.price}`;
-      if (triggeredRef.current.has(key)) continue;
+    if (newCandles.length === 0) return;
 
-      let touched = false;
-      if (prevPrice > 0) {
-        // Price crossed the level from either direction.
-        if ((prevPrice < line.price && currentPrice >= line.price) ||
-            (prevPrice > line.price && currentPrice <= line.price)) {
-          touched = true;
+    // Update the last checked timestamp.
+    lastCheckedTimeRef.current = candles[candles.length - 1].time;
+
+    // On initial load, DON'T fire alerts — just mark current levels as
+    // "already known" if the last candle is already touching them.
+    // This prevents the "alert on page load" bug.
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      const lastCandle = candles[candles.length - 1];
+      for (const line of srLines) {
+        // If the last candle's range already includes this level,
+        // mark it as triggered so it doesn't fire immediately.
+        if (lastCandle.low <= line.price && lastCandle.high >= line.price) {
+          const key = `${symbol}-${line.label}-${line.price}`;
+          triggeredRef.current.add(key);
         }
       }
+      return; // Skip alerting on the initial load.
+    }
 
-      if (touched) {
-        triggeredRef.current.add(key);
-        fireSRAlert(symbol, line);
+    // Check each new candle against each S/R level.
+    for (const candle of newCandles) {
+      for (const line of srLines) {
+        const key = `${symbol}-${line.label}-${line.price}`;
+        if (triggeredRef.current.has(key)) continue;
+
+        // A candle "touches" a level if its high or low crosses the level.
+        // This means the candle's range [low, high] includes the level price.
+        if (candle.low <= line.price && candle.high >= line.price) {
+          triggeredRef.current.add(key);
+          fireSRAlert(symbol, line, candle.close);
+        }
       }
     }
-  }, [currentPrice, symbol, srLines]);
+  }, [candles, symbol, srLines]);
 
-  // Reset triggered levels when symbol changes.
+  // Reset everything when symbol changes.
   useEffect(() => {
     triggeredRef.current = new Set();
-    lastPriceRef.current = 0;
+    lastCheckedTimeRef.current = 0;
+    initializedRef.current = false;
   }, [symbol]);
 }
 
-function fireSRAlert(symbol: string, line: SRLine) {
+function fireSRAlert(symbol: string, line: SRLine, price: number) {
   const title = `${symbol}: price touched ${line.label} (${line.price})`;
-  const body = `${line.fullLabel} at ${line.price}. ${symbol} has reached this ${line.type} level.`;
+  const body = `${line.fullLabel} at ${line.price}. ${symbol} current price: ${price}.`;
 
   // Browser notification.
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
@@ -68,7 +93,7 @@ function fireSRAlert(symbol: string, line: SRLine) {
     toast.success(title, { description: body, duration: 10000 });
   });
 
-  // Play alert sound (same double-beep as price alerts).
+  // Play alert sound (double-beep).
   try {
     const AudioCtx =
       window.AudioContext ||
