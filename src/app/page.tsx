@@ -495,7 +495,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
             <Button
               onClick={onOpenChart}
               size="sm"
-              className="bg-amber-500/15 font-mono text-xs text-amber-400 hover:bg-amber-500/25"
+              className="bg-red-600/15 font-mono text-xs text-red-400 hover:bg-red-600/25"
             >
               Open Chart →
             </Button>
@@ -545,7 +545,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
               onClick={onOpenChart}
-              className="bg-amber-500 px-8 py-3 text-sm font-semibold text-white hover:bg-amber-600"
+              className="bg-red-600 px-8 py-3 text-sm font-semibold text-white hover:bg-red-700"
             >
               Launch Chart →
             </Button>
@@ -623,7 +623,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           <div className="text-center">
             <Button
               onClick={onOpenChart}
-              className="bg-amber-500 px-8 py-3 text-sm font-semibold text-white hover:bg-amber-600"
+              className="bg-red-600 px-8 py-3 text-sm font-semibold text-white hover:bg-red-700"
             >
               View Live Chart →
             </Button>
@@ -671,7 +671,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           <div className="mt-8 text-center">
             <a
               href="mailto:valan@outlook.com"
-              className="inline-flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-6 py-3 text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/10"
+              className="inline-flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-600/10 px-6 py-3 text-sm font-semibold text-red-400 transition-colors hover:bg-red-600/20"
             >
               Get a Quote →
             </a>
@@ -688,7 +688,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           </p>
           <Button
             onClick={onOpenChart}
-            className="mt-6 bg-amber-500 px-8 py-3 text-sm font-semibold text-white hover:bg-amber-600"
+            className="mt-6 bg-red-600 px-8 py-3 text-sm font-semibold text-white hover:bg-red-700"
           >
             Launch Vaan.One Chart →
           </Button>
