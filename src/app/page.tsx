@@ -18,6 +18,7 @@ import { LevelsPanel } from "@/components/levels-panel";
 import { AlertButton } from "@/components/alert-button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePriceAlerts } from "@/hooks/use-price-alerts";
+import { useSRLevelAlerts } from "@/hooks/use-sr-level-alerts";
 import { userLevelsToLines } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
 import type { Candle, ParseResult } from "@/lib/excel-parser";
@@ -172,6 +173,9 @@ export default function Home() {
 
   // Price alerts — monitors current price and fires notifications.
   const { alerts, addAlert, removeAlert, clearAll } = usePriceAlerts(symbolLabel, lastClose);
+
+  // Auto S/R level touch alerts — fires when price crosses any S/R line.
+  useSRLevelAlerts(symbolLabel, lastClose, top6Lines);
 
   // No live price streaming — chart uses CSV data only.
 

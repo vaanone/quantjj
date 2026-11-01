@@ -179,7 +179,7 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
         (f) => !loadedIdsRef.current.has(f.id),
       );
       if (newFiles.length > 0) {
-        await autoLoadAll(newFiles);
+        await autoLoadAll(newFiles, true); // silent — no toast on polling
       }
     }, POLL_INTERVAL);
 
