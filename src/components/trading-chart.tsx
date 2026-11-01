@@ -43,7 +43,7 @@ const COLORS = {
   border: "#262a36",
   up: "#26a69a",
   down: "#ef5350",
-  resistance: "#d4af37", // dark gold — solid line
+  resistance: "#22c55e", // green — solid line
   support: "#ef4444",    // red — solid line
 };
 

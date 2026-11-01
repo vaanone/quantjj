@@ -60,13 +60,13 @@ export function LevelsPanel({ lines, lastClose, symbol }: LevelsPanelProps) {
                   key={`${line.label}-${idx}`}
                   className={`flex items-center justify-between rounded-md border px-3 py-2 ${
                     isResistance
-                      ? "border-amber-500/30 bg-amber-500/[0.06]"
+                      ? "border-emerald-500/30 bg-emerald-500/[0.06]"
                       : "border-red-500/30 bg-red-500/[0.06]"
                   }`}
                 >
                   <span
                     className={`text-xs font-semibold ${
-                      isResistance ? "text-amber-400" : "text-red-400"
+                      isResistance ? "text-emerald-400" : "text-red-400"
                     }`}
                   >
                     {line.fullLabel}
@@ -78,7 +78,7 @@ export function LevelsPanel({ lines, lastClose, symbol }: LevelsPanelProps) {
                     {lastClose > 0 && (
                       <span
                         className={`font-mono text-[10px] ${
-                          isResistance ? "text-amber-400/60" : "text-red-400/60"
+                          isResistance ? "text-emerald-400/60" : "text-red-400/60"
                         }`}
                       >
                         {distPct >= 0 ? "+" : ""}
