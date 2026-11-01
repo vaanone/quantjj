@@ -530,6 +530,37 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
         </div>
       </section>
 
+      {/* ====== METHODOLOGY ====== */}
+      <section className="border-t border-white/5 px-4 py-16">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-8 text-center">
+            <h3 className="text-2xl font-bold sm:text-3xl">About VAAN Pivot Levels</h3>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/60">
+              VAAN Pivot Levels are calculated using a customized pivot calculation method, designed to
+              identify potential intraday support and resistance zones.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <FeatureCard
+              title="Customized Methodology"
+              desc="Customized pivot calculation methodology."
+            />
+            <FeatureCard
+              title="Daily Updates"
+              desc="Daily updated price levels."
+            />
+            <FeatureCard
+              title="Support & Resistance"
+              desc="Identifies potential support and resistance."
+            />
+            <FeatureCard
+              title="Intraday Trading"
+              desc="Designed for intraday trading."
+            />
+          </div>
+        </div>
+      </section>
+
       {/* ====== VAAN LEVELS ====== */}
       <section id="levels" className="border-t border-white/5 px-4 py-16">
         <div className="mx-auto max-w-5xl">
