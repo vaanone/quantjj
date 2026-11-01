@@ -109,7 +109,7 @@ export function TradingChart({
         // Add right offset so the last candle (live price) isn't flush against
         // the price scale — gives space between the chart area and the price
         // labels on the right.
-        rightOffset: 15,
+        rightOffset: -30,
         timeVisible: true,
         secondsVisible: false,
         // Zoom out by default — reduces the bar width so more candles fit
