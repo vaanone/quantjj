@@ -266,11 +266,26 @@ export function userLevelsToLines(
     // Force: name starts with R → resistance (green), S → support (red).
     const nameUpper = ul.name.toUpperCase().trim();
     const type: SRType = nameUpper.startsWith("R") ? "resistance" : "support";
+
+    // Normalize the label to the compact chart format:
+    //   R1 / R I / Resistance I → "RI"
+    //   R2 / R II / Resistance II → "RII"
+    //   R3 / R III / Resistance III → "RIII"
+    //   S1 / S I / Support I → "SI"
+    //   S2 / S II / Support II → "SII"
+    //   S3 / S III / Support III → "SIII"
+    const prefix = type === "resistance" ? "R" : "S";
+    // Determine tier from the name. Check III/3 first, then II/2, then I/1.
+    let tier = 1;
+    if (/III|3/.test(nameUpper)) tier = 3;
+    else if (/II|2/.test(nameUpper)) tier = 2;
+    const compactLabel = prefix + "I".repeat(tier);
+
     return {
       price: ul.price,
       type,
-      tier: 1 as SRTier,
-      label: ul.name,
+      tier: tier as SRTier,
+      label: compactLabel,
       fullLabel: ul.name,
     };
   });
