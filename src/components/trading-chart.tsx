@@ -95,19 +95,17 @@ export function TradingChart({
       },
       rightPriceScale: {
         borderColor: COLORS.border,
-        // Auto-scale: the price axis fits to the visible candles automatically.
         autoScale: true,
-        // Margins so candles don't touch edges.
         scaleMargins: { top: 0.25, bottom: 0.25 },
-        // Ensure the price scale has enough width for S/R labels (RI, SI, etc.)
-        // and the current price value — they were overlapping the candles.
         ensureEdgeTickMarksVisible: true,
-        // Make the price scale wider so labels don't overlap the chart.
-        minimumWidth: 120,
+        // Force the price scale to be wide enough for labels like "RI 1.3400"
+        minimumWidth: 150,
       },
       timeScale: {
         borderColor: COLORS.border,
-        rightOffset: 20,
+        // Large right offset creates empty space between the last candle
+        // and the price scale — so S/R labels don't overlap candles.
+        rightOffset: 40,
         timeVisible: true,
         secondsVisible: false,
         barSpacing: 6,
