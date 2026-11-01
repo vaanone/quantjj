@@ -490,6 +490,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           </div>
           <div className="flex items-center gap-4">
             <a href="#levels" className="hidden text-xs text-white/60 hover:text-white sm:block">Levels</a>
+            <a href="#quant" className="hidden text-xs text-white/60 hover:text-white sm:block">Quant</a>
             <a href="#faq" className="hidden text-xs text-white/60 hover:text-white sm:block">FAQ</a>
             <Button
               onClick={onOpenChart}
@@ -630,6 +631,54 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
         </div>
       </section>
 
+      {/* ====== QUANT DEVELOPER ====== */}
+      <section id="quant" className="border-t border-white/5 bg-[#0d0a00] px-4 py-16">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-10 text-center">
+            <span className="text-[10px] uppercase tracking-widest text-amber-400">02 — Development</span>
+            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">Quant Developer</h3>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
+              MT5/MT4 and Amibroker Indicators &amp; EA — custom algorithmic trading systems built to
+              your specification.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="shimmer-border rounded-xl border border-amber-500/15 bg-white/[0.02] p-6 transition-colors hover:border-amber-500/30">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 font-mono text-xs font-bold text-amber-400">M5</span>
+                <h4 className="font-mono text-lg font-bold text-amber-400">MetaTrader 5 / MT4</h4>
+              </div>
+              <ul className="space-y-2 text-sm text-white/60">
+                <li className="flex gap-2"><span className="text-amber-400">▸</span> Expert Advisors (EAs) for automated trading</li>
+                <li className="flex gap-2"><span className="text-amber-400">▸</span> Custom indicators for pivot-level detection</li>
+                <li className="flex gap-2"><span className="text-amber-400">▸</span> Strategy backtesting &amp; optimization</li>
+                <li className="flex gap-2"><span className="text-amber-400">▸</span> Multi-symbol and multi-timeframe systems</li>
+              </ul>
+            </div>
+            <div className="shimmer-border rounded-xl border border-red-500/15 bg-white/[0.02] p-6 transition-colors hover:border-red-500/30">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10 font-mono text-xs font-bold text-red-400">AB</span>
+                <h4 className="font-mono text-lg font-bold text-red-400">Amibroker (AFL)</h4>
+              </div>
+              <ul className="space-y-2 text-sm text-white/60">
+                <li className="flex gap-2"><span className="text-red-400">▸</span> AFL formulas for scanning &amp; screening</li>
+                <li className="flex gap-2"><span className="text-red-400">▸</span> Custom chart templates with pivot overlays</li>
+                <li className="flex gap-2"><span className="text-red-400">▸</span> Backtesting with historical data</li>
+                <li className="flex gap-2"><span className="text-red-400">▸</span> Automated exploration &amp; alerts</li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-8 text-center">
+            <a
+              href="mailto:valan@outlook.com"
+              className="inline-flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-6 py-3 text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/10"
+            >
+              Get a Quote →
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* ====== CTA ====== */}
       <section className="border-t border-white/5 px-4 py-16 text-center">
         <div className="mx-auto max-w-2xl">
@@ -692,21 +741,22 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
 
       {/* ====== FOOTER ====== */}
       <footer className="border-t border-white/10 px-4 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 text-center">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 text-center">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Vaan.One" className="h-6 w-6 rounded-md object-contain" />
-            <span className="text-xs font-mono text-white/40">Vaan.One — Vaan Pivot</span>
+            <span className="text-xs font-mono text-white/40">Vaan.One</span>
           </div>
-          <p className="text-[10px] text-white/30">
-            Daily Vaan Pivot Levels are updated manually every morning for educational and
-            informational purposes only.
-          </p>
           <a
             href="mailto:valan@outlook.com"
             className="text-xs text-amber-400 transition-colors hover:text-amber-300"
           >
-            contact: valan@outlook.com
+            valan@outlook.com
           </a>
+          <p className="text-[10px] text-white/30">
+            Daily Vaan Pivot Levels are updated manually every morning for educational and
+            informational purposes only.
+          </p>
+          <p className="text-[10px] font-medium text-white/40">Designed By JJ</p>
         </div>
       </footer>
     </div>
