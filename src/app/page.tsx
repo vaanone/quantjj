@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { PanelRight } from "lucide-react";
+import { PanelRight, Square, Columns2, Columns3, Grid2x2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -49,6 +49,10 @@ export default function Home() {
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
+  const [chartLayout, setChartLayout] = useState<1 | 2 | 3 | 4>(1);
+  // Per-chart symbol selections (for multi-chart layouts).
+  // Index 0 = first chart (uses the main selectedFile), 1-3 = additional charts.
+  const [multiSymbols, setMultiSymbols] = useState<Record<number, string>>({});
   const isLg = useMediaQuery("(min-width: 1024px)", true);
 
   const handleLoaded = useCallback(
@@ -177,6 +181,59 @@ export default function Home() {
   // For the symbol dropdown value: the currently active symbol.
   const activeSymbolValue = selectedSymbol || currentResult?.symbol || "";
 
+  // Helper: get candles + lines for a specific chart slot.
+  // Slot 0 = main chart (uses selectedFile/multiSymbols[0]).
+  // Slots 1-3 = additional charts with their own symbol selection.
+  const getChartSlotData = (slot: number) => {
+    if (slot === 0) {
+      return { candles, lines: top6Lines, symbol: symbolLabel, lastClose };
+    }
+
+    // For multi-chart slots, find the symbol and its file.
+    const slotSymbol = multiSymbols[slot];
+    if (!slotSymbol) return { candles: [], lines: [], symbol: "", lastClose: 0 };
+
+    // Find which file contains this symbol.
+    let slotResult: ParseResult | null = null;
+    let slotFileName = "";
+    for (const [fName, loaded] of files) {
+      if (loaded.result.symbols.includes(slotSymbol)) {
+        slotResult = loaded.result;
+        slotFileName = fName;
+        break;
+      }
+    }
+    if (!slotResult) return { candles: [], lines: [], symbol: slotSymbol, lastClose: 0 };
+
+    const slotCandles = (() => {
+      const syms = slotResult!.symbols;
+      const filtered =
+        syms.length <= 1
+          ? slotResult!.candles
+          : slotResult!.candles.filter(
+              (c) => !c.symbol || c.symbol === slotSymbol,
+            );
+      if (filtered.length > MAX_DISPLAY_CANDLES) {
+        return filtered.slice(filtered.length - MAX_DISPLAY_CANDLES);
+      }
+      return filtered;
+    })();
+
+    const slotClose = slotCandles.length > 0 ? slotCandles[slotCandles.length - 1].close : 0;
+    const slotLines =
+      slotResult.userLevels && slotResult.userLevels.length > 0
+        ? userLevelsToLines(slotResult.userLevels, slotClose)
+        : [];
+
+    return { candles: slotCandles, lines: slotLines, symbol: slotSymbol, lastClose: slotClose, fileName: slotFileName };
+  };
+
+  // Get live price for a specific slot.
+  const getSlotLivePrice = (slot: number) => {
+    const data = getChartSlotData(slot);
+    return data.symbol;
+  };
+
   if (view === "landing") {
     return <LandingPage onOpenChart={() => setView("chart")} />;
   }
@@ -204,8 +261,33 @@ export default function Home() {
 
         {/* All controls in one row, no wrapping */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Symbol dropdown — right next to logo */}
-          {activeSymbolValue && (
+          {/* Chart layout selector — 1/2/3/4 chart views */}
+          {candles.length > 0 && (
+            <div className="flex shrink-0 items-center gap-0.5 rounded-md border border-white/10 bg-white/5 p-0.5">
+              {([
+                { count: 1, icon: Square, label: "1 chart" },
+                { count: 2, icon: Columns2, label: "2 charts" },
+                { count: 3, icon: Columns3, label: "3 charts" },
+                { count: 4, icon: Grid2x2, label: "4 charts" },
+              ] as const).map(({ count, icon: Icon, label }) => (
+                <button
+                  key={count}
+                  onClick={() => setChartLayout(count)}
+                  title={label}
+                  className={`flex h-6 w-6 items-center justify-center rounded transition-colors sm:h-7 sm:w-7 ${
+                    chartLayout === count
+                      ? "bg-red-600/30 text-red-400"
+                      : "text-white/40 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Symbol dropdown — right next to layout icons */}
+          {activeSymbolValue && chartLayout === 1 && (
             <Select value={dropdownValue} onValueChange={handleDropdownChange}>
               <SelectTrigger className="h-7 w-auto min-w-[70px] max-w-[120px] gap-1 border-white/15 bg-white/5 px-1.5 font-mono text-xs font-bold tracking-wide text-white hover:bg-white/10 sm:h-8 sm:min-w-[110px] sm:max-w-[220px] sm:px-2 sm:text-sm">
                 <SelectValue />
@@ -347,44 +429,60 @@ export default function Home() {
         )}
         {candles.length === 0 && !chartLoading ? (
           <EmptyState onLoaded={handleLoaded} />
-        ) : isLg ? (
-          <ResizablePanelGroup direction="horizontal" className="h-full">
-            <ResizablePanel defaultSize={75} minSize={50}>
-              <ChartArea
-                candles={candles}
-                lines={top6Lines}
-                symbol={symbolLabel}
-                timeframe={timeframe}
-                alertPrices={alerts
-                  .filter((a) => a.symbol === symbolLabel)
-                  .map((a) => ({ price: a.price, triggered: a.triggered }))}
-                livePrice={liveData.price}
-                isLive={liveData.isConnected}
-                lastUpdate={lastUpdate}
-              />
-            </ResizablePanel>
-            <ResizableHandle withHandle className="bg-white/10" />
-            <ResizablePanel defaultSize={25} minSize={18} maxSize={45}>
-              <LevelsPanel
-                key={selectedFile}
-                lines={top6Lines}
-                lastClose={lastClose}
-                symbol={symbolLabel}
-              />
-            </ResizablePanel>
-          </ResizablePanelGroup>
+        ) : chartLayout === 1 ? (
+          isLg ? (
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              <ResizablePanel defaultSize={75} minSize={50}>
+                <ChartArea
+                  candles={candles}
+                  lines={top6Lines}
+                  symbol={symbolLabel}
+                  timeframe={timeframe}
+                  alertPrices={alerts
+                    .filter((a) => a.symbol === symbolLabel)
+                    .map((a) => ({ price: a.price, triggered: a.triggered }))}
+                  livePrice={liveData.price}
+                  isLive={liveData.isConnected}
+                  lastUpdate={lastUpdate}
+                />
+              </ResizablePanel>
+              <ResizableHandle withHandle className="bg-white/10" />
+              <ResizablePanel defaultSize={25} minSize={18} maxSize={45}>
+                <LevelsPanel
+                  key={selectedFile}
+                  lines={top6Lines}
+                  lastClose={lastClose}
+                  symbol={symbolLabel}
+                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            <ChartArea
+              candles={candles}
+              lines={top6Lines}
+              symbol={symbolLabel}
+              timeframe={timeframe}
+              alertPrices={alerts
+                .filter((a) => a.symbol === symbolLabel)
+                .map((a) => ({ price: a.price, triggered: a.triggered }))}
+              livePrice={liveData.price}
+              isLive={liveData.isConnected}
+              lastUpdate={lastUpdate}
+            />
+          )
         ) : (
-          <ChartArea
-            candles={candles}
-            lines={top6Lines}
-            symbol={symbolLabel}
+          /* Multi-chart grid layout */
+          <MultiChartGrid
+            layout={chartLayout}
+            allSymbols={allSymbols.map((s) => s.symbol)}
+            multiSymbols={multiSymbols}
+            onSymbolChange={(slot, sym) =>
+              setMultiSymbols((prev) => ({ ...prev, [slot]: sym }))
+            }
+            getSlotData={getChartSlotData}
             timeframe={timeframe}
-            alertPrices={alerts
-              .filter((a) => a.symbol === symbolLabel)
-              .map((a) => ({ price: a.price, triggered: a.triggered }))}
-            livePrice={liveData.price}
-            isLive={liveData.isConnected}
             lastUpdate={lastUpdate}
+            slotSymbols={[symbolLabel, multiSymbols[1], multiSymbols[2], multiSymbols[3]]}
           />
         )}
       </main>
@@ -444,6 +542,104 @@ function ChartArea({
           </span>
         </div>
       )}
+    </div>
+  );
+}
+
+// ============================================================ MULTI-CHART GRID
+function MultiChartGrid({
+  layout,
+  allSymbols,
+  multiSymbols,
+  onSymbolChange,
+  getSlotData,
+  timeframe,
+  lastUpdate,
+  slotSymbols,
+}: {
+  layout: 2 | 3 | 4;
+  allSymbols: string[];
+  multiSymbols: Record<number, string>;
+  onSymbolChange: (slot: number, sym: string) => void;
+  getSlotData: (slot: number) => {
+    candles: Candle[];
+    lines: ReturnType<typeof userLevelsToLines>;
+    symbol: string;
+    lastClose: number;
+  };
+  timeframe: TimeframeInfo | null;
+  lastUpdate?: string | null;
+  slotSymbols: string[];
+}) {
+  // Auto-assign symbols to slots that don't have one yet.
+  const slots = Array.from({ length: layout }, (_, i) => {
+    const sym = i === 0 ? slotSymbols[0] : multiSymbols[i] || allSymbols[i] || allSymbols[0] || "";
+    return { slot: i, symbol: sym };
+  });
+
+  // Grid layout classes.
+  const gridClass =
+    layout === 2
+      ? "grid-cols-1 sm:grid-cols-2 grid-rows-2 sm:grid-rows-1"
+      : layout === 3
+      ? "grid-cols-1 sm:grid-cols-2 grid-rows-3 sm:grid-rows-2"
+      : "grid-cols-1 sm:grid-cols-2 grid-rows-4 sm:grid-rows-2";
+
+  return (
+    <div className={`grid h-full gap-0.5 ${gridClass}`}>
+      {slots.map(({ slot, symbol }) => {
+        const data = getSlotData(slot);
+        return (
+          <div key={slot} className="relative flex flex-col overflow-hidden border border-white/5 bg-[#100c00]">
+            {/* Per-chart symbol selector */}
+            <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-[#0d0a00] px-2 py-1">
+              <Select
+                value={symbol}
+                onValueChange={(v) => onSymbolChange(slot, v)}
+              >
+                <SelectTrigger className="h-6 w-auto min-w-[60px] max-w-[100px] gap-1 border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-bold text-white hover:bg-white/10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 border-white/15 bg-[#15161d] text-white">
+                  {allSymbols.map((s) => (
+                    <SelectItem key={s} value={s} className="font-mono text-xs focus:bg-white/10">
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex items-center gap-1.5">
+                {data.lastClose > 0 && (
+                  <span className="font-mono text-[10px] text-white/50">
+                    {data.lastClose >= 1000 ? data.lastClose.toFixed(2) : data.lastClose.toFixed(5)}
+                  </span>
+                )}
+                {timeframe && (
+                  <Badge className="h-4 px-1 font-mono text-[8px] font-bold text-amber-400">
+                    {timeframe.label}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            {/* Chart area */}
+            <div className="relative flex-1">
+              {data.candles.length > 0 ? (
+                <ChartArea
+                  candles={data.candles}
+                  lines={data.lines}
+                  symbol={data.symbol}
+                  timeframe={timeframe}
+                  lastUpdate={lastUpdate}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <span className="text-xs text-white/30">No data</span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
