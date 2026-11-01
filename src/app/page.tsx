@@ -503,7 +503,26 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
 
       {/* ====== HERO ====== */}
       <section className="relative overflow-hidden px-4 py-20 text-center">
-        <div className="mx-auto max-w-3xl">
+        {/* Animated background: drifting grid + floating glow orbs */}
+        <div className="pointer-events-none absolute inset-0">
+          {/* Drifting grid */}
+          <div
+            className="animate-grid-drift absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(212,175,55,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.5) 1px, transparent 1px)",
+              backgroundSize: "60px 60px",
+            }}
+          />
+          {/* Glow orb 1 */}
+          <div className="animate-float-slow absolute -left-20 top-10 h-72 w-72 rounded-full bg-amber-500/8 blur-[80px]" />
+          {/* Glow orb 2 */}
+          <div className="animate-float-medium absolute -right-20 top-40 h-96 w-96 rounded-full bg-amber-600/6 blur-[100px]" />
+          {/* Glow orb 3 */}
+          <div className="animate-pulse-glow absolute bottom-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-400/5 blur-[90px]" />
+        </div>
+
+        <div className="relative mx-auto max-w-3xl">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
@@ -529,6 +548,11 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
               Launch Chart →
             </Button>
           </div>
+        </div>
+
+        {/* Animated chart mockup */}
+        <div className="relative mx-auto mt-16 max-w-2xl">
+          <ChartMockup />
         </div>
       </section>
 
@@ -646,9 +670,60 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
 
 function FeatureCard({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-colors hover:border-amber-500/30 hover:bg-amber-500/[0.03]">
+    <div className="shimmer-border animate-fade-in-up rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-amber-500/40 hover:bg-amber-500/[0.04] hover:shadow-lg hover:shadow-amber-500/5">
       <h4 className="mb-2 text-sm font-semibold text-white">{title}</h4>
       <p className="text-xs leading-relaxed text-white/50">{desc}</p>
+    </div>
+  );
+}
+
+/** Animated chart mockup — candlestick bars + pivot level lines drawn with SVG */
+function ChartMockup() {
+  // Generate 20 candle heights for the mockup
+  const candles = [
+    { h: 40, up: true }, { h: 55, up: false }, { h: 35, up: true }, { h: 60, up: true },
+    { h: 45, up: false }, { h: 70, up: true }, { h: 50, up: false }, { h: 65, up: true },
+    { h: 80, up: true }, { h: 55, up: false }, { h: 75, up: true }, { h: 60, up: false },
+    { h: 85, up: true }, { h: 70, up: false }, { h: 90, up: true }, { h: 75, up: false },
+    { h: 95, up: true }, { h: 65, up: false }, { h: 80, up: true }, { h: 70, up: false },
+  ];
+  return (
+    <div className="rounded-xl border border-amber-500/20 bg-[#100c00]/80 p-4 backdrop-blur-sm">
+      {/* Header bar */}
+      <div className="mb-3 flex items-center justify-between border-b border-white/5 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-amber-500" />
+          <span className="font-mono text-xs text-white/60">XAUUSD · M15</span>
+        </div>
+        <span className="font-mono text-xs text-amber-400">2,330.45</span>
+      </div>
+      {/* Chart body */}
+      <div className="relative h-48">
+        {/* Resistance line (gold) */}
+        <div className="absolute left-0 right-0 top-6 flex items-center gap-2">
+          <div className="h-px flex-1 bg-amber-500/60" style={{ borderTop: "1px solid #d4af37" }} />
+          <span className="font-mono text-[8px] text-amber-400">RI 2,380</span>
+        </div>
+        {/* Support line (red) */}
+        <div className="absolute left-0 right-0 bottom-8 flex items-center gap-2">
+          <div className="h-px flex-1" style={{ borderTop: "1px solid #ef4444" }} />
+          <span className="font-mono text-[8px] text-red-400">SI 2,280</span>
+        </div>
+        {/* Candlestick bars */}
+        <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-1">
+          {candles.map((c, i) => (
+            <div
+              key={i}
+              className="animate-bar-rise w-full rounded-sm"
+              style={{
+                height: `${c.h}%`,
+                backgroundColor: c.up ? "#26a69a" : "#ef5350",
+                animationDelay: `${i * 0.1}s`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
