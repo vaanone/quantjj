@@ -40,6 +40,7 @@ interface LoadedFile {
 }
 
 export default function Home() {
+  const [view, setView] = useState<"landing" | "chart">("landing");
   const [files, setFiles] = useState<Map<string, LoadedFile>>(new Map());
   const [selectedFile, setSelectedFile] = useState<string>("");
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
@@ -174,21 +175,27 @@ export default function Home() {
   // For the symbol dropdown value: the currently active symbol.
   const activeSymbolValue = selectedSymbol || currentResult?.symbol || "";
 
+  if (view === "landing") {
+    return <LandingPage onOpenChart={() => setView("chart")} />;
+  }
+
   return (
     <div className="flex h-screen flex-col bg-[#0a0b0f] text-white">
       {/* ============================================================= HEADER */}
       <header className="flex items-center gap-2 border-b border-white/10 bg-[#0c0d12] px-3 py-2">
-        {/* Logo (always visible, even on mobile) */}
-        <img
-          src="/logo.png"
-          alt="PIVOTJJ"
-          className="h-7 w-7 shrink-0 rounded-md object-contain sm:h-9 sm:w-9"
-        />
+        {/* Back to home button */}
+        <button
+          onClick={() => setView("landing")}
+          className="flex shrink-0 items-center gap-1.5 rounded-md px-1 py-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+          title="Back to home"
+        >
+          <img src="/logo.png" alt="PIVOTJJ" className="h-7 w-7 rounded-md object-contain sm:h-9 sm:w-9" />
         {/* App name — hidden on mobile to save space */}
         <div className="hidden shrink-0 sm:block">
           <h1 className="text-sm font-semibold leading-tight">PIVOTJJ</h1>
           <p className="text-[10px] leading-tight text-white/40">PRECISION TRADING LEVELS</p>
         </div>
+        </button>
 
         {/* Spacer to push the rest to the right on desktop */}
         <div className="flex-1" />
@@ -466,5 +473,216 @@ function LoadingDots() {
       Loading Chart
       <span className="text-emerald-400">{".".repeat(dotCount)}</span>
     </span>
+  );
+}
+
+// ============================================================ LANDING PAGE
+function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
+  return (
+    <div className="min-h-screen bg-[#0a0b0f] text-white">
+      {/* ====== NAV ====== */}
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0c0d12]/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="PIVOTJJ" className="h-8 w-8 rounded-md object-contain" />
+            <div>
+              <h1 className="text-sm font-bold leading-tight">PIVOTJJ</h1>
+              <p className="text-[9px] leading-tight text-white/40">PRECISION TRADING LEVELS</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="#levels" className="hidden text-xs text-white/60 hover:text-white sm:block">Levels</a>
+            <a href="#copytrade" className="hidden text-xs text-white/60 hover:text-white sm:block">Copy Trade</a>
+            <a href="#quant" className="hidden text-xs text-white/60 hover:text-white sm:block">Quant</a>
+            <Button
+              onClick={onOpenChart}
+              size="sm"
+              className="bg-emerald-500/15 font-mono text-xs text-emerald-400 hover:bg-emerald-500/25"
+            >
+              Open Chart →
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ====== HERO ====== */}
+      <section className="relative overflow-hidden px-4 py-20 text-center">
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-3 py-1">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            </span>
+            <span className="text-[10px] uppercase tracking-wider text-emerald-400">Live Levels Updated Daily</span>
+          </div>
+          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
+            <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent">PIVOTJJ</span>
+            <br />
+            <span className="text-white">Precision Trading Levels</span>
+          </h2>
+          <p className="mx-auto mt-6 max-w-xl text-sm text-white/60 sm:text-base">
+            Daily support &amp; resistance levels auto-loaded from your MT5 data, with copy trading
+            signals and custom quant programming for MT5 and Amibroker.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button
+              onClick={onOpenChart}
+              className="bg-emerald-500 px-8 py-3 text-sm font-semibold text-white hover:bg-emerald-600"
+            >
+              Launch Chart →
+            </Button>
+            <a
+              href="#copytrade"
+              className="rounded-lg border border-white/15 bg-white/5 px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              Copy Trade
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ====== PIVOTJJ LEVELS ====== */}
+      <section id="levels" className="border-t border-white/5 px-4 py-16">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-10 text-center">
+            <span className="text-[10px] uppercase tracking-widest text-emerald-400">01 — Chart</span>
+            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">PIVOTJJ Levels on Chart</h3>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
+              Automatically loads your MT5 CSV files from Google Drive and draws 6 precision pivot
+              levels — Resistance I/II/III (green) and Support I/II/III (red) — directly on a
+              TradingView-style candlestick chart.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FeatureCard
+              title="Auto-Load from Drive"
+              desc="CSV files in your Google Drive folder are fetched and parsed automatically — no manual upload."
+            />
+            <FeatureCard
+              title="6 Pivot Levels"
+              desc="Resistance I, II, III (green) and Support I, II, III (red) drawn as solid lines on the chart."
+            />
+            <FeatureCard
+              title="Last 200 Candles"
+              desc="Zoomed view showing the latest 100 candles with day-separation vertical lines."
+            />
+          </div>
+          <div className="mt-8 text-center">
+            <Button
+              onClick={onOpenChart}
+              className="bg-emerald-500/15 font-mono text-sm text-emerald-400 hover:bg-emerald-500/25"
+            >
+              View Live Chart →
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ====== COPY TRADE ====== */}
+      <section id="copytrade" className="border-t border-white/5 bg-[#0c0d12] px-4 py-16">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-10 text-center">
+            <span className="text-[10px] uppercase tracking-widest text-emerald-400">02 — Trading</span>
+            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">Copy Trade</h3>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
+              Follow verified pivot-level trades. Every signal is based on the daily PIVOTJJ levels
+              — entries, stop-losses, and targets are pre-calculated from the support/resistance zones.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FeatureCard
+              title="Signal Alerts"
+              desc="Real-time alerts when price touches Resistance I or Support I — the highest-probability reversal zones."
+            />
+            <FeatureCard
+              title="Pre-Set Entries"
+              desc="Each signal includes entry price, stop-loss (beyond RII/SII), and target (next pivot level)."
+            />
+            <FeatureCard
+              title="Risk-Adjusted"
+              desc="Position sizing calculated per trade so risk stays consistent across all signals."
+            />
+          </div>
+          <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.02] p-6 text-center">
+            <p className="text-sm text-white/70">
+              💡 <span className="font-semibold text-white">Copy trade signals</span> are generated from
+              the same pivot levels you see on the chart — what you see is what you trade.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ====== QUANT PROGRAMMING ====== */}
+      <section id="quant" className="border-t border-white/5 px-4 py-16">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-10 text-center">
+            <span className="text-[10px] uppercase tracking-widest text-emerald-400">03 — Development</span>
+            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">Quant Programming — MT5 / Amibroker</h3>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
+              Custom algorithmic trading systems built for MetaTrader 5 and Amibroker. From pivot-level
+              EAs to full automated strategies with backtesting.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-6">
+              <h4 className="mb-3 font-mono text-lg font-bold text-emerald-400">MetaTrader 5 (MQL5)</h4>
+              <ul className="space-y-2 text-sm text-white/60">
+                <li>• Expert Advisors (EAs) for automated trading</li>
+                <li>• Custom indicators for pivot-level detection</li>
+                <li>• Strategy backtesting &amp; optimization</li>
+                <li>• Multi-symbol and multi-timeframe systems</li>
+              </ul>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-6">
+              <h4 className="mb-3 font-mono text-lg font-bold text-emerald-400">Amibroker (AFL)</h4>
+              <ul className="space-y-2 text-sm text-white/60">
+                <li>• AFL formulas for scanning &amp; screening</li>
+                <li>• Custom chart templates with pivot overlays</li>
+                <li>• Backtesting with historical data</li>
+                <li>• Automated exploration &amp; alerts</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ====== CTA ====== */}
+      <section className="border-t border-white/5 px-4 py-16 text-center">
+        <div className="mx-auto max-w-2xl">
+          <h3 className="text-2xl font-bold sm:text-3xl">Ready to trade with precision?</h3>
+          <p className="mt-3 text-sm text-white/60">
+            Launch the live chart with today's pivot levels loaded automatically.
+          </p>
+          <Button
+            onClick={onOpenChart}
+            className="mt-6 bg-emerald-500 px-8 py-3 text-sm font-semibold text-white hover:bg-emerald-600"
+          >
+            Launch PIVOTJJ Chart →
+          </Button>
+        </div>
+      </section>
+
+      {/* ====== FOOTER ====== */}
+      <footer className="border-t border-white/10 px-4 py-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="PIVOTJJ" className="h-6 w-6 rounded-md object-contain" />
+            <span className="text-xs font-mono text-white/40">PIVOTJJ — PRECISION TRADING LEVELS</span>
+          </div>
+          <p className="text-[10px] text-white/30">
+            Daily QUANTJJ Levels are updated manually every morning for educational and informational purposes only.
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function FeatureCard({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-colors hover:border-emerald-500/30 hover:bg-emerald-500/[0.03]">
+      <h4 className="mb-2 text-sm font-semibold text-white">{title}</h4>
+      <p className="text-xs leading-relaxed text-white/50">{desc}</p>
+    </div>
   );
 }
