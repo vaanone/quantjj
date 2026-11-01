@@ -241,6 +241,15 @@ export default function Home() {
               {timeframe.label}
             </Badge>
           )}
+
+          {/* Drive refresh button — always rendered (even before candles load)
+              so it can fetch files and clear the loading state. */}
+          <DriveFilePicker
+            onLoaded={handleLoaded}
+            onLastUpdate={setLastUpdate}
+            onLoadingChange={setChartLoading}
+            compact
+          />
         </div>
       </header>
 
@@ -251,7 +260,7 @@ export default function Home() {
           <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
             Daily QUANTJJ Levels are updated manually every morning for educational and informational purposes only.
           </p>
-          {/* Last Update timestamp + refresh button — right side */}
+          {/* Last Update timestamp — right side */}
           <div className="ml-auto flex items-center gap-3">
             {lastUpdate && (
               <div className="flex flex-col items-start leading-tight">
@@ -263,12 +272,6 @@ export default function Home() {
                 </span>
               </div>
             )}
-            <DriveFilePicker
-              onLoaded={handleLoaded}
-              onLastUpdate={setLastUpdate}
-              onLoadingChange={setChartLoading}
-              compact
-            />
           </div>
           <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
             <SheetTrigger asChild>
