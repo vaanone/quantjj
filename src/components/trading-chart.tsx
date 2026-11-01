@@ -103,13 +103,11 @@ export function TradingChart({
         // and the current price value — they were overlapping the candles.
         ensureEdgeTickMarksVisible: true,
         // Make the price scale wider so labels don't overlap the chart.
-        minimumWidth: 80,
+        minimumWidth: 120,
       },
       timeScale: {
         borderColor: COLORS.border,
-        // Negative right offset pushes the chart LEFT, giving the price scale
-        // more room on the right for S/R labels.
-        rightOffset: 5,
+        rightOffset: 20,
         timeVisible: true,
         secondsVisible: false,
         barSpacing: 6,
