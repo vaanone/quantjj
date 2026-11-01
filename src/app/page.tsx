@@ -287,38 +287,26 @@ export default function Home() {
                   {chartLayout === 2 && (<><rect x="1" y="1" width="4.5" height="10" rx="1" /><rect x="6.5" y="1" width="4.5" height="10" rx="1" /></>)}
                   {chartLayout === 4 && (<><rect x="1" y="1" width="4.5" height="4.5" rx="1" /><rect x="6.5" y="1" width="4.5" height="4.5" rx="1" /><rect x="1" y="6.5" width="4.5" height="4.5" rx="1" /><rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" /></>)}
                 </svg>
-                <span className="hidden font-mono text-xs font-bold text-white/60 sm:inline">
-                  {chartLayout}
-                </span>
               </SelectTrigger>
               <SelectContent className="border-white/15 bg-[#15161d] text-white">
-                <SelectItem value="1" className="font-mono text-xs">
-                  <span className="flex items-center gap-2">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                      <rect x="1" y="1" width="10" height="10" rx="1" />
-                    </svg>
-                    1 Chart
-                  </span>
+                <SelectItem value="1">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                    <rect x="1" y="1" width="10" height="10" rx="1" />
+                  </svg>
                 </SelectItem>
-                <SelectItem value="2" className="font-mono text-xs">
-                  <span className="flex items-center gap-2">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                      <rect x="1" y="1" width="4.5" height="10" rx="1" />
-                      <rect x="6.5" y="1" width="4.5" height="10" rx="1" />
-                    </svg>
-                    2 Charts
-                  </span>
+                <SelectItem value="2">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                    <rect x="1" y="1" width="4.5" height="10" rx="1" />
+                    <rect x="6.5" y="1" width="4.5" height="10" rx="1" />
+                  </svg>
                 </SelectItem>
-                <SelectItem value="4" className="font-mono text-xs">
-                  <span className="flex items-center gap-2">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                      <rect x="1" y="1" width="4.5" height="4.5" rx="1" />
-                      <rect x="6.5" y="1" width="4.5" height="4.5" rx="1" />
-                      <rect x="1" y="6.5" width="4.5" height="4.5" rx="1" />
-                      <rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" />
-                    </svg>
-                    4 Charts
-                  </span>
+                <SelectItem value="4">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
+                    <rect x="1" y="1" width="4.5" height="4.5" rx="1" />
+                    <rect x="6.5" y="1" width="4.5" height="4.5" rx="1" />
+                    <rect x="1" y="6.5" width="4.5" height="4.5" rx="1" />
+                    <rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" />
+                  </svg>
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -514,9 +502,25 @@ export default function Home() {
             layout={chartLayout}
             allSymbols={allSymbols.map((s) => s.symbol)}
             multiSymbols={multiSymbols}
-            onSymbolChange={(slot, sym) =>
-              setMultiSymbols((prev) => ({ ...prev, [slot]: sym }))
-            }
+            onSymbolChange={(slot, sym) => {
+              if (slot === 0) {
+                // Slot 0 uses the main symbol — find the file containing
+                // this symbol and switch to it.
+                for (const [fName, loaded] of files) {
+                  if (loaded.result.symbols.includes(sym)) {
+                    setFiles((prev) => {
+                      const next = new Map(prev);
+                      next.set(fName, { ...loaded, selectedSymbol: sym });
+                      return next;
+                    });
+                    setSelectedFile(fName);
+                    break;
+                  }
+                }
+              } else {
+                setMultiSymbols((prev) => ({ ...prev, [slot]: sym }));
+              }
+            }}
             getSlotData={getChartSlotData}
             timeframe={timeframe}
             lastUpdate={lastUpdate}
