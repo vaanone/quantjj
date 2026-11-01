@@ -609,9 +609,6 @@ function MultiChartGrid({
   lastUpdate?: string | null;
   slotSymbols: string[];
 }) {
-  // All layouts are vertical (stacked top to bottom).
-  const containerClass = "flex flex-col h-full";
-
   // For 4 charts: stacked vertically, each gets 1/4 height.
   if (layout === 4) {
     const slots4 = Array.from({ length: 4 }, (_, i) => {
@@ -657,16 +654,16 @@ function MultiChartGrid({
     );
   }
 
-  // Layout 2 — side by side (desktop) or stacked (mobile).
+  // Layout 2 — vertical stack, each gets 1/2 height.
   const slots = Array.from({ length: layout }, (_, i) => {
     const sym = i === 0 ? slotSymbols[0] : multiSymbols[i] || allSymbols[i] || allSymbols[0] || "";
     return { slot: i, symbol: sym };
   });
 
   return (
-    <div className={containerClass}>
+    <div className="flex h-full flex-col gap-0.5">
       {slots.map(({ slot, symbol }) => (
-        <div key={slot} className="h-full flex-1">
+        <div key={slot} className="h-1/2">
           <ChartSlot slot={slot} symbol={symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
         </div>
       ))}
@@ -699,7 +696,7 @@ function ChartSlot({
 }) {
   const data = getSlotData(slot);
   return (
-    <div className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden border border-white/5 bg-[#100c00]">
+    <div className="relative flex h-full w-full flex-col overflow-hidden border border-white/5 bg-[#100c00]">
       {/* Per-chart header: symbol dropdown + price */}
       <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-[#0d0a00] px-2 py-1">
         <Select
