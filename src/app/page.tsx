@@ -536,22 +536,22 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
     <div className="min-h-screen bg-[#000000] text-white">
       {/* ====== NAV ====== */}
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0d0a00]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Vaan.One" className="h-8 w-8 rounded-md object-contain" />
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="Vaan.One" className="h-10 w-10 rounded-md object-contain" />
             <div>
-              <h1 className="text-sm font-bold leading-tight">Vaan.One</h1>
-              <p className="text-[9px] leading-tight text-white/40">Vaan Pivot</p>
+              <h1 className="text-base font-bold leading-tight">Vaan.One</h1>
+              <p className="text-[11px] leading-tight text-white/40">Vaan Pivot</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <a href="#levels" className="hidden text-xs text-white/60 hover:text-white sm:block">Levels</a>
-            <a href="#quant" className="hidden text-xs text-white/60 hover:text-white sm:block">Quant</a>
-            <a href="#faq" className="hidden text-xs text-white/60 hover:text-white sm:block">FAQ</a>
+          <div className="flex items-center gap-6">
+            <a href="#levels" className="hidden text-sm text-white/60 hover:text-white sm:block">Levels</a>
+            <a href="#quant" className="hidden text-sm text-white/60 hover:text-white sm:block">Quant</a>
+            <a href="#faq" className="hidden text-sm text-white/60 hover:text-white sm:block">FAQ</a>
             <Button
               onClick={onOpenChart}
               size="sm"
-              className="bg-red-600/15 font-mono text-xs text-red-400 hover:bg-red-600/25"
+              className="bg-red-600/15 font-mono text-sm text-red-400 hover:bg-red-600/25"
             >
               Open Chart →
             </Button>
@@ -560,7 +560,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
       </nav>
 
       {/* ====== HERO ====== */}
-      <section className="relative overflow-hidden px-4 py-20 text-center">
+      <section className="relative overflow-hidden px-6 py-28 text-center">
         {/* Animated background: drifting grid + floating glow orbs */}
         <div className="pointer-events-none absolute inset-0">
           {/* Drifting grid */}
@@ -580,28 +580,28 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           <div className="animate-pulse-glow absolute bottom-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-400/5 blur-[90px]" />
         </div>
 
-        <div className="relative mx-auto max-w-3xl">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1">
-            <span className="relative flex h-1.5 w-1.5">
+        <div className="relative mx-auto max-w-4xl">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-4 py-1.5">
+            <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
             </span>
-            <span className="text-[10px] uppercase tracking-wider text-amber-400">Live Levels Updated Daily</span>
+            <span className="text-xs uppercase tracking-wider text-amber-400">Live Levels Updated Daily</span>
           </div>
-          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          <h2 className="text-5xl font-bold tracking-tight sm:text-7xl">
             <span className="bg-gradient-to-r from-red-500 via-amber-400 to-amber-600 bg-clip-text text-transparent">Vaan Pivot</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg font-medium text-amber-400 sm:text-xl">
+          <p className="mx-auto mt-6 max-w-2xl text-xl font-medium text-amber-400 sm:text-2xl">
             Know Your Levels. Trade with Confidence.
           </p>
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base">
+          <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/60 sm:text-lg">
             Vaan.One Pivot Levels are calculated using a customized pivot calculation method, designed to
             identify potential intraday support and resistance zones.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button
               onClick={onOpenChart}
-              className="bg-red-600 px-8 py-3 text-sm font-semibold text-white hover:bg-red-700"
+              className="bg-red-600 px-10 py-4 text-base font-semibold text-white hover:bg-red-700"
             >
               Launch Chart →
             </Button>
@@ -609,25 +609,25 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
         </div>
 
         {/* Sample equity curve card */}
-        <div className="relative mx-auto mt-16 max-w-2xl">
+        <div className="relative mx-auto mt-20 max-w-3xl">
           <EquityCurveCard />
         </div>
       </section>
 
       {/* ====== Vaan.One LEVELS ====== */}
-      <section id="levels" className="border-t border-white/5 px-4 py-16">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-10 text-center">
-            <span className="text-[10px] uppercase tracking-widest text-amber-400">01 — Chart</span>
-            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">Vaan.One Levels on Chart</h3>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
+      <section id="levels" className="border-t border-white/5 px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <span className="text-xs uppercase tracking-widest text-amber-400">01 — Chart</span>
+            <h3 className="mt-3 text-3xl font-bold sm:text-4xl">Vaan.One Levels on Chart</h3>
+            <p className="mx-auto mt-4 max-w-2xl text-base text-white/60">
               Get daily Pivot Points and Support &amp; Resistance levels for your favourite trading
               instruments.
             </p>
           </div>
 
           {/* Key facts */}
-          <div className="mb-10 grid gap-4 sm:grid-cols-3">
+          <div className="mb-12 grid gap-5 sm:grid-cols-3">
             <FeatureCard
               title="Daily Updates"
               desc="Vaan.One Pivot levels are manually updated every morning at 5:30 AM IST."
@@ -643,11 +643,11 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           </div>
 
           {/* Available symbols */}
-          <div className="mb-8 rounded-xl border border-white/10 bg-white/[0.02] p-6">
-            <h4 className="mb-4 text-center text-sm font-semibold uppercase tracking-wider text-amber-400">
+          <div className="mb-10 rounded-xl border border-white/10 bg-white/[0.02] p-8">
+            <h4 className="mb-6 text-center text-base font-semibold uppercase tracking-wider text-amber-400">
               Available Trading Symbols
             </h4>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               {[
                 { sym: "XAUUSD", name: "Gold" },
                 { sym: "EURUSD", name: "Euro / US Dollar" },
@@ -656,18 +656,18 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
               ].map((s) => (
                 <div
                   key={s.sym}
-                  className="flex items-center justify-between rounded-md border border-white/5 bg-white/[0.01] px-4 py-2.5"
+                  className="flex items-center justify-between rounded-md border border-white/5 bg-white/[0.01] px-5 py-3.5"
                 >
-                  <span className="font-mono text-sm font-bold text-amber-400">{s.sym}</span>
-                  <span className="text-xs text-white/60">{s.name}</span>
+                  <span className="font-mono text-base font-bold text-amber-400">{s.sym}</span>
+                  <span className="text-sm text-white/60">{s.name}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Disclaimer */}
-          <div className="mb-8 rounded-xl border border-amber-500/15 bg-amber-500/[0.03] p-5">
-            <p className="text-xs leading-relaxed text-white/50">
+          <div className="mb-10 rounded-xl border border-amber-500/15 bg-amber-500/[0.03] p-6">
+            <p className="text-sm leading-relaxed text-white/50">
               <span className="font-semibold text-amber-400">Disclaimer:</span>{" "}
               Vaan.One Levels are provided for educational and informational purposes only. These levels
               are manually calculated and updated daily. Accuracy is not guaranteed. They are not
@@ -679,7 +679,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           <div className="text-center">
             <Button
               onClick={onOpenChart}
-              className="bg-red-600 px-8 py-3 text-sm font-semibold text-white hover:bg-red-700"
+              className="bg-red-600 px-10 py-4 text-base font-semibold text-white hover:bg-red-700"
             >
               View Live Chart →
             </Button>
@@ -688,35 +688,35 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
       </section>
 
       {/* ====== QUANT DEVELOPER ====== */}
-      <section id="quant" className="border-t border-white/5 bg-[#0d0a00] px-4 py-16">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-10 text-center">
-            <span className="text-[10px] uppercase tracking-widest text-amber-400">02 — Development</span>
-            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">Quant Developer</h3>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
+      <section id="quant" className="border-t border-white/5 bg-[#0d0a00] px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <span className="text-xs uppercase tracking-widest text-amber-400">02 — Development</span>
+            <h3 className="mt-3 text-3xl font-bold sm:text-4xl">Quant Developer</h3>
+            <p className="mx-auto mt-4 max-w-2xl text-base text-white/60">
               MT5/MT4 and Amibroker Indicators &amp; EA — custom algorithmic trading systems built to
               your specification.
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="shimmer-border rounded-xl border border-amber-500/15 bg-white/[0.02] p-6 transition-colors hover:border-amber-500/30">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 font-mono text-xs font-bold text-amber-400">M5</span>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="shimmer-border rounded-xl border border-amber-500/15 bg-white/[0.02] p-8 transition-colors hover:border-amber-500/30">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 font-mono text-sm font-bold text-amber-400">M5</span>
                 <h4 className="font-mono text-lg font-bold text-amber-400">MetaTrader 5 / MT4</h4>
               </div>
-              <ul className="space-y-2 text-sm text-white/60">
+              <ul className="space-y-3 text-base text-white/60">
                 <li className="flex gap-2"><span className="text-amber-400">▸</span> Expert Advisors (EAs) for automated trading</li>
                 <li className="flex gap-2"><span className="text-amber-400">▸</span> Custom indicators for pivot-level detection</li>
                 <li className="flex gap-2"><span className="text-amber-400">▸</span> Strategy backtesting &amp; optimization</li>
                 <li className="flex gap-2"><span className="text-amber-400">▸</span> Multi-symbol and multi-timeframe systems</li>
               </ul>
             </div>
-            <div className="shimmer-border rounded-xl border border-red-500/15 bg-white/[0.02] p-6 transition-colors hover:border-red-500/30">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10 font-mono text-xs font-bold text-red-400">AB</span>
+            <div className="shimmer-border rounded-xl border border-red-500/15 bg-white/[0.02] p-8 transition-colors hover:border-red-500/30">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10 font-mono text-sm font-bold text-red-400">AB</span>
                 <h4 className="font-mono text-lg font-bold text-red-400">Amibroker (AFL)</h4>
               </div>
-              <ul className="space-y-2 text-sm text-white/60">
+              <ul className="space-y-3 text-base text-white/60">
                 <li className="flex gap-2"><span className="text-red-400">▸</span> AFL formulas for scanning &amp; screening</li>
                 <li className="flex gap-2"><span className="text-red-400">▸</span> Custom chart templates with pivot overlays</li>
                 <li className="flex gap-2"><span className="text-red-400">▸</span> Backtesting with historical data</li>
@@ -736,15 +736,15 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
       </section>
 
       {/* ====== CTA ====== */}
-      <section className="border-t border-white/5 px-4 py-16 text-center">
+      <section className="border-t border-white/5 px-6 py-20 text-center">
         <div className="mx-auto max-w-2xl">
-          <h3 className="text-2xl font-bold sm:text-3xl">Ready to trade with precision?</h3>
-          <p className="mt-3 text-sm text-white/60">
+          <h3 className="text-3xl font-bold sm:text-4xl">Ready to trade with precision?</h3>
+          <p className="mt-4 text-base text-white/60">
             Launch the live chart with today's pivot levels loaded automatically.
           </p>
           <Button
             onClick={onOpenChart}
-            className="mt-6 bg-red-600 px-8 py-3 text-sm font-semibold text-white hover:bg-red-700"
+            className="mt-8 bg-red-600 px-10 py-4 text-base font-semibold text-white hover:bg-red-700"
           >
             Launch Vaan.One Chart →
           </Button>
@@ -752,11 +752,11 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
       </section>
 
       {/* ====== FAQ ====== */}
-      <section id="faq" className="border-t border-white/5 px-4 py-16">
+      <section id="faq" className="border-t border-white/5 px-6 py-20">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-10 text-center">
-            <span className="text-[10px] uppercase tracking-widest text-amber-400">FAQ</span>
-            <h3 className="mt-2 text-2xl font-bold sm:text-3xl">Frequently Asked Questions</h3>
+          <div className="mb-12 text-center">
+            <span className="text-xs uppercase tracking-widest text-amber-400">FAQ</span>
+            <h3 className="mt-3 text-3xl font-bold sm:text-4xl">Frequently Asked Questions</h3>
           </div>
           <div className="space-y-3">
             <FaqItem
@@ -821,9 +821,9 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
 
 function FeatureCard({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="shimmer-border animate-fade-in-up rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-amber-500/40 hover:bg-amber-500/[0.04] hover:shadow-lg hover:shadow-amber-500/5">
-      <h4 className="mb-2 text-sm font-semibold text-white">{title}</h4>
-      <p className="text-xs leading-relaxed text-white/50">{desc}</p>
+    <div className="shimmer-border animate-fade-in-up rounded-xl border border-white/10 bg-white/[0.02] p-7 transition-all hover:border-amber-500/40 hover:bg-amber-500/[0.04] hover:shadow-lg hover:shadow-amber-500/5">
+      <h4 className="mb-3 text-lg font-semibold text-white">{title}</h4>
+      <p className="text-sm leading-relaxed text-white/50">{desc}</p>
     </div>
   );
 }
@@ -911,12 +911,12 @@ function EquityCurveCard() {
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   return (
-    <details className="group rounded-lg border border-white/10 bg-white/[0.02] p-4 transition-colors hover:border-amber-500/20">
-      <summary className="flex cursor-pointer items-center justify-between text-sm font-medium text-white/80 [&::-webkit-details-marker]:hidden">
+    <details className="group rounded-lg border border-white/10 bg-white/[0.02] p-5 transition-colors hover:border-amber-500/20">
+      <summary className="flex cursor-pointer items-center justify-between text-base font-medium text-white/80 [&::-webkit-details-marker]:hidden">
         {q}
-        <span className="ml-2 text-amber-400 transition-transform group-open:rotate-45">+</span>
+        <span className="ml-2 text-lg text-amber-400 transition-transform group-open:rotate-45">+</span>
       </summary>
-      <p className="mt-3 text-xs leading-relaxed text-white/50">{a}</p>
+      <p className="mt-4 text-sm leading-relaxed text-white/50">{a}</p>
     </details>
   );
 }
