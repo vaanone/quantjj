@@ -23,6 +23,10 @@ interface TradingChartProps {
   lines: SRLine[];
   symbol: string;
   timeframe?: TimeframeInfo | null;
+  /** Number of candles to show in the visible viewport on initial load.
+   *  The full `candles` array is loaded; the viewport is just zoomed to the
+   *  last N. The user can scroll left to see older candles. */
+  visibleCount?: number;
 }
 
 const COLORS = {
@@ -41,6 +45,7 @@ export function TradingChart({
   lines,
   symbol,
   timeframe,
+  visibleCount,
 }: TradingChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -253,9 +258,18 @@ export function TradingChart({
       createSeriesMarkers(candleSeriesRef.current, dayMarkers);
     }
 
-    // Show the entire loaded history — fits all 300 candles into the view.
-    chartRef.current.timeScale().fitContent();
-  }, [candles]);
+    // Set the visible range to show only the last `visibleCount` candles.
+    // The full dataset (up to 200) is loaded so the user can scroll left,
+    // but the initial viewport is zoomed to show only the most recent N.
+    if (visibleCount && visibleCount < candles.length) {
+      const fromIdx = candles.length - visibleCount;
+      const fromTime = candles[fromIdx].time as UTCTimestamp;
+      const toTime = candles[candles.length - 1].time as UTCTimestamp;
+      chartRef.current.timeScale().setVisibleRange({ from: fromTime, to: toTime });
+    } else {
+      chartRef.current.timeScale().fitContent();
+    }
+  }, [candles, visibleCount]);
 
   // -- Update S/R price lines (only the top-6: R I/II/III + S I/II/III) -----
   useEffect(() => {

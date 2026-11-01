@@ -28,10 +28,10 @@ import {
 const SR_SENSITIVITY_BARS = 5;
 const SR_TOLERANCE_PCT = 0.15;
 const SR_MIN_TOUCHES = 2;
-/** Only the last N candles are shown on the chart — keeps the view "big zoom"
- *  with each candle wide enough to read. The user can still scroll/zoom
- *  afterwards. */
-const MAX_DISPLAY_CANDLES = 300;
+/** Load this many candles into the chart data (the user can scroll back to see older ones). */
+const MAX_DISPLAY_CANDLES = 200;
+/** Number of candles visible at once on initial load (zoom level). */
+const VISIBLE_CANDLES = 100;
 
 interface LoadedFile {
   result: ParseResult;
@@ -147,8 +147,28 @@ export default function Home() {
 
   const fileNames = Array.from(files.keys());
   const lastClose = candles.length > 0 ? candles[candles.length - 1].close : 0;
-  const firstClose = candles.length > 0 ? candles[0].close : 0;
-  const totalChangePct = firstClose > 0 ? ((lastClose - firstClose) / firstClose) * 100 : 0;
+
+  // Market change%: calculated from TODAY's first candle (the day's open).
+  // We find the first candle whose UTC date matches the last candle's UTC date,
+  // and use its open price as the "market open" reference. This gives the
+  // correct intraday change, not the change across all 200 loaded candles.
+  const todayOpen = (() => {
+    if (candles.length === 0) return 0;
+    const lastCandle = candles[candles.length - 1];
+    const lastD = new Date(lastCandle.time * 1000);
+    const lastDay = lastD.getUTCFullYear() * 10000 + (lastD.getUTCMonth() + 1) * 100 + lastD.getUTCDate();
+    for (let i = candles.length - 1; i >= 0; i--) {
+      const d = new Date(candles[i].time * 1000);
+      const dayKey = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+      if (dayKey !== lastDay) {
+        // The candle just before this one is the first candle of today.
+        return candles[i + 1]?.open ?? lastClose;
+      }
+    }
+    // All candles are from the same day — use the very first candle's open.
+    return candles[0].open;
+  })();
+  const totalChangePct = todayOpen > 0 ? ((lastClose - todayOpen) / todayOpen) * 100 : 0;
   const symbolLabel = selectedSymbol || currentResult?.symbol || "";
 
   // For the symbol dropdown value: the currently active symbol.
@@ -347,6 +367,7 @@ function ChartArea({
         lines={lines}
         symbol={symbol}
         timeframe={timeframe}
+        visibleCount={VISIBLE_CANDLES}
       />
       <div className="pointer-events-none absolute left-4 top-3 select-none">
         <div className="flex items-baseline gap-2">
