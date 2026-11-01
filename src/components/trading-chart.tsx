@@ -259,7 +259,7 @@ export function TradingChart({
     // the old price range and the candles appear squished at the bottom.
     chartRef.current.priceScale("right").applyOptions({ autoScale: true });
 
-    // Day-separation vertical lines: insert a vertical line marker at the
+    // Day-separation vertical lines: insert a dashed vertical line marker at the
     // first candle of each new UTC day. This visually separates trading days.
     const dayMarkers = [];
     let lastDay = -1;
@@ -270,9 +270,9 @@ export function TradingChart({
         dayMarkers.push({
           time: c.time as UTCTimestamp,
           position: "aboveBar" as const,
-          color: "#3a3f4b",
+          color: "#4b5563", // grey — visible but subtle
           shape: "line" as const,
-          lineStyle: LineStyle.Solid,
+          lineStyle: LineStyle.Dashed, // dotted/dashed vertical line
         });
         lastDay = dayKey;
       }
