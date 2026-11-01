@@ -244,7 +244,7 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
         </div>
 
         {autoLoading && (
-          <div className="mb-3 flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-500/5 p-2 text-[11px] text-emerald-400">
+          <div className="mb-3 flex items-center gap-2 rounded-md border border-amber-500/20 bg-amber-500/5 p-2 text-[11px] text-amber-400">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
             Auto-loading files from Drive…
           </div>
@@ -276,18 +276,18 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
                 key={file.id}
                 onClick={() => loadFile(file)}
                 disabled={isLoading}
-                className="flex w-full items-center gap-2 rounded-md border border-white/5 bg-white/[0.01] px-3 py-2 text-left text-xs text-white/80 transition-colors hover:border-emerald-500/30 hover:bg-emerald-500/[0.06] disabled:opacity-50"
+                className="flex w-full items-center gap-2 rounded-md border border-white/5 bg-white/[0.01] px-3 py-2 text-left text-xs text-white/80 transition-colors hover:border-amber-500/30 hover:bg-amber-500/[0.06] disabled:opacity-50"
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-emerald-400" />
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-400" />
                 ) : isLoaded ? (
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-400" />
                 ) : (
                   <FileText className="h-4 w-4 shrink-0 text-white/40" />
                 )}
                 <span className="flex-1 truncate font-mono">{file.name}</span>
                 {isLoaded && (
-                  <span className="text-[10px] text-emerald-400">loaded</span>
+                  <span className="text-[10px] text-amber-400">loaded</span>
                 )}
               </button>
             );

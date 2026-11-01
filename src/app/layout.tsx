@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PIVOTJJ — PRECISION TRADING LEVELS",
+  title: "VAAN — Vaan Pivot",
   description: "TradingView-style candlestick chart for MT5 Excel/CSV exports, with automatic pivot levels detection.",
   keywords: ["trading", "MT5", "candlestick", "support resistance", "lightweight-charts"],
   authors: [{ name: "Vaan One" }],
@@ -33,7 +33,7 @@ export default function RootLayout({
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
-        style={{ backgroundColor: "#0a0b0f", color: "#e5e7eb" }}
+        style={{ backgroundColor: "#000000", color: "#e5e7eb" }}
       >
         <ThemeProvider>
           {children}

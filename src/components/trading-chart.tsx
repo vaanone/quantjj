@@ -30,13 +30,13 @@ interface TradingChartProps {
 }
 
 const COLORS = {
-  bg: "#0e0f14",
+  bg: "#100c00",
   text: "#d1d5db",
   grid: "#1c1e26",
   border: "#262a36",
   up: "#26a69a",
   down: "#ef5350",
-  resistance: "#22c55e", // green — solid line
+  resistance: "#d4af37", // dark gold — solid line
   support: "#ef4444",    // red — solid line
 };
 
@@ -302,7 +302,7 @@ export function TradingChart({
       {timeframe && (
         <div className="pointer-events-none absolute right-2 top-2 select-none rounded-md border border-white/10 bg-black/40 px-2 py-1 backdrop-blur-sm">
           <div className="flex items-baseline gap-1.5">
-            <span className="font-mono text-sm font-bold text-emerald-400">
+            <span className="font-mono text-sm font-bold text-amber-400">
               {timeframe.label}
             </span>
             <span className="text-[10px] uppercase tracking-wider text-white/50">

@@ -19,7 +19,7 @@ interface LevelsPanelProps {
  */
 export function LevelsPanel({ lines, lastClose, fileName, symbol }: LevelsPanelProps) {
   return (
-    <aside className="flex h-full w-full flex-col gap-4 overflow-y-auto bg-[#0c0d12] p-4 text-white">
+    <aside className="flex h-full w-full flex-col gap-4 overflow-y-auto bg-[#0d0a00] p-4 text-white">
       {/* Compact file summary */}
       <section className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-white/60">
@@ -67,13 +67,13 @@ export function LevelsPanel({ lines, lastClose, fileName, symbol }: LevelsPanelP
                   key={`${line.label}-${idx}`}
                   className={`flex items-center justify-between rounded-md border px-3 py-2 ${
                     isResistance
-                      ? "border-emerald-500/30 bg-emerald-500/[0.06]"
+                      ? "border-amber-500/30 bg-amber-500/[0.06]"
                       : "border-red-500/30 bg-red-500/[0.06]"
                   }`}
                 >
                   <span
                     className={`text-xs font-semibold ${
-                      isResistance ? "text-emerald-400" : "text-red-400"
+                      isResistance ? "text-amber-400" : "text-red-400"
                     }`}
                   >
                     {line.fullLabel}
@@ -85,7 +85,7 @@ export function LevelsPanel({ lines, lastClose, fileName, symbol }: LevelsPanelP
                     {lastClose > 0 && (
                       <span
                         className={`font-mono text-[10px] ${
-                          isResistance ? "text-emerald-400/60" : "text-red-400/60"
+                          isResistance ? "text-amber-400/60" : "text-red-400/60"
                         }`}
                       >
                         {distPct >= 0 ? "+" : ""}
