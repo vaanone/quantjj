@@ -6,6 +6,7 @@ import {
   CandlestickSeries,
   CrosshairMode,
   LineStyle,
+  createSeriesMarkers,
   type IChartApi,
   type ISeriesApi,
   type IPriceLine,
@@ -85,6 +86,28 @@ export function TradingChart({
         borderColor: COLORS.border,
         timeVisible: true,
         secondsVisible: false,
+        // Zoom out by default — reduces the bar width so more candles fit
+        // comfortably and the chart feels less cramped.
+        barSpacing: 6,
+        minBarSpacing: 2,
+        // Draw a vertical separator line at each day boundary.
+        ticksVisible: true,
+        tickMarkFormatter: (time: number, tickMarkType: number) => {
+          const d = new Date(time * 1000);
+          // Show date when at day boundary, time otherwise.
+          if (tickMarkType === 0) {
+            // Year
+            return `${d.getUTCFullYear()}`;
+          } else if (tickMarkType === 1) {
+            // Month
+            return `${d.toLocaleString("en-US", { month: "short", timeZone: "UTC" })}`;
+          } else if (tickMarkType === 2) {
+            // Day
+            return `${d.getUTCDate()}`;
+          }
+          // Time
+          return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+        },
       },
     });
 
@@ -208,7 +231,29 @@ export function TradingChart({
     }));
     candleSeriesRef.current.setData(candleData);
 
-    // Show the entire loaded history — no arbitrary slice or last-N-days.
+    // Day-separation vertical lines: insert a vertical line marker at the
+    // first candle of each new UTC day. This visually separates trading days.
+    const dayMarkers = [];
+    let lastDay = -1;
+    for (const c of candles) {
+      const d = new Date(c.time * 1000);
+      const dayKey = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+      if (dayKey !== lastDay) {
+        dayMarkers.push({
+          time: c.time as UTCTimestamp,
+          position: "aboveBar" as const,
+          color: "#3a3f4b",
+          shape: "line" as const,
+          lineStyle: LineStyle.Solid,
+        });
+        lastDay = dayKey;
+      }
+    }
+    if (dayMarkers.length > 0) {
+      createSeriesMarkers(candleSeriesRef.current, dayMarkers);
+    }
+
+    // Show the entire loaded history — fits all 300 candles into the view.
     chartRef.current.timeScale().fitContent();
   }, [candles]);
 
