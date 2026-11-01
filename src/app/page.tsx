@@ -31,7 +31,7 @@ const SR_MIN_TOUCHES = 2;
 /** Only the last N candles are shown on the chart — keeps the view "big zoom"
  *  with each candle wide enough to read. The user can still scroll/zoom
  *  afterwards. */
-const MAX_DISPLAY_CANDLES = 100;
+const MAX_DISPLAY_CANDLES = 300;
 
 interface LoadedFile {
   result: ParseResult;
