@@ -102,7 +102,7 @@ export function TradingChart({
         // Increased margins so candles don't touch the top/bottom edges —
         // the current price line and S/R lines have more breathing room.
         // Right margin ensures S/R label text doesn't overlap candles.
-        scaleMargins: { top: 0.25, bottom: 0.25, right: 0.08 },
+        scaleMargins: { top: 0.25, bottom: 0.25, right: 0.30 },
       },
       timeScale: {
         borderColor: COLORS.border,
