@@ -96,24 +96,22 @@ export function TradingChart({
       rightPriceScale: {
         borderColor: COLORS.border,
         // Auto-scale: the price axis fits to the visible candles automatically.
-        // This ensures EURUSD (~1.12) and XAUUSD (~3900) both display properly
-        // with the last price centered in the chart when switching symbols.
         autoScale: true,
-        // Increased margins so candles don't touch the top/bottom edges —
-        // the current price line and S/R lines have more breathing room.
-        // Right margin ensures S/R label text doesn't overlap candles.
-        scaleMargins: { top: 0.25, bottom: 0.25, right: 0.30 },
+        // Margins so candles don't touch edges.
+        scaleMargins: { top: 0.25, bottom: 0.25 },
+        // Ensure the price scale has enough width for S/R labels (RI, SI, etc.)
+        // and the current price value — they were overlapping the candles.
+        ensureEdgeTickMarksVisible: true,
+        // Make the price scale wider so labels don't overlap the chart.
+        minimumWidth: 80,
       },
       timeScale: {
         borderColor: COLORS.border,
-        // Add right offset so the last candle (live price) isn't flush against
-        // the price scale — gives space between the chart area and the price
-        // labels on the right.
-        rightOffset: -30,
+        // Negative right offset pushes the chart LEFT, giving the price scale
+        // more room on the right for S/R labels.
+        rightOffset: 5,
         timeVisible: true,
         secondsVisible: false,
-        // Zoom out by default — reduces the bar width so more candles fit
-        // comfortably and the chart feels less cramped.
         barSpacing: 6,
         minBarSpacing: 2,
         // Draw a vertical separator line at each day boundary.
