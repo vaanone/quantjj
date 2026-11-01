@@ -280,9 +280,9 @@ export default function Home() {
               <SelectTrigger className="h-7 w-auto shrink-0 gap-1 border-white/15 bg-white/5 px-1.5 text-white hover:bg-white/10 sm:h-8 sm:px-2">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-white/60">
                   {chartLayout === 1 && <rect x="1" y="1" width="10" height="10" rx="1" />}
-                  {chartLayout === 2 && (<><rect x="1" y="1" width="4.5" height="10" rx="1" /><rect x="6.5" y="1" width="4.5" height="10" rx="1" /></>)}
-                  {chartLayout === 3 && (<><rect x="1" y="1" width="4.5" height="10" rx="1" /><rect x="6.5" y="1" width="4.5" height="4.5" rx="1" /><rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" /></>)}
-                  {chartLayout === 4 && (<><rect x="1" y="1" width="4.5" height="4.5" rx="1" /><rect x="6.5" y="1" width="4.5" height="4.5" rx="1" /><rect x="1" y="6.5" width="4.5" height="4.5" rx="1" /><rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" /></>)}
+                  {chartLayout === 2 && (<><rect x="1" y="1" width="10" height="4.5" rx="1" /><rect x="1" y="6.5" width="10" height="4.5" rx="1" /></>)}
+                  {chartLayout === 3 && (<><rect x="1" y="1" width="10" height="2.8" rx="1" /><rect x="1" y="4.6" width="10" height="2.8" rx="1" /><rect x="1" y="8.2" width="10" height="2.8" rx="1" /></>)}
+                  {chartLayout === 4 && (<><rect x="1" y="1" width="10" height="2" rx="1" /><rect x="1" y="3.7" width="10" height="2" rx="1" /><rect x="1" y="6.4" width="10" height="2" rx="1" /><rect x="1" y="9.1" width="10" height="2" rx="1" /></>)}
                 </svg>
               </SelectTrigger>
               <SelectContent className="border-white/15 bg-[#15161d] text-white">
@@ -292,28 +292,28 @@ export default function Home() {
                     <rect x="1" y="1" width="10" height="10" rx="1" />
                   </svg>
                 </SelectItem>
-                {/* 2 charts — side by side */}
+                {/* 2 charts — vertical stack */}
                 <SelectItem value="2">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                    <rect x="1" y="1" width="4.5" height="10" rx="1" />
-                    <rect x="6.5" y="1" width="4.5" height="10" rx="1" />
+                    <rect x="1" y="1" width="10" height="4.5" rx="1" />
+                    <rect x="1" y="6.5" width="10" height="4.5" rx="1" />
                   </svg>
                 </SelectItem>
-                {/* 3 charts — left big, right split */}
+                {/* 3 charts — vertical stack */}
                 <SelectItem value="3">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                    <rect x="1" y="1" width="4.5" height="10" rx="1" />
-                    <rect x="6.5" y="1" width="4.5" height="4.5" rx="1" />
-                    <rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" />
+                    <rect x="1" y="1" width="10" height="2.8" rx="1" />
+                    <rect x="1" y="4.6" width="10" height="2.8" rx="1" />
+                    <rect x="1" y="8.2" width="10" height="2.8" rx="1" />
                   </svg>
                 </SelectItem>
-                {/* 4 charts — 2x2 grid */}
+                {/* 4 charts — vertical stack */}
                 <SelectItem value="4">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                    <rect x="1" y="1" width="4.5" height="4.5" rx="1" />
-                    <rect x="6.5" y="1" width="4.5" height="4.5" rx="1" />
-                    <rect x="1" y="6.5" width="4.5" height="4.5" rx="1" />
-                    <rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" />
+                    <rect x="1" y="1" width="10" height="2" rx="1" />
+                    <rect x="1" y="3.7" width="10" height="2" rx="1" />
+                    <rect x="1" y="6.4" width="10" height="2" rx="1" />
+                    <rect x="1" y="9.1" width="10" height="2" rx="1" />
                   </svg>
                 </SelectItem>
               </SelectContent>
@@ -609,14 +609,10 @@ function MultiChartGrid({
   lastUpdate?: string | null;
   slotSymbols: string[];
 }) {
-  // Grid layout — equal divisions, each chart gets the same screen space.
-  // Using flexbox for equal distribution so CMP is always visible.
-  const containerClass =
-    layout === 2
-      ? "flex flex-col sm:flex-row h-full"
-      : "flex flex-col h-full";
+  // All layouts are vertical (stacked top to bottom).
+  const containerClass = "flex flex-col h-full";
 
-  // For 4 charts: top half has 2 charts side by side, bottom half has 2 charts side by side.
+  // For 4 charts: stacked vertically, each gets 1/4 height.
   if (layout === 4) {
     const slots4 = Array.from({ length: 4 }, (_, i) => {
       const sym = i === 0 ? slotSymbols[0] : multiSymbols[i] || allSymbols[i] || allSymbols[0] || "";
@@ -624,40 +620,38 @@ function MultiChartGrid({
     });
     return (
       <div className="flex h-full flex-col gap-0.5">
-        <div className="flex h-1/2 gap-0.5">
-          {slots4.slice(0, 2).map(({ slot, symbol }) => (
-            <ChartSlot key={slot} slot={slot} symbol={symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
-          ))}
+        <div className="flex h-1/4">
+          <ChartSlot slot={slots4[0].slot} symbol={slots4[0].symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
         </div>
-        <div className="flex h-1/2 gap-0.5">
-          {slots4.slice(2, 4).map(({ slot, symbol }) => (
-            <ChartSlot key={slot} slot={slot} symbol={symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
-          ))}
+        <div className="flex h-1/4">
+          <ChartSlot slot={slots4[1].slot} symbol={slots4[1].symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
+        </div>
+        <div className="flex h-1/4">
+          <ChartSlot slot={slots4[2].slot} symbol={slots4[2].symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
+        </div>
+        <div className="flex h-1/4">
+          <ChartSlot slot={slots4[3].slot} symbol={slots4[3].symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
         </div>
       </div>
     );
   }
 
-  // For 3 charts: left half is 1 big chart, right half is split into 2.
+  // For 3 charts: stacked vertically, each gets 1/3 height.
   if (layout === 3) {
     const slots3 = Array.from({ length: 3 }, (_, i) => {
       const sym = i === 0 ? slotSymbols[0] : multiSymbols[i] || allSymbols[i] || allSymbols[0] || "";
       return { slot: i, symbol: sym };
     });
     return (
-      <div className="flex h-full gap-0.5">
-        {/* Left — 1 big chart (50% width) */}
-        <div className="flex h-full w-1/2">
+      <div className="flex h-full flex-col gap-0.5">
+        <div className="flex h-1/3">
           <ChartSlot slot={slots3[0].slot} symbol={slots3[0].symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
         </div>
-        {/* Right — 2 stacked charts (50% width) */}
-        <div className="flex h-full w-1/2 flex-col gap-0.5">
-          <div className="flex h-1/2">
-            <ChartSlot slot={slots3[1].slot} symbol={slots3[1].symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
-          </div>
-          <div className="flex h-1/2">
-            <ChartSlot slot={slots3[2].slot} symbol={slots3[2].symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
-          </div>
+        <div className="flex h-1/3">
+          <ChartSlot slot={slots3[1].slot} symbol={slots3[1].symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
+        </div>
+        <div className="flex h-1/3">
+          <ChartSlot slot={slots3[2].slot} symbol={slots3[2].symbol} getSlotData={getSlotData} allSymbols={allSymbols} onSymbolChange={onSymbolChange} timeframe={timeframe} lastUpdate={lastUpdate} />
         </div>
       </div>
     );
