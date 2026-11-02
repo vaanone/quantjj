@@ -898,17 +898,17 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
         </div>
 
         <div className="relative mx-auto max-w-4xl">
+          {/* Scrolling price ticker — above the badge */}
+          <div className="mb-6">
+            <PriceTicker />
+          </div>
+
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-4 py-1.5">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
             </span>
             <span className="text-xs uppercase tracking-wider text-amber-400">Live Levels Updated Daily</span>
-          </div>
-
-          {/* Scrolling price ticker — all 4 symbols with price and profit % */}
-          <div className="mb-8">
-            <PriceTicker />
           </div>
 
           <h2 className="text-5xl font-bold tracking-tight sm:text-7xl">
