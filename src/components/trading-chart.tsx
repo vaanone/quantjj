@@ -99,7 +99,7 @@ export function TradingChart({
         scaleMargins: { top: 0.25, bottom: 0.25 },
         ensureEdgeTickMarksVisible: true,
         // Force the price scale to be wide enough for labels like "RI 1.3400"
-        minimumWidth: 150,
+        minimumWidth: 5,
       },
       timeScale: {
         borderColor: COLORS.border,
