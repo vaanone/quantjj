@@ -951,15 +951,19 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
       </section>
 
       {/* ====== Vaan.One LEVELS ====== */}
-      <section id="levels" className="relative border-t border-white/5 px-6 py-20 overflow-hidden">
+      <section id="levels" className="relative border-t border-white/5 px-6 py-20">
         {/* Animated glowing S/R visual above the section */}
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-32 overflow-hidden">
-          <div className="animate-float-slow absolute left-10 top-10 h-24 w-24 rounded-full bg-amber-500/5 blur-[50px]" />
-          <div className="animate-float-medium absolute right-20 top-5 h-32 w-32 rounded-full bg-red-600/4 blur-[60px]" />
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-40">
+          <div className="animate-float-slow absolute left-10 top-5 h-32 w-32 rounded-full" style={{ background: "rgba(212,175,55,0.12)", filter: "blur(50px)" }} />
+          <div className="animate-float-medium absolute right-20 top-0 h-40 w-40 rounded-full" style={{ background: "rgba(239,68,68,0.08)", filter: "blur(60px)" }} />
           {/* Animated horizontal lines representing S/R levels */}
-          <div className="absolute left-0 right-0 top-8 h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
-          <div className="absolute left-0 right-0 top-16 h-px bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
-          <div className="absolute left-0 right-0 top-24 h-px bg-gradient-to-r from-transparent via-amber-500/15 to-transparent" />
+          <div className="absolute left-0 right-0 top-6 h-0.5" style={{ background: "linear-gradient(90deg, transparent, rgba(34,197,94,0.4), transparent)" }} />
+          <div className="absolute left-0 right-0 top-14 h-0.5" style={{ background: "linear-gradient(90deg, transparent, rgba(239,68,68,0.4), transparent)" }} />
+          <div className="absolute left-0 right-0 top-24 h-0.5" style={{ background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)" }} />
+          {/* Small floating candlestick icons */}
+          <div className="animate-float-slow absolute left-1/4 top-4 h-3 w-1 rounded-sm" style={{ background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.6)" }} />
+          <div className="animate-float-medium absolute right-1/3 top-10 h-2 w-1 rounded-sm" style={{ background: "#ef4444", boxShadow: "0 0 6px rgba(239,68,68,0.6)" }} />
+          <div className="animate-pulse-glow absolute left-1/2 top-6 h-2.5 w-1 rounded-sm" style={{ background: "#d4af37", boxShadow: "0 0 8px rgba(212,175,55,0.8)" }} />
         </div>
         <div className="relative mx-auto max-w-6xl">
           <div className="mb-12 text-center">
@@ -1033,25 +1037,24 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
       </section>
 
       {/* ====== QUANT DEVELOPER ====== */}
-      <section id="quant" className="relative border-t border-white/5 bg-[#0d0a00] px-6 py-20 overflow-hidden">
+      <section id="quant" className="relative border-t border-white/5 bg-[#0d0a00] px-6 py-20">
         {/* Animated code/matrix visual */}
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-full overflow-hidden">
-          <div className="animate-pulse-glow absolute left-1/3 top-1/4 h-40 w-40 rounded-full bg-amber-500/4 blur-[80px]" />
-          <div className="animate-float-medium absolute right-1/4 bottom-1/3 h-48 w-48 rounded-full bg-red-600/3 blur-[90px]" />
-          {/* Binary/matrix-style lines */}
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute font-mono text-[10px] text-amber-500/5 select-none"
-              style={{
-                left: `${5 + i * 12}%`,
-                top: `${10 + (i % 3) * 25}%`,
-                animation: `fade-in-up ${3 + i * 0.3}s ease-out infinite alternate`,
-              }}
-            >
-              {Array.from({ length: 20 }, () => Math.random() > 0.5 ? "1" : "0").join("")}
-            </div>
-          ))}
+        <div className="pointer-events-none absolute top-0 left-0 right-0 bottom-0 overflow-hidden">
+          <div className="animate-pulse-glow absolute left-1/3 top-1/4 h-40 w-40 rounded-full" style={{ background: "rgba(212,175,55,0.06)", filter: "blur(80px)" }} />
+          <div className="animate-float-medium absolute right-1/4 bottom-1/3 h-48 w-48 rounded-full" style={{ background: "rgba(239,68,68,0.04)", filter: "blur(90px)" }} />
+          {/* Binary/matrix-style code lines — visible */}
+          <div className="absolute left-4 top-8 font-mono text-xs leading-relaxed select-none" style={{ color: "rgba(212,175,55,0.12)" }}>
+            01001 10110 01101<br/>10110 01001 11010<br/>01101 10110 01001<br/>11010 01101 10110
+          </div>
+          <div className="absolute right-8 top-12 font-mono text-xs leading-relaxed select-none" style={{ color: "rgba(34,197,94,0.1)" }}>
+            11010 01101 10110<br/>01001 11010 01101<br/>10110 01001 11010<br/>01101 10110 01001
+          </div>
+          <div className="absolute left-1/4 bottom-12 font-mono text-xs leading-relaxed select-none" style={{ color: "rgba(239,68,68,0.1)" }}>
+            01101 10110 01001<br/>11010 01101 10110<br/>01001 11010 01101<br/>10110 01001 11010
+          </div>
+          {/* Glowing code brackets */}
+          <div className="animate-pulse-glow absolute left-12 top-1/3 font-mono text-2xl font-bold" style={{ color: "rgba(212,175,55,0.15)" }}>{"{ }"}</div>
+          <div className="animate-float-slow absolute right-16 bottom-1/4 font-mono text-xl font-bold" style={{ color: "rgba(34,197,94,0.12)" }}>{"</>"}</div>
         </div>
         <div className="relative mx-auto max-w-6xl">
           <div className="mb-12 text-center">
