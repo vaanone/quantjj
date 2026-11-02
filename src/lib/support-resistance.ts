@@ -279,7 +279,7 @@ export function userLevelsToLines(
     let tier = 1;
     if (/III|3/.test(nameUpper)) tier = 3;
     else if (/II|2/.test(nameUpper)) tier = 2;
-    const compactLabel = prefix + "I".repeat(tier);
+    const compactLabel = prefix;
 
     return {
       price: ul.price,
