@@ -1139,60 +1139,79 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
           </Button>
         </div>
 
-        {/* Animated upward chart visualization */}
+        {/* Animated globe network visualization — different from the chart card */}
         <div className="pointer-events-none relative mx-auto mt-12 h-48 max-w-3xl overflow-hidden rounded-xl">
           {/* Glowing orbs */}
-          <div className="animate-pulse-glow absolute left-1/4 top-1/4 h-32 w-32 rounded-full" style={{ background: "rgba(212,175,55,0.15)", filter: "blur(60px)" }} />
-          <div className="animate-float-slow absolute right-1/4 bottom-1/4 h-28 w-28 rounded-full" style={{ background: "rgba(34,197,94,0.1)", filter: "blur(50px)" }} />
+          <div className="animate-pulse-glow absolute left-1/3 top-1/4 h-32 w-32 rounded-full" style={{ background: "rgba(212,175,55,0.15)", filter: "blur(60px)" }} />
+          <div className="animate-float-slow absolute right-1/3 bottom-1/4 h-28 w-28 rounded-full" style={{ background: "rgba(239,68,68,0.1)", filter: "blur(50px)" }} />
 
-          {/* Animated rising candlesticks */}
-          <div className="absolute bottom-0 left-4 right-4 flex h-full items-end justify-between gap-1.5">
-            {[
-              { h: 20, up: true }, { h: 35, up: false }, { h: 30, up: true }, { h: 50, up: true },
-              { h: 40, up: false }, { h: 60, up: true }, { h: 55, up: false }, { h: 75, up: true },
-              { h: 65, up: false }, { h: 85, up: true }, { h: 70, up: false }, { h: 90, up: true },
-              { h: 80, up: false }, { h: 95, up: true }, { h: 85, up: false }, { h: 100, up: true },
-            ].map((c, i) => (
-              <div key={i} className="relative flex h-full flex-1 items-end justify-center">
-                <div className="absolute w-px" style={{ height: `${c.h + 10}%`, bottom: 0, background: "rgba(255,255,255,0.15)" }} />
-                <div
-                  className="animate-bar-rise w-full rounded-sm"
-                  style={{
-                    height: `${c.h}%`,
-                    backgroundColor: c.up ? "#22c55e" : "#ef4444",
-                    boxShadow: c.up ? "0 0 8px rgba(34,197,94,0.5)" : "0 0 8px rgba(239,68,68,0.5)",
-                    animationDelay: `${i * 0.1}s`,
-                    opacity: 0.8,
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Glowing upward trend line */}
-          <svg className="absolute bottom-0 left-4 right-4 h-full w-auto" preserveAspectRatio="none" viewBox="0 0 320 180">
+          {/* SVG network — connected nodes representing trading instruments */}
+          <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet" viewBox="0 0 400 180">
             <defs>
-              <linearGradient id="trendGlow" x1="0" y1="1" x2="1" y2="0">
-                <stop offset="0%" stopColor="#d4af37" stopOpacity="0" />
-                <stop offset="50%" stopColor="#d4af37" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#22c55e" stopOpacity="0.8" />
-              </linearGradient>
-              <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#d4af37" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#d4af37" stopOpacity="0" />
-              </linearGradient>
-              <filter id="lineBlur">
-                <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <filter id="nodeGlow">
+                <feGaussianBlur stdDeviation="2" result="blur" />
                 <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
               </filter>
+              <linearGradient id="netLine" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#d4af37" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#22c55e" stopOpacity="0.5" />
+              </linearGradient>
             </defs>
-            <path d="M0,160 L20,145 L40,155 L60,130 L80,140 L100,110 L120,125 L140,95 L160,105 L180,75 L200,85 L220,55 L240,65 L260,35 L280,40 L300,15 L320,5" fill="url(#trendFill)" stroke="none" />
-            <path d="M0,160 L20,145 L40,155 L60,130 L80,140 L100,110 L120,125 L140,95 L160,105 L180,75 L200,85 L220,55 L240,65 L260,35 L280,40 L300,15 L320,5" fill="none" stroke="url(#trendGlow)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" filter="url(#lineBlur)" className="animate-draw-line" />
+
+            {/* Connection lines */}
+            <line x1="60" y1="90" x2="150" y2="40" stroke="url(#netLine)" strokeWidth="1" opacity="0.6" />
+            <line x1="60" y1="90" x2="150" y2="140" stroke="url(#netLine)" strokeWidth="1" opacity="0.6" />
+            <line x1="150" y1="40" x2="250" y2="90" stroke="url(#netLine)" strokeWidth="1" opacity="0.6" />
+            <line x1="150" y1="140" x2="250" y2="90" stroke="url(#netLine)" strokeWidth="1" opacity="0.6" />
+            <line x1="250" y1="90" x2="340" y2="40" stroke="url(#netLine)" strokeWidth="1" opacity="0.6" />
+            <line x1="250" y1="90" x2="340" y2="140" stroke="url(#netLine)" strokeWidth="1" opacity="0.6" />
+            <line x1="150" y1="40" x2="150" y2="140" stroke="rgba(239,68,68,0.3)" strokeWidth="1" />
+            <line x1="340" y1="40" x2="340" y2="140" stroke="rgba(34,197,94,0.3)" strokeWidth="1" />
+
+            {/* Nodes — pulsing circles */}
+            <circle cx="60" cy="90" r="6" fill="#d4af37" filter="url(#nodeGlow)">
+              <animate attributeName="r" values="6;8;6" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="150" cy="40" r="5" fill="#22c55e" filter="url(#nodeGlow)">
+              <animate attributeName="r" values="5;7;5" dur="2.5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="150" cy="140" r="5" fill="#ef4444" filter="url(#nodeGlow)">
+              <animate attributeName="r" values="5;7;5" dur="3s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="250" cy="90" r="7" fill="#d4af37" filter="url(#nodeGlow)">
+              <animate attributeName="r" values="7;9;7" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="340" cy="40" r="5" fill="#22c55e" filter="url(#nodeGlow)">
+              <animate attributeName="r" values="5;7;5" dur="2.8s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="340" cy="140" r="5" fill="#ef4444" filter="url(#nodeGlow)">
+              <animate attributeName="r" values="5;7;5" dur="3.2s" repeatCount="indefinite" />
+            </circle>
+
+            {/* Animated traveling pulses along lines */}
+            <circle r="2" fill="#d4af37">
+              <animateMotion dur="3s" repeatCount="indefinite" path="M60,90 L150,40 L250,90 L340,40" />
+            </circle>
+            <circle r="2" fill="#22c55e">
+              <animateMotion dur="4s" repeatCount="indefinite" path="M60,90 L150,140 L250,90 L340,140" />
+            </circle>
+
+            {/* Labels */}
+            <text x="60" y="108" fill="rgba(212,175,55,0.6)" fontSize="7" fontFamily="monospace" fontWeight="bold">XAUUSD</text>
+            <text x="150" y="28" fill="rgba(34,197,94,0.5)" fontSize="6" fontFamily="monospace">EURUSD</text>
+            <text x="150" y="158" fill="rgba(239,68,68,0.5)" fontSize="6" fontFamily="monospace">GBPUSD</text>
+            <text x="250" y="108" fill="rgba(212,175,55,0.6)" fontSize="7" fontFamily="monospace" fontWeight="bold">PIVOT</text>
+            <text x="340" y="28" fill="rgba(34,197,94,0.5)" fontSize="6" fontFamily="monospace">USDCHF</text>
+            <text x="340" y="158" fill="rgba(239,68,68,0.5)" fontSize="6" fontFamily="monospace">ALERT</text>
           </svg>
 
-          {/* Floating price labels */}
-          <div className="animate-float-slow absolute right-8 top-4 font-mono text-xs font-bold" style={{ color: "rgba(34,197,94,0.5)" }}>▲ +2.45%</div>
-          <div className="animate-pulse-glow absolute left-8 top-8 font-mono text-[10px]" style={{ color: "rgba(212,175,55,0.4)" }}>PIVOT BREAKOUT</div>
+          {/* Floating badges */}
+          <div className="animate-float-slow absolute right-6 top-4 rounded-full border border-amber-500/20 bg-black/40 px-3 py-1">
+            <span className="font-mono text-[10px] text-amber-400">MULTI-SYMBOL</span>
+          </div>
+          <div className="animate-pulse-glow absolute left-6 bottom-4 rounded-full border border-emerald-500/20 bg-black/40 px-3 py-1">
+            <span className="font-mono text-[10px] text-emerald-400">LIVE NETWORK</span>
+          </div>
         </div>
       </section>
 
