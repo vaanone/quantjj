@@ -952,19 +952,6 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
 
       {/* ====== Vaan.One LEVELS ====== */}
       <section id="levels" className="relative border-t border-white/5 px-6 py-20">
-        {/* Animated glowing S/R visual above the section */}
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-40">
-          <div className="animate-float-slow absolute left-10 top-5 h-32 w-32 rounded-full" style={{ background: "rgba(212,175,55,0.12)", filter: "blur(50px)" }} />
-          <div className="animate-float-medium absolute right-20 top-0 h-40 w-40 rounded-full" style={{ background: "rgba(239,68,68,0.08)", filter: "blur(60px)" }} />
-          {/* Animated horizontal lines representing S/R levels */}
-          <div className="absolute left-0 right-0 top-6 h-0.5" style={{ background: "linear-gradient(90deg, transparent, rgba(34,197,94,0.4), transparent)" }} />
-          <div className="absolute left-0 right-0 top-14 h-0.5" style={{ background: "linear-gradient(90deg, transparent, rgba(239,68,68,0.4), transparent)" }} />
-          <div className="absolute left-0 right-0 top-24 h-0.5" style={{ background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)" }} />
-          {/* Small floating candlestick icons */}
-          <div className="animate-float-slow absolute left-1/4 top-4 h-3 w-1 rounded-sm" style={{ background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.6)" }} />
-          <div className="animate-float-medium absolute right-1/3 top-10 h-2 w-1 rounded-sm" style={{ background: "#ef4444", boxShadow: "0 0 6px rgba(239,68,68,0.6)" }} />
-          <div className="animate-pulse-glow absolute left-1/2 top-6 h-2.5 w-1 rounded-sm" style={{ background: "#d4af37", boxShadow: "0 0 8px rgba(212,175,55,0.8)" }} />
-        </div>
         <div className="relative mx-auto max-w-6xl">
           <div className="mb-12 text-center">
             <span className="text-xs uppercase tracking-widest text-amber-400">01 — Chart</span>
@@ -1033,6 +1020,20 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
               View Live Chart →
             </Button>
           </div>
+        </div>
+
+        {/* Animated glowing S/R visual — below the View Live Chart button */}
+        <div className="pointer-events-none relative mt-12 h-40 overflow-hidden rounded-xl">
+          <div className="animate-float-slow absolute left-10 top-5 h-32 w-32 rounded-full" style={{ background: "rgba(212,175,55,0.12)", filter: "blur(50px)" }} />
+          <div className="animate-float-medium absolute right-20 top-0 h-40 w-40 rounded-full" style={{ background: "rgba(239,68,68,0.08)", filter: "blur(60px)" }} />
+          {/* Animated horizontal lines representing S/R levels */}
+          <div className="absolute left-0 right-0 top-6 h-0.5" style={{ background: "linear-gradient(90deg, transparent, rgba(34,197,94,0.4), transparent)" }} />
+          <div className="absolute left-0 right-0 top-14 h-0.5" style={{ background: "linear-gradient(90deg, transparent, rgba(239,68,68,0.4), transparent)" }} />
+          <div className="absolute left-0 right-0 top-24 h-0.5" style={{ background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)" }} />
+          {/* Small floating candlestick icons */}
+          <div className="animate-float-slow absolute left-1/4 top-4 h-3 w-1 rounded-sm" style={{ background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.6)" }} />
+          <div className="animate-float-medium absolute right-1/3 top-10 h-2 w-1 rounded-sm" style={{ background: "#ef4444", boxShadow: "0 0 6px rgba(239,68,68,0.6)" }} />
+          <div className="animate-pulse-glow absolute left-1/2 top-6 h-2.5 w-1 rounded-sm" style={{ background: "#d4af37", boxShadow: "0 0 8px rgba(212,175,55,0.8)" }} />
         </div>
       </section>
 
