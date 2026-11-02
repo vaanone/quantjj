@@ -951,8 +951,17 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
       </section>
 
       {/* ====== Vaan.One LEVELS ====== */}
-      <section id="levels" className="border-t border-white/5 px-6 py-20">
-        <div className="mx-auto max-w-6xl">
+      <section id="levels" className="relative border-t border-white/5 px-6 py-20 overflow-hidden">
+        {/* Animated glowing S/R visual above the section */}
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-32 overflow-hidden">
+          <div className="animate-float-slow absolute left-10 top-10 h-24 w-24 rounded-full bg-amber-500/5 blur-[50px]" />
+          <div className="animate-float-medium absolute right-20 top-5 h-32 w-32 rounded-full bg-red-600/4 blur-[60px]" />
+          {/* Animated horizontal lines representing S/R levels */}
+          <div className="absolute left-0 right-0 top-8 h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
+          <div className="absolute left-0 right-0 top-16 h-px bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
+          <div className="absolute left-0 right-0 top-24 h-px bg-gradient-to-r from-transparent via-amber-500/15 to-transparent" />
+        </div>
+        <div className="relative mx-auto max-w-6xl">
           <div className="mb-12 text-center">
             <span className="text-xs uppercase tracking-widest text-amber-400">01 — Chart</span>
             <h3 className="mt-3 text-3xl font-bold sm:text-4xl">Vaan.One Levels on Chart</h3>
@@ -1024,8 +1033,27 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
       </section>
 
       {/* ====== QUANT DEVELOPER ====== */}
-      <section id="quant" className="border-t border-white/5 bg-[#0d0a00] px-6 py-20">
-        <div className="mx-auto max-w-6xl">
+      <section id="quant" className="relative border-t border-white/5 bg-[#0d0a00] px-6 py-20 overflow-hidden">
+        {/* Animated code/matrix visual */}
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-full overflow-hidden">
+          <div className="animate-pulse-glow absolute left-1/3 top-1/4 h-40 w-40 rounded-full bg-amber-500/4 blur-[80px]" />
+          <div className="animate-float-medium absolute right-1/4 bottom-1/3 h-48 w-48 rounded-full bg-red-600/3 blur-[90px]" />
+          {/* Binary/matrix-style lines */}
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute font-mono text-[10px] text-amber-500/5 select-none"
+              style={{
+                left: `${5 + i * 12}%`,
+                top: `${10 + (i % 3) * 25}%`,
+                animation: `fade-in-up ${3 + i * 0.3}s ease-out infinite alternate`,
+              }}
+            >
+              {Array.from({ length: 20 }, () => Math.random() > 0.5 ? "1" : "0").join("")}
+            </div>
+          ))}
+        </div>
+        <div className="relative mx-auto max-w-6xl">
           <div className="mb-12 text-center">
             <span className="text-xs uppercase tracking-widest text-amber-400">02 — Development</span>
             <h3 className="mt-3 text-3xl font-bold sm:text-4xl">Quant Developer</h3>
