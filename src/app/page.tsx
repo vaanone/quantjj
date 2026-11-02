@@ -16,6 +16,7 @@ import { TradingChart } from "@/components/trading-chart";
 import { DriveFilePicker } from "@/components/drive-file-picker";
 import { LevelsPanel } from "@/components/levels-panel";
 import { AlertButton } from "@/components/alert-button";
+import { PriceTicker } from "@/components/price-ticker";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePriceAlerts } from "@/hooks/use-price-alerts";
 import { useSRLevelAlerts } from "@/hooks/use-sr-level-alerts";
@@ -904,6 +905,12 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
             </span>
             <span className="text-xs uppercase tracking-wider text-amber-400">Live Levels Updated Daily</span>
           </div>
+
+          {/* Scrolling price ticker — all 4 symbols with price and profit % */}
+          <div className="mb-8">
+            <PriceTicker />
+          </div>
+
           <h2 className="text-5xl font-bold tracking-tight sm:text-7xl">
             <span className="bg-gradient-to-r from-red-500 via-amber-400 to-amber-600 bg-clip-text text-transparent">Vaan Pivot</span>
           </h2>
