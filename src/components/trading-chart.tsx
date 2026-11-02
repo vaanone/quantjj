@@ -146,6 +146,12 @@ export function TradingChart({
       priceLineColor: "#9ca3af",
       priceLineStyle: LineStyle.Dashed,
       priceLineWidth: 1,
+      // Price format: 5 decimals for forex pairs, 2 for gold/crypto.
+      priceFormat: {
+        type: "price",
+        precision: symbol && symbol.toUpperCase().includes("XAU") ? 2 : 5,
+        minMove: symbol && symbol.toUpperCase().includes("XAU") ? 0.01 : 0.00001,
+      },
     });
     candleSeriesRef.current = candleSeries;
 
@@ -441,7 +447,6 @@ export function TradingChart({
 
 function fmt(n: number): string {
   if (n >= 1000) return n.toFixed(2);
-  if (n >= 1) return n.toFixed(4);
   return n.toFixed(5);
 }
 
