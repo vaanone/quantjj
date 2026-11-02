@@ -17,7 +17,7 @@ import { DriveFilePicker } from "@/components/drive-file-picker";
 import { LevelsPanel } from "@/components/levels-panel";
 import { AlertButton } from "@/components/alert-button";
 import { PriceTicker } from "@/components/price-ticker";
-import { XauusdChartCard } from "@/components/xauusd-chart-card";
+import { TradingVisualCard } from "@/components/trading-visual-card";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePriceAlerts } from "@/hooks/use-price-alerts";
 import { useSRLevelAlerts } from "@/hooks/use-sr-level-alerts";
@@ -250,18 +250,8 @@ export default function Home() {
     return data.symbol;
   };
 
-  // Find XAUUSD candles from loaded files for the landing page chart.
-  const xauusdCandles = (() => {
-    for (const [, loaded] of files) {
-      if (loaded.result.symbols.some((s) => s.toUpperCase().includes("XAU"))) {
-        return loaded.result.candles.slice(-200);
-      }
-    }
-    return [];
-  })();
-
   if (view === "landing") {
-    return <LandingPage onOpenChart={() => setView("chart")} xauusdCandles={xauusdCandles} />;
+    return <LandingPage onOpenChart={() => setView("chart")} />;
   }
 
   return (
@@ -859,7 +849,7 @@ function LoadingDots() {
 }
 
 // ============================================================ LANDING PAGE
-function LandingPage({ onOpenChart, xauusdCandles }: { onOpenChart: () => void; xauusdCandles?: Candle[] }) {
+function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
   return (
     <div className="min-h-screen bg-[#000000] text-white">
       {/* ====== NAV ====== */}
@@ -941,13 +931,9 @@ function LandingPage({ onOpenChart, xauusdCandles }: { onOpenChart: () => void; 
           </div>
         </div>
 
-          {/* XAUUSD live chart from CSV data */}
+          {/* Animated trading visualization */}
           <div className="relative mx-auto mt-12 max-w-3xl">
-            {xauusdCandles && xauusdCandles.length > 0 ? (
-              <XauusdChartCard candles={xauusdCandles} />
-            ) : (
-              <EquityCurveCard />
-            )}
+            <TradingVisualCard />
           </div>
       </section>
 
