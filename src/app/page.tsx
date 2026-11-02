@@ -1105,22 +1105,22 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
         {/* Matrix-based quant developer graphics — below Get a Quote */}
         <div className="pointer-events-none relative mt-12 h-48 overflow-hidden rounded-xl">
           {/* Binary matrix lines */}
-          <div className="absolute left-4 top-4 font-mono text-xs leading-relaxed select-none" style={{ color: "rgba(212,175,55,0.35)" }}>
+          <div className="absolute left-4 top-4 font-mono text-xs leading-relaxed select-none" style={{ color: "rgba(212,175,55,0.65)" }}>
             01001 10110 01101<br/>10110 01001 11010<br/>01101 10110 01001<br/>11010 01101 10110<br/>01001 11010 01101
           </div>
-          <div className="absolute right-8 top-6 font-mono text-xs leading-relaxed select-none" style={{ color: "rgba(34,197,94,0.3)" }}>
+          <div className="absolute right-8 top-6 font-mono text-xs leading-relaxed select-none" style={{ color: "rgba(34,197,94,0.6)" }}>
             11010 01101 10110<br/>01001 11010 01101<br/>10110 01001 11010<br/>01101 10110 01001<br/>11010 01101 10110
           </div>
-          <div className="absolute left-1/3 bottom-4 font-mono text-xs leading-relaxed select-none" style={{ color: "rgba(239,68,68,0.3)" }}>
+          <div className="absolute left-1/3 bottom-4 font-mono text-xs leading-relaxed select-none" style={{ color: "rgba(239,68,68,0.6)" }}>
             01101 10110 01001<br/>11010 01101 10110<br/>01001 11010 01101<br/>10110 01001 11010
           </div>
           {/* Glowing code symbols */}
-          <div className="animate-pulse-glow absolute left-12 top-1/3 font-mono text-3xl font-bold" style={{ color: "rgba(212,175,55,0.4)" }}>{"{ }"}</div>
-          <div className="animate-float-slow absolute right-16 top-1/4 font-mono text-2xl font-bold" style={{ color: "rgba(34,197,94,0.35)" }}>{"</>"}</div>
-          <div className="animate-float-medium absolute left-1/2 bottom-6 font-mono text-2xl font-bold" style={{ color: "rgba(239,68,68,0.3)" }}>{"[ ]"}</div>
+          <div className="animate-pulse-glow absolute left-12 top-1/3 font-mono text-3xl font-bold" style={{ color: "rgba(212,175,55,0.7)" }}>{"{ }"}</div>
+          <div className="animate-float-slow absolute right-16 top-1/4 font-mono text-2xl font-bold" style={{ color: "rgba(34,197,94,0.65)" }}>{"</>"}</div>
+          <div className="animate-float-medium absolute left-1/2 bottom-6 font-mono text-2xl font-bold" style={{ color: "rgba(239,68,68,0.6)" }}>{"[ ]"}</div>
           {/* Glowing orbs */}
-          <div className="animate-pulse-glow absolute left-1/3 top-1/4 h-32 w-32 rounded-full" style={{ background: "rgba(212,175,55,0.15)", filter: "blur(60px)" }} />
-          <div className="animate-float-medium absolute right-1/4 bottom-1/3 h-36 w-36 rounded-full" style={{ background: "rgba(239,68,68,0.1)", filter: "blur(70px)" }} />
+          <div className="animate-pulse-glow absolute left-1/3 top-1/4 h-32 w-32 rounded-full" style={{ background: "rgba(212,175,55,0.2)", filter: "blur(60px)" }} />
+          <div className="animate-float-medium absolute right-1/4 bottom-1/3 h-36 w-36 rounded-full" style={{ background: "rgba(239,68,68,0.15)", filter: "blur(70px)" }} />
         </div>
       </section>
 
