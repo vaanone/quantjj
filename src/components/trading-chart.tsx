@@ -105,11 +105,13 @@ export function TradingChart({
         borderColor: COLORS.border,
         // Large right offset creates empty space between the last candle
         // and the price scale — so S/R labels don't overlap candles.
-        rightOffset: 40,
+        // Right Margin – space between latest candle and price scale
+        rightOffset: 80,
         timeVisible: true,
         secondsVisible: false,
-        barSpacing: 6,
-        minBarSpacing: 2,
+        // Bar Spacing – horizontal distance between candles (wider = fewer candles visible)
+        barSpacing: 12,
+        minBarSpacing: 4,
         // Draw a vertical separator line at each day boundary.
         ticksVisible: true,
         tickMarkFormatter: (time: number, tickMarkType: number) => {
