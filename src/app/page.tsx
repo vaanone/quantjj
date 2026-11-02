@@ -877,7 +877,7 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
       </nav>
 
       {/* ====== HERO ====== */}
-      <section className="relative overflow-hidden px-6 py-28 text-center">
+      <section className="relative overflow-hidden px-6 py-12 text-center">
         {/* Animated background: drifting grid + floating glow orbs */}
         <div className="pointer-events-none absolute inset-0">
           {/* Drifting grid */}
