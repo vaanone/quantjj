@@ -264,9 +264,16 @@ export function TradingChart({
     }));
     candleSeriesRef.current.setData(candleData);
 
+    // Update the price format to match the new symbol's decimal precision.
+    // This fixes the issue where switching from XAUUSD (2 decimals) to
+    // EURUSD (5 decimals) didn't update the price bar format.
+    const precision = detectPrecision(candles);
+    const minMove = Math.pow(10, -precision);
+    candleSeriesRef.current.applyOptions({
+      priceFormat: { type: "price", precision, minMove },
+    });
+
     // Reset the price scale so it auto-fits to the new symbol's price range.
-    // Without this, switching from XAUUSD (~3900) to EURUSD (~1.12) keeps
-    // the old price range and the candles appear squished at the bottom.
     chartRef.current.priceScale("right").applyOptions({ autoScale: true });
 
     // Day-separation vertical lines: insert a dashed vertical line marker at the
@@ -453,7 +460,7 @@ export function TradingChart({
  * If 2 decimals (3455.55), returns 2.
  */
 function detectPrecision(candles: Candle[]): number {
-  let maxDecimals = 2; // default
+  let maxDecimals = 0;
   const sample = candles.slice(0, Math.min(candles.length, 50));
   for (const c of sample) {
     for (const price of [c.open, c.high, c.low, c.close]) {
@@ -465,7 +472,8 @@ function detectPrecision(candles: Candle[]): number {
       }
     }
   }
-  return Math.min(maxDecimals, 8); // cap at 8
+  // Default to at least 2 if no decimals found.
+  return Math.max(maxDecimals, 2);
 }
 
 /**
