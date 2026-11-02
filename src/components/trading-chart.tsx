@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createChart,
   CandlestickSeries,
@@ -58,6 +58,7 @@ export function TradingChart({
   isLive,
 }: TradingChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [srLabels, setSrLabels] = useState<{ label: string; y: number; color: string }[]>([]);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const priceLinesRef = useRef<IPriceLine[]>([]);
@@ -105,7 +106,7 @@ export function TradingChart({
         borderColor: COLORS.border,
         // Large right offset creates empty space between the last candle
         // and the price scale — so S/R labels don't overlap candles.
-        rightOffset: 100,
+        rightOffset: 40,
         timeVisible: true,
         secondsVisible: false,
         barSpacing: 6,
@@ -310,12 +311,28 @@ export function TradingChart({
         color: srLine.type === "resistance" ? COLORS.resistance : COLORS.support,
         lineWidth: 1,
         lineStyle: LineStyle.Solid,
-        axisLabelVisible: true,
-        title: srLine.label, // "R I", "S I", "R II", ...
+        axisLabelVisible: false, // hide label on price scale — we show it centered instead
+        title: "", // no title on the line itself
       });
       priceLinesRef.current.push(line);
     });
   }, [lines]);
+
+  // -- Compute S/R label Y positions for centered overlay -------------------
+  useEffect(() => {
+    if (!candleSeriesRef.current || !containerRef.current || lines.length === 0) {
+      return;
+    }
+    const labels = lines.map((srLine) => {
+      const y = candleSeriesRef.current!.priceToCoordinate(srLine.price);
+      return {
+        label: srLine.label,
+        y: y ?? 0,
+        color: srLine.type === "resistance" ? COLORS.resistance : COLORS.support,
+      };
+    }).filter((l) => l.y > 0);
+    setSrLabels(labels);
+  }, [lines, candles]);
 
   // -- Update alert price lines (dashed, orange/gray for triggered) ----------
   useEffect(() => {
@@ -408,6 +425,21 @@ export function TradingChart({
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
+      {/* S/R level labels — centered on the chart at each line's Y position */}
+      {srLabels.map((item, idx) => (
+        <div
+          key={idx}
+          className="pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 select-none rounded px-2 py-0.5 text-[10px] font-bold"
+          style={{
+            top: `${item.y}px`,
+            color: item.color,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            border: `1px solid ${item.color}40`,
+          }}
+        >
+          {item.label}
+        </div>
+      ))}
       {/* LIVE badge (top-right) — shows when streaming is active */}
       {isLive && (
         <div className="pointer-events-none absolute right-2 top-12 z-10 flex items-center gap-1.5 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 backdrop-blur-sm">
