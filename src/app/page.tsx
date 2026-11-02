@@ -929,8 +929,7 @@ function LandingPage({ onOpenChart, xauusdCandles }: { onOpenChart: () => void; 
             Know Your Levels. Trade with Confidence.
           </p>
           <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/60 sm:text-lg">
-            Vaan.One Pivot Levels are calculated using a customized pivot calculation method, designed to
-            identify potential intraday support and resistance zones.
+            Vaan Pivot Levels are calculated using a proprietary, customized calculation method designed to identify potential intraday support and resistance levels. These levels help traders identify possible price reaction zones and make informed trading decisions.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button
