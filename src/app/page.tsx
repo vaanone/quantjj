@@ -1138,6 +1138,62 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             Launch Vaan.One Chart →
           </Button>
         </div>
+
+        {/* Animated upward chart visualization */}
+        <div className="pointer-events-none relative mx-auto mt-12 h-48 max-w-3xl overflow-hidden rounded-xl">
+          {/* Glowing orbs */}
+          <div className="animate-pulse-glow absolute left-1/4 top-1/4 h-32 w-32 rounded-full" style={{ background: "rgba(212,175,55,0.15)", filter: "blur(60px)" }} />
+          <div className="animate-float-slow absolute right-1/4 bottom-1/4 h-28 w-28 rounded-full" style={{ background: "rgba(34,197,94,0.1)", filter: "blur(50px)" }} />
+
+          {/* Animated rising candlesticks */}
+          <div className="absolute bottom-0 left-4 right-4 flex h-full items-end justify-between gap-1.5">
+            {[
+              { h: 20, up: true }, { h: 35, up: false }, { h: 30, up: true }, { h: 50, up: true },
+              { h: 40, up: false }, { h: 60, up: true }, { h: 55, up: false }, { h: 75, up: true },
+              { h: 65, up: false }, { h: 85, up: true }, { h: 70, up: false }, { h: 90, up: true },
+              { h: 80, up: false }, { h: 95, up: true }, { h: 85, up: false }, { h: 100, up: true },
+            ].map((c, i) => (
+              <div key={i} className="relative flex h-full flex-1 items-end justify-center">
+                <div className="absolute w-px" style={{ height: `${c.h + 10}%`, bottom: 0, background: "rgba(255,255,255,0.15)" }} />
+                <div
+                  className="animate-bar-rise w-full rounded-sm"
+                  style={{
+                    height: `${c.h}%`,
+                    backgroundColor: c.up ? "#22c55e" : "#ef4444",
+                    boxShadow: c.up ? "0 0 8px rgba(34,197,94,0.5)" : "0 0 8px rgba(239,68,68,0.5)",
+                    animationDelay: `${i * 0.1}s`,
+                    opacity: 0.8,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Glowing upward trend line */}
+          <svg className="absolute bottom-0 left-4 right-4 h-full w-auto" preserveAspectRatio="none" viewBox="0 0 320 180">
+            <defs>
+              <linearGradient id="trendGlow" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0%" stopColor="#d4af37" stopOpacity="0" />
+                <stop offset="50%" stopColor="#d4af37" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#22c55e" stopOpacity="0.8" />
+              </linearGradient>
+              <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#d4af37" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#d4af37" stopOpacity="0" />
+              </linearGradient>
+              <filter id="lineBlur">
+                <feGaussianBlur stdDeviation="1.5" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            <path d="M0,160 L20,145 L40,155 L60,130 L80,140 L100,110 L120,125 L140,95 L160,105 L180,75 L200,85 L220,55 L240,65 L260,35 L280,40 L300,15 L320,5" fill="url(#trendFill)" stroke="none" />
+            <path d="M0,160 L20,145 L40,155 L60,130 L80,140 L100,110 L120,125 L140,95 L160,105 L180,75 L200,85 L220,55 L240,65 L260,35 L280,40 L300,15 L320,5" fill="none" stroke="url(#trendGlow)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" filter="url(#lineBlur)" className="animate-draw-line" />
+          </svg>
+
+          {/* Floating price labels */}
+          <div className="animate-float-slow absolute right-8 top-4 font-mono text-xs font-bold" style={{ color: "rgba(34,197,94,0.5)" }}>▲ +2.45%</div>
+          <div className="animate-pulse-glow absolute left-8 top-8 font-mono text-[10px]" style={{ color: "rgba(212,175,55,0.4)" }}>PIVOT BREAKOUT</div>
+        </div>
       </section>
 
       {/* ====== FAQ ====== */}
