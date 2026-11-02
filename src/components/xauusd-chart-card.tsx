@@ -46,7 +46,7 @@ export function XauusdChartCard({ candles }: XauusdChartCardProps) {
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Vaan.One" className="h-5 w-5 rounded object-contain" />
           <span className="font-mono text-xs font-semibold text-white/80">
-            XAUUSD · Gold
+            Master Equity Curve · XAUUSD
           </span>
         </div>
         <span className="font-mono text-xs font-bold text-amber-400">
@@ -68,7 +68,7 @@ export function XauusdChartCard({ candles }: XauusdChartCardProps) {
             </linearGradient>
           </defs>
           <path d={areaD} fill="url(#xauGrad)" />
-          {/* Line */}
+          {/* Line — draws upward from left to right */}
           <path
             d={pathD}
             fill="none"
@@ -76,6 +76,7 @@ export function XauusdChartCard({ candles }: XauusdChartCardProps) {
             strokeWidth="2"
             strokeLinejoin="round"
             strokeLinecap="round"
+            className="animate-draw-line"
           />
         </svg>
       </div>
