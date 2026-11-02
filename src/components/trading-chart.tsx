@@ -105,7 +105,7 @@ export function TradingChart({
         borderColor: COLORS.border,
         // Large right offset creates empty space between the last candle
         // and the price scale — so S/R labels don't overlap candles.
-        rightOffset: 60,
+        rightOffset: 100,
         timeVisible: true,
         secondsVisible: false,
         barSpacing: 6,
