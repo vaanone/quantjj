@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createChart,
   CandlestickSeries,
@@ -58,6 +58,7 @@ export function TradingChart({
   isLive,
 }: TradingChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [srLabels, setSrLabels] = useState<{ label: string; y: number; color: string }[]>([]);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const priceLinesRef = useRef<IPriceLine[]>([]);
@@ -310,12 +311,28 @@ export function TradingChart({
         color: srLine.type === "resistance" ? COLORS.resistance : COLORS.support,
         lineWidth: 1,
         lineStyle: LineStyle.Solid,
-        axisLabelVisible: true, // show label on price scale (right side)
-        title: srLine.label, // "RI", "SI", "RII", ...
+        axisLabelVisible: false,
+        title: "",
       });
       priceLinesRef.current.push(line);
     });
   }, [lines]);
+
+  // Compute S/R label Y positions — labels shown on left side inside chart.
+  useEffect(() => {
+    if (!candleSeriesRef.current || lines.length === 0) {
+      return;
+    }
+    const labels = lines.map((srLine) => {
+      const y = candleSeriesRef.current!.priceToCoordinate(srLine.price);
+      return {
+        label: srLine.label,
+        y: y ?? 0,
+        color: srLine.type === "resistance" ? COLORS.resistance : COLORS.support,
+      };
+    }).filter((l) => l.y > 0);
+    setSrLabels(labels);
+  }, [lines, candles]);
 
   // -- Update alert price lines (dashed, orange/gray for triggered) ----------
   useEffect(() => {
@@ -408,6 +425,22 @@ export function TradingChart({
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
+      {/* S/R labels — on the left side, 1 inch inside the chart at each line's Y */}
+      {srLabels.map((item, idx) => (
+        <div
+          key={idx}
+          className="pointer-events-none absolute z-10 select-none rounded px-1.5 py-0.5 font-mono text-[11px] font-bold"
+          style={{
+            left: "24px",
+            top: `${item.y}px`,
+            transform: "translateY(-50%)",
+            color: item.color,
+            backgroundColor: "rgba(0,0,0,0.7)",
+          }}
+        >
+          {item.label}
+        </div>
+      ))}
       {/* LIVE badge (top-right) — shows when streaming is active */}
       {isLive && (
         <div className="pointer-events-none absolute right-2 top-12 z-10 flex items-center gap-1.5 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 backdrop-blur-sm">
