@@ -23,7 +23,7 @@ import { usePriceAlerts } from "@/hooks/use-price-alerts";
 import { useSRLevelAlerts } from "@/hooks/use-sr-level-alerts";
 import { userLevelsToLines } from "@/lib/support-resistance";
 import { detectTimeframe, type TimeframeInfo } from "@/lib/timeframe";
-import type { Candle, ParseResult } from "@/lib/excel-parser";
+import type { Candle, ParseResult, UserLevel } from "@/lib/excel-parser";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -250,8 +250,21 @@ export default function Home() {
     return data.symbol;
   };
 
+  // Find XAUUSD candles + S/R levels from loaded files for the landing page visual.
+  const xauusdData = (() => {
+    for (const [, loaded] of files) {
+      if (loaded.result.symbols.some((s) => s.toUpperCase().includes("XAU"))) {
+        return {
+          candles: loaded.result.candles.slice(-200),
+          userLevels: loaded.result.userLevels ?? [],
+        };
+      }
+    }
+    return null;
+  })();
+
   if (view === "landing") {
-    return <LandingPage onOpenChart={() => setView("chart")} />;
+    return <LandingPage onOpenChart={() => setView("chart")} xauusdCandles={xauusdData?.candles} xauusdLevels={xauusdData?.userLevels} />;
   }
 
   return (
@@ -849,7 +862,7 @@ function LoadingDots() {
 }
 
 // ============================================================ LANDING PAGE
-function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
+function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart: () => void; xauusdCandles?: Candle[]; xauusdLevels?: UserLevel[] }) {
   return (
     <div className="min-h-screen bg-[#000000] text-white">
       {/* ====== NAV ====== */}
@@ -931,9 +944,9 @@ function LandingPage({ onOpenChart }: { onOpenChart: () => void }) {
           </div>
         </div>
 
-          {/* Animated trading visualization */}
+          {/* Animated trading visualization with real XAUUSD data */}
           <div className="relative mx-auto mt-12 max-w-3xl">
-            <TradingVisualCard />
+            <TradingVisualCard candles={xauusdCandles} userLevels={xauusdLevels} />
           </div>
       </section>
 

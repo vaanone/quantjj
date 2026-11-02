@@ -1,13 +1,45 @@
 "use client";
 
+import type { Candle } from "@/lib/excel-parser";
+import type { UserLevel } from "@/lib/excel-parser";
+
+interface TradingVisualCardProps {
+  /** Real XAUUSD candles from CSV — used for the price, S/R display. */
+  candles?: Candle[];
+  /** Real S/R levels from CSV columns H–O. */
+  userLevels?: UserLevel[];
+}
+
 /**
  * Animated trading visualization card — eye-catching mini dashboard
  * with floating candlesticks, glowing price line, S/R levels,
  * particle effects, and live-style animations.
+ *
+ * If real CSV data is provided, it shows the actual last close price
+ * and real S/R values. Otherwise falls back to demo values.
  */
-export function TradingVisualCard() {
-  // Generate animated candlestick data
-  const candles = [
+export function TradingVisualCard({ candles, userLevels }: TradingVisualCardProps) {
+  // Get real data from CSV if available, otherwise use demo values.
+  const lastClose = candles && candles.length > 0
+    ? candles[candles.length - 1].close
+    : 2400.50;
+
+  // Find first resistance and first support from user levels.
+  const resistance = userLevels && userLevels.length > 0
+    ? userLevels.find((l) => l.name.toUpperCase().startsWith("R"))
+    : null;
+  const support = userLevels && userLevels.length > 0
+    ? userLevels.find((l) => l.name.toUpperCase().startsWith("S"))
+    : null;
+
+  const resistancePrice = resistance?.price ?? 2410;
+  const supportPrice = support?.price ?? 2390;
+
+  // Format price — 2 decimals for gold.
+  const fmtPrice = (p: number) => p >= 1000 ? p.toFixed(2) : p.toFixed(5);
+
+  // Generate animated candlestick data (visual only).
+  const candles_viz = [
     { h: 60, up: true }, { h: 45, up: false }, { h: 75, up: true },
     { h: 50, up: false }, { h: 85, up: true }, { h: 55, up: false },
     { h: 90, up: true }, { h: 65, up: false }, { h: 70, up: true },
@@ -37,27 +69,27 @@ export function TradingVisualCard() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
-          <span className="font-mono text-sm font-bold text-amber-400">2,400.50</span>
+          <span className="font-mono text-sm font-bold text-amber-400">{fmtPrice(lastClose)}</span>
         </div>
       </div>
 
       {/* Chart body */}
       <div className="relative h-44 px-4 py-3">
-        {/* S/R level lines */}
+        {/* S/R level lines — real values from CSV */}
         <div className="absolute left-4 right-4 top-6 flex items-center gap-2">
           <span className="font-mono text-[8px] font-bold text-emerald-400">R</span>
           <div className="h-px flex-1" style={{ borderTop: "1px dashed #22c55e60" }} />
-          <span className="font-mono text-[8px] text-emerald-400/50">2,410</span>
+          <span className="font-mono text-[8px] text-emerald-400/50">{fmtPrice(resistancePrice)}</span>
         </div>
         <div className="absolute left-4 right-4 bottom-8 flex items-center gap-2">
           <span className="font-mono text-[8px] font-bold text-red-400">S</span>
           <div className="h-px flex-1" style={{ borderTop: "1px dashed #ef444460" }} />
-          <span className="font-mono text-[8px] text-red-400/50">2,390</span>
+          <span className="font-mono text-[8px] text-red-400/50">{fmtPrice(supportPrice)}</span>
         </div>
 
         {/* Animated candlestick bars */}
         <div className="absolute bottom-3 left-4 right-4 flex h-32 items-end justify-between gap-1">
-          {candles.map((c, i) => (
+          {candles_viz.map((c, i) => (
             <div key={i} className="relative flex h-full flex-1 items-end justify-center">
               {/* Wick */}
               <div
@@ -127,18 +159,18 @@ export function TradingVisualCard() {
         ))}
       </div>
 
-      {/* Footer */}
+      {/* Footer — real S/R values from CSV */}
       <div className="relative flex items-center justify-between border-t border-amber-500/10 px-5 py-3">
         <div className="flex gap-5">
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             <span className="text-[10px] text-white/50">Resistance</span>
-            <span className="font-mono text-[10px] font-bold text-emerald-400">2,410</span>
+            <span className="font-mono text-[10px] font-bold text-emerald-400">{fmtPrice(resistancePrice)}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
             <span className="text-[10px] text-white/50">Support</span>
-            <span className="font-mono text-[10px] font-bold text-red-400">2,390</span>
+            <span className="font-mono text-[10px] font-bold text-red-400">{fmtPrice(supportPrice)}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
