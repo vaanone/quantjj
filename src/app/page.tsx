@@ -49,6 +49,10 @@ export default function Home() {
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
+  // Track whether the first load has completed. The loading overlay only
+  // shows on the very first load — after that, all refreshes/polling
+  // happen silently in the background (no overlay, no "Loading Chart").
+  const [hasFirstLoad, setHasFirstLoad] = useState(false);
   const [chartLayout, setChartLayout] = useState<1 | 2 | 3 | 4>(1);
   // Per-chart symbol selections (for multi-chart layouts).
   // Index 0 = first chart (uses the main selectedFile), 1-3 = additional charts.
@@ -64,6 +68,8 @@ export default function Home() {
         return next;
       });
       setSelectedFile(fileName);
+      // Mark first load as complete — loading overlay will never show again.
+      setHasFirstLoad(true);
     },
     [],
   );
@@ -446,9 +452,9 @@ export default function Home() {
 
       {/* ============================================================== BODY */}
       <main className="relative flex-1 overflow-hidden">
-        {/* Full-screen loading overlay — shown on first load while Drive files
-            are being fetched and parsed. */}
-        {chartLoading && (
+        {/* Full-screen loading overlay — shown ONLY on the very first load.
+            After that, all refreshes/polling happen silently in the background. */}
+        {chartLoading && !hasFirstLoad && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#000000]">
             <div className="flex flex-col items-center gap-6">
               <img src="/logo.png" alt="Vaan.One" className="h-16 w-16 rounded-lg object-contain opacity-80" />
