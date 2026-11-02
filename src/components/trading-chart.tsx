@@ -146,11 +146,12 @@ export function TradingChart({
       priceLineColor: "#9ca3af",
       priceLineStyle: LineStyle.Dashed,
       priceLineWidth: 1,
-      // Price format: 5 decimals for forex pairs, 2 for gold/crypto.
+      // Price format: detect precision from the actual CSV data.
+      // If the data has 5 decimals (1.24566), show 5. If 2 (3455.55), show 2.
       priceFormat: {
         type: "price",
-        precision: symbol && symbol.toUpperCase().includes("XAU") ? 2 : 5,
-        minMove: symbol && symbol.toUpperCase().includes("XAU") ? 0.01 : 0.00001,
+        precision: detectPrecision(candles),
+        minMove: detectMinMove(candles),
       },
     });
     candleSeriesRef.current = candleSeries;
@@ -444,6 +445,37 @@ export function TradingChart({
 }
 
 // ---- Helpers -------------------------------------------------------------
+
+/**
+ * Detects the decimal precision from actual candle data.
+ * Scans a sample of candles and finds the maximum number of decimal places
+ * in their prices. If the data has 5 decimals (1.24566), returns 5.
+ * If 2 decimals (3455.55), returns 2.
+ */
+function detectPrecision(candles: Candle[]): number {
+  let maxDecimals = 2; // default
+  const sample = candles.slice(0, Math.min(candles.length, 50));
+  for (const c of sample) {
+    for (const price of [c.open, c.high, c.low, c.close]) {
+      const str = price.toString();
+      const dotIdx = str.indexOf(".");
+      if (dotIdx >= 0) {
+        const decimals = str.length - dotIdx - 1;
+        if (decimals > maxDecimals) maxDecimals = decimals;
+      }
+    }
+  }
+  return Math.min(maxDecimals, 8); // cap at 8
+}
+
+/**
+ * Detects the minimum price move from candle data.
+ * Returns 10^(-precision) — e.g. 0.00001 for 5 decimals, 0.01 for 2.
+ */
+function detectMinMove(candles: Candle[]): number {
+  const precision = detectPrecision(candles);
+  return Math.pow(10, -precision);
+}
 
 function fmt(n: number): string {
   if (n >= 1000) return n.toFixed(2);
