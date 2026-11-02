@@ -157,34 +157,69 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
     [loadFile],
   );
 
-  // ====== On mount: fetch file list, then auto-load ALL files ======
+  // ====== On mount: fetch file list, then auto-load ALL files silently ======
+  // On initial load, we batch all files and call onLoaded once per file,
+  // but we mark the loading state as active until ALL files are done.
+  // The loading overlay covers the chart so the user doesn't see
+  // intermediate states — just the final chart with the default symbol.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const fileList = await fetchFiles();
       if (cancelled || fileList.length === 0) return;
       hasAutoLoadedRef.current = true;
-      await autoLoadAll(fileList, true); // silent=true — no toasts during initial load
+
+      // Load all files silently — the loading overlay handles the UX.
+      setAutoLoading(true);
+      for (const file of fileList) {
+        if (cancelled) break;
+        if (loadedIdsRef.current.has(file.id)) continue;
+        await loadFile(file, true); // silent=true
+      }
+      setAutoLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [fetchFiles, autoLoadAll]);
+  }, [fetchFiles, loadFile]);
 
-  // ====== Polling: check for new files every POLL_INTERVAL ms ======
-  // When new files appear (ones we haven't loaded yet), auto-load them.
+  // ====== Polling: check for new OR updated files every POLL_INTERVAL ms ======
+  // New files: loaded silently. Updated files (same ID, new modifiedTime):
+  // re-loaded silently WITHOUT changing the selected symbol.
+  const modifiedTimesRef = useRef<Record<string, string>>({});
+
   useEffect(() => {
     const interval = setInterval(async () => {
       const fileList = await fetchFiles(true);
-      // Find files that exist in Drive but haven't been loaded yet.
-      const newFiles = fileList.filter(
-        (f) => !loadedIdsRef.current.has(f.id),
-      );
-      if (newFiles.length > 0) {
-        await autoLoadAll(newFiles, true); // silent — no toast on polling
+
+      // Find NEW files (never loaded) or UPDATED files (modifiedTime changed).
+      const filesToLoad: DriveFile[] = [];
+      for (const f of fileList) {
+        const prevTime = modifiedTimesRef.current[f.id];
+        if (!loadedIdsRef.current.has(f.id)) {
+          // New file
+          filesToLoad.push(f);
+        } else if (f.modifiedTime && prevTime && f.modifiedTime !== prevTime) {
+          // Updated file — force reload by removing from loadedIds
+          loadedIdsRef.current.delete(f.id);
+          filesToLoad.push(f);
+        }
+        // Track modifiedTime for next poll.
+        if (f.modifiedTime) {
+          modifiedTimesRef.current[f.id] = f.modifiedTime;
+        }
+      }
+
+      if (filesToLoad.length > 0) {
+        // Silent load — no toast, no loading overlay.
+        setAutoLoading(true);
+        for (const file of filesToLoad) {
+          await loadFile(file, true); // silent=true
+        }
+        setAutoLoading(false);
       }
     }, POLL_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [fetchFiles, autoLoadAll]);
+  }, [fetchFiles, loadFile]);
 
   // Manual "load all" button (re-loads any unloaded files).
   const loadAll = useCallback(async () => {

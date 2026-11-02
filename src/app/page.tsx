@@ -68,22 +68,17 @@ export default function Home() {
         // selected symbol — don't reset it. Only set the default symbol
         // for newly loaded files.
         const existing = prev.get(fileName);
-        const selectedSymbol = existing
+        const sym = existing
           ? existing.selectedSymbol  // keep what the user selected
           : primarySymbol;            // new file — use default
-        next.set(fileName, { result, fileName, selectedSymbol });
+        next.set(fileName, { result, fileName, selectedSymbol: sym });
         return next;
       });
-      // Only switch the selected file if it's a NEW file (not already selected).
-      // This prevents the chart from reloading when the same file is refreshed.
-      setSelectedFile((prev) => {
-        if (prev && files.has(prev)) return prev;  // keep current selection
-        return fileName;  // first load — select this file
-      });
-      // Mark first load as complete — loading overlay will never show again.
+      // Only switch selected file on first load — never during background refresh.
+      setSelectedFile((prev) => prev || fileName);
       setHasFirstLoad(true);
     },
-    [files],
+    [],
   );
 
   const currentFile = files.get(selectedFile);
