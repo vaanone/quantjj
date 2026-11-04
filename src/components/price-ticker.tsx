@@ -45,7 +45,7 @@ export function PriceTicker() {
   const displayList = [...symbols, ...symbols];
 
   return (
-    <div className="overflow-hidden border-y border-white/10 bg-[#0d0a00] py-3">
+    <div className="overflow-hidden border-y border-white/10 bg-[#0D141B] py-3">
       <div className="flex w-max animate-ticker items-center gap-8">
         {displayList.map((s, i) => {
           const isPositive = s.changePct >= 0;

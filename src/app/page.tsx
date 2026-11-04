@@ -268,9 +268,9 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-[#000000] text-white">
+    <div className="flex h-screen flex-col bg-[#070D12] text-white">
       {/* ============================================================= HEADER */}
-      <header className="flex items-center gap-2 border-b border-white/10 bg-[#0d0a00] px-3 py-2">
+      <header className="flex items-center gap-2 border-b border-white/10 bg-[#0D141B] px-3 py-2">
         {/* Back to home button */}
         <button
           onClick={() => setView("landing")}
@@ -384,7 +384,7 @@ export default function Home() {
                 variant="outline"
                 className={`h-5 border-white/15 px-1 text-[9px] font-mono sm:text-[10px] ${
                   totalChangePct >= 0
-                    ? "bg-amber-500/10 text-amber-400"
+                    ? "bg-[#75D380]/10 text-[#75D380]"
                     : "bg-red-500/10 text-red-400"
                 }`}
               >
@@ -396,7 +396,7 @@ export default function Home() {
 
           {/* Timeframe badge — same line, next to percentage */}
           {timeframe && (
-            <Badge className="h-7 shrink-0 gap-1 border border-amber-500/30 bg-amber-500/10 px-1.5 font-mono text-xs font-bold text-amber-400 sm:h-8 sm:px-2 sm:text-sm">
+            <Badge className="h-7 shrink-0 gap-1 border border-[#75D380]/30 bg-[#75D380]/10 px-1.5 font-mono text-xs font-bold text-[#75D380] sm:h-8 sm:px-2 sm:text-sm">
               {timeframe.label}
             </Badge>
           )}
@@ -426,7 +426,7 @@ export default function Home() {
 
       {/* ============================================================ TOOLBAR */}
       {candles.length > 0 && (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-white/10 bg-[#0d0a00] px-4 py-1.5 text-[11px] text-white/70">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-white/10 bg-[#0D141B] px-4 py-1.5 text-[11px] text-white/70">
           {/* Disclaimer — left side, small font, single line */}
           <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
             Daily Vaan.One Levels are updated manually every morning for educational and informational purposes only.
@@ -456,7 +456,7 @@ export default function Home() {
                 <Badge className="ml-1 h-4 px-1 text-[9px] font-mono">{top6Lines.length}</Badge>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[88vw] max-w-sm overflow-y-auto border-white/10 bg-[#0d0a00] p-0 lg:hidden">
+            <SheetContent side="right" className="w-[88vw] max-w-sm overflow-y-auto border-white/10 bg-[#0D141B] p-0 lg:hidden">
               <SheetHeader className="border-b border-white/10 px-4 py-3">
                 <SheetTitle className="text-sm font-semibold text-white">
                   Pivot Levels
@@ -477,7 +477,7 @@ export default function Home() {
         {/* Full-screen loading overlay — shown ONLY on the very first load.
             After that, all refreshes/polling happen silently in the background. */}
         {chartLoading && !hasFirstLoad && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#000000]">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#070D12]">
             <div className="flex flex-col items-center gap-6">
               <img src="/logo.png" alt="Vaan.One" className="h-16 w-16 rounded-lg object-contain opacity-80" />
               <LoadingDots />
@@ -581,7 +581,7 @@ function ChartArea({
   lastUpdate?: string | null;
 }) {
   return (
-    <div className="relative h-full w-full bg-[#100c00]">
+    <div className="relative h-full w-full bg-[#0D141B]">
       <TradingChart
         candles={candles}
         lines={lines}
@@ -595,7 +595,7 @@ function ChartArea({
         <div className="flex items-baseline gap-2">
           <div className="font-mono text-3xl font-bold text-white/[0.06]">{symbol || "—"}</div>
           {timeframe && (
-            <div className="font-mono text-xl font-bold text-amber-400/15">
+            <div className="font-mono text-xl font-bold text-[#75D380]/15">
               {timeframe.label}
             </div>
           )}
@@ -728,9 +728,9 @@ function ChartSlot({
 }) {
   const data = getSlotData(slot);
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden border border-white/5 bg-[#100c00]">
+    <div className="relative flex h-full w-full flex-col overflow-hidden border border-white/5 bg-[#0D141B]">
       {/* Per-chart header: symbol dropdown + price */}
-      <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-[#0d0a00] px-2 py-1">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-[#0D141B] px-2 py-1">
         <Select
           value={symbol}
           onValueChange={(v) => onSymbolChange(slot, v)}
@@ -753,7 +753,7 @@ function ChartSlot({
             </span>
           )}
           {timeframe && (
-            <Badge className="h-4 px-1 font-mono text-[8px] font-bold text-amber-400">
+            <Badge className="h-4 px-1 font-mono text-[8px] font-bold text-[#75D380]">
               {timeframe.label}
             </Badge>
           )}
@@ -856,7 +856,7 @@ function LoadingDots() {
   return (
     <span className="font-mono text-2xl text-white/80">
       Loading Chart
-      <span className="text-amber-400">{".".repeat(dotCount)}</span>
+      <span className="text-[#75D380]">{".".repeat(dotCount)}</span>
     </span>
   );
 }
@@ -864,9 +864,9 @@ function LoadingDots() {
 // ============================================================ LANDING PAGE
 function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart: () => void; xauusdCandles?: Candle[]; xauusdLevels?: UserLevel[] }) {
   return (
-    <div className="min-h-screen bg-[#000000] text-white">
+    <div className="min-h-screen bg-[#070D12] text-white">
       {/* ====== NAV ====== */}
-      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0d0a00]/95 backdrop-blur">
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0D141B]/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Vaan.One" className="h-10 w-10 rounded-md object-contain" />
@@ -904,11 +904,11 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             }}
           />
           {/* Glow orb 1 — gold */}
-          <div className="animate-float-slow absolute -left-20 top-10 h-72 w-72 rounded-full bg-amber-500/8 blur-[80px]" />
+          <div className="animate-float-slow absolute -left-20 top-10 h-72 w-72 rounded-full bg-[#75D380]/8 blur-[80px]" />
           {/* Glow orb 2 — red */}
           <div className="animate-float-medium absolute -right-20 top-40 h-96 w-96 rounded-full bg-red-600/5 blur-[100px]" />
           {/* Glow orb 3 — gold pulse */}
-          <div className="animate-pulse-glow absolute bottom-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-400/5 blur-[90px]" />
+          <div className="animate-pulse-glow absolute bottom-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#75D380]/5 blur-[90px]" />
         </div>
 
         <div className="relative mx-auto max-w-4xl">
@@ -917,18 +917,18 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             <PriceTicker />
           </div>
 
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-4 py-1.5">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#75D380]/20 bg-[#75D380]/5 px-4 py-1.5">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#75D380] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#75D380]" />
             </span>
-            <span className="text-xs uppercase tracking-wider text-amber-400">Live Levels Updated Daily</span>
+            <span className="text-xs uppercase tracking-wider text-[#75D380]">Live Levels Updated Daily</span>
           </div>
 
           <h2 className="text-5xl font-bold tracking-tight sm:text-7xl">
-            <span className="bg-gradient-to-r from-red-500 via-amber-400 to-amber-600 bg-clip-text text-transparent">Vaan Pivot</span>
+            <span className="bg-gradient-to-r from-red-500 via-[#75D380] to-[#60D2D5] bg-clip-text text-transparent">Vaan Pivot</span>
           </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-xl font-medium text-amber-400 sm:text-2xl">
+          <p className="mx-auto mt-6 max-w-2xl text-xl font-medium text-[#75D380] sm:text-2xl">
             Know Your Levels. Trade with Confidence.
           </p>
           <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/60 sm:text-lg">
@@ -954,7 +954,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
       <section id="levels" className="relative border-t border-white/5 px-6 py-20">
         <div className="relative mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <span className="text-xs uppercase tracking-widest text-amber-400">01 — Chart</span>
+            <span className="text-xs uppercase tracking-widest text-[#75D380]">01 — Chart</span>
             <h3 className="mt-3 text-3xl font-bold sm:text-4xl">Vaan.One Levels on Chart</h3>
             <p className="mx-auto mt-4 max-w-2xl text-base text-white/60">
               Get daily Pivot Points and Support &amp; Resistance levels for your favourite trading
@@ -980,7 +980,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
 
           {/* Available symbols */}
           <div className="mb-10 rounded-xl border border-white/10 bg-white/[0.02] p-8">
-            <h4 className="mb-6 text-center text-base font-semibold uppercase tracking-wider text-amber-400">
+            <h4 className="mb-6 text-center text-base font-semibold uppercase tracking-wider text-[#75D380]">
               Available Trading Symbols
             </h4>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -994,7 +994,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
                   key={s.sym}
                   className="flex items-center justify-between rounded-md border border-white/5 bg-white/[0.01] px-5 py-3.5"
                 >
-                  <span className="font-mono text-base font-bold text-amber-400">{s.sym}</span>
+                  <span className="font-mono text-base font-bold text-[#75D380]">{s.sym}</span>
                   <span className="text-sm text-white/60">{s.name}</span>
                 </div>
               ))}
@@ -1002,9 +1002,9 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
           </div>
 
           {/* Disclaimer */}
-          <div className="mb-10 rounded-xl border border-amber-500/15 bg-amber-500/[0.03] p-6">
+          <div className="mb-10 rounded-xl border border-[#75D380]/15 bg-[#75D380]/[0.03] p-6">
             <p className="text-sm leading-relaxed text-white/50">
-              <span className="font-semibold text-amber-400">Disclaimer:</span>{" "}
+              <span className="font-semibold text-[#75D380]">Disclaimer:</span>{" "}
               Vaan.One Levels are provided for educational and informational purposes only. These levels
               are manually calculated and updated daily. Accuracy is not guaranteed. They are not
               investment advice or trading recommendations. Always do your own research and manage your
@@ -1038,7 +1038,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
       </section>
 
       {/* ====== QUANT DEVELOPER ====== */}
-      <section id="quant" className="relative border-t border-white/5 bg-[#0d0a00] px-6 py-20">
+      <section id="quant" className="relative border-t border-white/5 bg-[#0D141B] px-6 py-20">
         {/* Animated code/matrix visual */}
         <div className="pointer-events-none absolute top-0 left-0 right-0 bottom-0 overflow-hidden">
           <div className="animate-pulse-glow absolute left-1/3 top-1/4 h-40 w-40 rounded-full" style={{ background: "rgba(212,175,55,0.06)", filter: "blur(80px)" }} />
@@ -1059,7 +1059,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
         </div>
         <div className="relative mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <span className="text-xs uppercase tracking-widest text-amber-400">02 — Development</span>
+            <span className="text-xs uppercase tracking-widest text-[#75D380]">02 — Development</span>
             <h3 className="mt-3 text-3xl font-bold sm:text-4xl">Quant Developer</h3>
             <p className="mx-auto mt-4 max-w-2xl text-base text-white/60">
               MT5/MT4 and Amibroker Indicators &amp; EA — custom algorithmic trading systems built to
@@ -1067,16 +1067,16 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             </p>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            <div className="shimmer-border rounded-xl border border-amber-500/15 bg-white/[0.02] p-8 transition-colors hover:border-amber-500/30">
+            <div className="shimmer-border rounded-xl border border-[#75D380]/15 bg-white/[0.02] p-8 transition-colors hover:border-[#75D380]/30">
               <div className="mb-4 flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 font-mono text-sm font-bold text-amber-400">M5</span>
-                <h4 className="font-mono text-lg font-bold text-amber-400">MetaTrader 5 / MT4</h4>
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#75D380]/10 font-mono text-sm font-bold text-[#75D380]">M5</span>
+                <h4 className="font-mono text-lg font-bold text-[#75D380]">MetaTrader 5 / MT4</h4>
               </div>
               <ul className="space-y-3 text-base text-white/60">
-                <li className="flex gap-2"><span className="text-amber-400">▸</span> Expert Advisors (EAs) for automated trading</li>
-                <li className="flex gap-2"><span className="text-amber-400">▸</span> Custom indicators for pivot-level detection</li>
-                <li className="flex gap-2"><span className="text-amber-400">▸</span> Strategy backtesting &amp; optimization</li>
-                <li className="flex gap-2"><span className="text-amber-400">▸</span> Multi-symbol and multi-timeframe systems</li>
+                <li className="flex gap-2"><span className="text-[#75D380]">▸</span> Expert Advisors (EAs) for automated trading</li>
+                <li className="flex gap-2"><span className="text-[#75D380]">▸</span> Custom indicators for pivot-level detection</li>
+                <li className="flex gap-2"><span className="text-[#75D380]">▸</span> Strategy backtesting &amp; optimization</li>
+                <li className="flex gap-2"><span className="text-[#75D380]">▸</span> Multi-symbol and multi-timeframe systems</li>
               </ul>
             </div>
             <div className="shimmer-border rounded-xl border border-red-500/15 bg-white/[0.02] p-8 transition-colors hover:border-red-500/30">
@@ -1206,8 +1206,8 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
           </svg>
 
           {/* Floating badges */}
-          <div className="animate-float-slow absolute right-6 top-4 rounded-full border border-amber-500/20 bg-black/40 px-3 py-1">
-            <span className="font-mono text-[10px] text-amber-400">MULTI-SYMBOL</span>
+          <div className="animate-float-slow absolute right-6 top-4 rounded-full border border-[#75D380]/20 bg-black/40 px-3 py-1">
+            <span className="font-mono text-[10px] text-[#75D380]">MULTI-SYMBOL</span>
           </div>
           <div className="animate-pulse-glow absolute left-6 bottom-4 rounded-full border border-emerald-500/20 bg-black/40 px-3 py-1">
             <span className="font-mono text-[10px] text-emerald-400">LIVE NETWORK</span>
@@ -1219,7 +1219,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
       <section id="faq" className="border-t border-white/5 px-6 py-20">
         <div className="mx-auto max-w-3xl">
           <div className="mb-12 text-center">
-            <span className="text-xs uppercase tracking-widest text-amber-400">FAQ</span>
+            <span className="text-xs uppercase tracking-widest text-[#75D380]">FAQ</span>
             <h3 className="mt-3 text-3xl font-bold sm:text-4xl">Frequently Asked Questions</h3>
           </div>
           <div className="space-y-3">
@@ -1268,7 +1268,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
           </div>
           <a
             href="mailto:valan@outlook.com"
-            className="text-xs text-amber-400 transition-colors hover:text-amber-300"
+            className="text-xs text-[#75D380] transition-colors hover:text-[#75D380]"
           >
             valan@outlook.com
           </a>
@@ -1285,7 +1285,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
 
 function FeatureCard({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="shimmer-border animate-fade-in-up rounded-xl border border-white/10 bg-white/[0.02] p-7 transition-all hover:border-amber-500/40 hover:bg-amber-500/[0.04] hover:shadow-lg hover:shadow-amber-500/5">
+    <div className="shimmer-border animate-fade-in-up rounded-xl border border-white/10 bg-white/[0.02] p-7 transition-all hover:border-[#75D380]/40 hover:bg-[#75D380]/[0.04] hover:shadow-lg hover:shadow-amber-500/5">
       <h4 className="mb-3 text-lg font-semibold text-white">{title}</h4>
       <p className="text-sm leading-relaxed text-white/50">{desc}</p>
     </div>
@@ -1312,7 +1312,7 @@ function EquityCurveCard() {
   const areaD = `${pathD} L ${w} ${h} L 0 ${h} Z`;
 
   return (
-    <div className="shimmer-border overflow-hidden rounded-xl border border-amber-500/20 bg-[#100c00]/80 backdrop-blur-sm">
+    <div className="shimmer-border overflow-hidden rounded-xl border border-[#75D380]/20 bg-[#0D141B]/80 backdrop-blur-sm">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
         <div className="flex items-center gap-2">
@@ -1357,7 +1357,7 @@ function EquityCurveCard() {
         <div className="flex gap-4">
           <div>
             <span className="text-[9px] uppercase text-white/30">Net Profit</span>
-            <p className="font-mono text-xs font-bold text-amber-400">+$24,580</p>
+            <p className="font-mono text-xs font-bold text-[#75D380]">+$24,580</p>
           </div>
           <div>
             <span className="text-[9px] uppercase text-white/30">Win Rate</span>
@@ -1375,10 +1375,10 @@ function EquityCurveCard() {
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   return (
-    <details className="group rounded-lg border border-white/10 bg-white/[0.02] p-5 transition-colors hover:border-amber-500/20">
+    <details className="group rounded-lg border border-white/10 bg-white/[0.02] p-5 transition-colors hover:border-[#75D380]/20">
       <summary className="flex cursor-pointer items-center justify-between text-base font-medium text-white/80 [&::-webkit-details-marker]:hidden">
         {q}
-        <span className="ml-2 text-lg text-amber-400 transition-transform group-open:rotate-45">+</span>
+        <span className="ml-2 text-lg text-[#75D380] transition-transform group-open:rotate-45">+</span>
       </summary>
       <p className="mt-4 text-sm leading-relaxed text-white/50">{a}</p>
     </details>

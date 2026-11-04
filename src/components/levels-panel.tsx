@@ -18,7 +18,7 @@ interface LevelsPanelProps {
  */
 export function LevelsPanel({ lines, lastClose, symbol }: LevelsPanelProps) {
   return (
-    <aside className="flex h-full w-full flex-col gap-4 overflow-y-auto bg-[#0d0a00] p-4 text-white">
+    <aside className="flex h-full w-full flex-col gap-4 overflow-y-auto bg-[#0D141B] p-4 text-white">
       {/* Compact file summary */}
       <section className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-white/60">

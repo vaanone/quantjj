@@ -37,13 +37,13 @@ interface TradingChartProps {
 }
 
 const COLORS = {
-  bg: "#100c00",
-  text: "#d1d5db",
-  grid: "#1c1e26",
-  border: "#262a36",
-  up: "#26a69a",
-  down: "#ef5350",
-  resistance: "#22c55e", // green — solid line
+  bg: "#070D12",
+  text: "#9EA6A9",
+  grid: "#11171C",
+  border: "#1F2933",
+  up: "#75D380",
+  down: "#ef4444",
+  resistance: "#75D380", // neon green — solid line
   support: "#ef4444",    // red — solid line
 };
 

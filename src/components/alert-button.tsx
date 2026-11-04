@@ -66,7 +66,7 @@ export function AlertButton({
           )}
         </Button>
       </DialogTrigger>
-      <DialogContent className="border-white/15 bg-[#0d0a00] text-white">
+      <DialogContent className="border-white/15 bg-[#0D141B] text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base font-semibold">
             <Bell className="h-4 w-4 text-red-400" />
@@ -78,7 +78,7 @@ export function AlertButton({
           {/* Current price */}
           <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-center">
             <span className="text-[10px] uppercase tracking-wider text-white/40">Current Price</span>
-            <p className="font-mono text-lg font-bold text-amber-400">
+            <p className="font-mono text-lg font-bold text-[#75D380]">
               {currentPrice > 0
                 ? currentPrice >= 1000
                   ? currentPrice.toFixed(2)
@@ -128,7 +128,7 @@ export function AlertButton({
                   className="flex items-center justify-between rounded-md border border-white/5 bg-white/[0.01] px-3 py-2"
                 >
                   <span className="font-mono text-xs text-white/80">
-                    <span className="text-amber-400">●</span> {alert.price}
+                    <span className="text-[#75D380]">●</span> {alert.price}
                   </span>
                   <Button
                     variant="ghost"

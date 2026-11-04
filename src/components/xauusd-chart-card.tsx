@@ -40,7 +40,7 @@ export function XauusdChartCard({ candles }: XauusdChartCardProps) {
   const lineColor = "#d4af37"; // gold
 
   return (
-    <div className="shimmer-border overflow-hidden rounded-xl border border-amber-500/20 bg-[#100c00]/80 backdrop-blur-sm">
+    <div className="shimmer-border overflow-hidden rounded-xl border border-amber-500/20 bg-[#0D141B]/80 backdrop-blur-sm">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/5 px-4 py-3">
         <div className="flex items-center gap-2">
@@ -49,7 +49,7 @@ export function XauusdChartCard({ candles }: XauusdChartCardProps) {
             Master Equity Curve · XAUUSD
           </span>
         </div>
-        <span className="font-mono text-xs font-bold text-amber-400">
+        <span className="font-mono text-xs font-bold text-[#75D380]">
           {lastPrice >= 1000 ? lastPrice.toFixed(2) : lastPrice.toFixed(5)}
         </span>
       </div>
@@ -85,7 +85,7 @@ export function XauusdChartCard({ candles }: XauusdChartCardProps) {
         <div className="flex gap-4">
           <div>
             <span className="text-[9px] uppercase text-white/30">Last Price</span>
-            <p className={`font-mono text-xs font-bold ${isPositive ? "text-amber-400" : "text-red-400"}`}>
+            <p className={`font-mono text-xs font-bold ${isPositive ? "text-[#75D380]" : "text-red-400"}`}>
               {lastPrice >= 1000 ? lastPrice.toFixed(2) : lastPrice.toFixed(5)}
             </p>
           </div>

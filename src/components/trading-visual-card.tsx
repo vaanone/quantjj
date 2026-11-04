@@ -61,7 +61,7 @@ export function TradingVisualCard({ candles, userLevels }: TradingVisualCardProp
           <img src="/logo.png" alt="Vaan.One" className="h-6 w-6 rounded object-contain" />
           <div>
             <span className="font-mono text-sm font-bold text-white">XAUUSD</span>
-            <span className="ml-2 text-[10px] uppercase tracking-wider text-amber-400">LIVE CHART</span>
+            <span className="ml-2 text-[10px] uppercase tracking-wider text-[#75D380]">LIVE CHART</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -69,7 +69,7 @@ export function TradingVisualCard({ candles, userLevels }: TradingVisualCardProp
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
-          <span className="font-mono text-sm font-bold text-amber-400">{fmtPrice(lastClose)}</span>
+          <span className="font-mono text-sm font-bold text-[#75D380]">{fmtPrice(lastClose)}</span>
         </div>
       </div>
 
@@ -175,7 +175,7 @@ export function TradingVisualCard({ candles, userLevels }: TradingVisualCardProp
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] uppercase tracking-wider text-white/30">M15</span>
-          <span className="rounded bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] font-bold text-amber-400">
+          <span className="rounded bg-[#75D380]/10 px-1.5 py-0.5 font-mono text-[9px] font-bold text-[#75D380]">
             PIVOT
           </span>
         </div>
