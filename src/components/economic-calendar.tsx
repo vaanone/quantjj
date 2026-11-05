@@ -113,8 +113,8 @@ export function EconomicCalendar() {
 
   return (
     <div className="border-y border-white/10 bg-[#0D141B]">
-      {/* Header row */}
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 pt-2.5">
+      {/* Header row — wraps to second line on mobile */}
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-y-1 px-4 pt-2.5">
         <div className="flex items-center gap-2">
           <span className="relative flex h-1.5 w-1.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
@@ -140,9 +140,9 @@ export function EconomicCalendar() {
         </div>
       </div>
 
-      {/* Scrolling / wrapping event strip */}
-      <div className="scrollbar-thin overflow-x-auto px-4 pb-2.5 pt-2">
-        <div className="flex w-max min-w-full gap-2">
+      {/* Event list — stacks vertically on mobile, horizontal scroll on sm+ */}
+      <div className="overflow-x-auto px-4 pb-2.5 pt-2 sm:block">
+        <div className="flex flex-col gap-2 sm:flex sm:w-max sm:min-w-full sm:flex-row sm:gap-2">
           {events.map((e) => {
             const flag = COUNTRY_FLAG[e.country] ?? "🏳";
             const impactColor =
@@ -156,7 +156,7 @@ export function EconomicCalendar() {
             return (
               <div
                 key={e.id}
-                className={`group relative flex min-w-[230px] max-w-[260px] flex-col gap-1 rounded-md border px-3 py-2 transition-colors ${
+                className={`group relative flex flex-col gap-1 rounded-md border px-3 py-2 transition-colors sm:min-w-[230px] sm:max-w-[260px] ${
                   e.isToday
                     ? "border-red-500/40 bg-red-500/5"
                     : e.isPast
@@ -214,8 +214,8 @@ export function EconomicCalendar() {
             );
           })}
 
-          {/* Trailing helper chip */}
-          <div className="flex min-w-[140px] items-center justify-center rounded-md border border-dashed border-white/10 px-3 py-2">
+          {/* Trailing helper chip — hidden on mobile, full-width row instead */}
+          <div className="flex min-w-[140px] items-center justify-center rounded-md border border-dashed border-white/10 px-3 py-2 sm:flex">
             <span className="font-mono text-[10px] text-white/30">
               {todayCount > 0
                 ? `${todayCount} today · ${events.length - todayCount} upcoming`
