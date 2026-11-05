@@ -17,6 +17,7 @@ import { DriveFilePicker } from "@/components/drive-file-picker";
 import { LevelsPanel } from "@/components/levels-panel";
 import { AlertButton } from "@/components/alert-button";
 import { PriceTicker } from "@/components/price-ticker";
+import { EconomicCalendar } from "@/components/economic-calendar";
 import { TradingVisualCard } from "@/components/trading-visual-card";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePriceAlerts } from "@/hooks/use-price-alerts";
@@ -913,8 +914,13 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
 
         <div className="relative mx-auto max-w-4xl">
           {/* Scrolling price ticker — above the badge */}
-          <div className="mb-6">
+          <div className="mb-4">
             <PriceTicker />
+          </div>
+
+          {/* Economic calendar — US 3-star high-impact events (Forex Factory feed) */}
+          <div className="mb-6">
+            <EconomicCalendar />
           </div>
 
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#75D380]/20 bg-[#75D380]/5 px-4 py-1.5">
