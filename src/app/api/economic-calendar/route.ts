@@ -19,7 +19,7 @@ import { NextResponse } from "next/server";
  */
 
 export const dynamic = "force-dynamic";
-export const revalidate = 300; // cache for 5 minutes
+export const revalidate = 60; // cache for 1 minute
 
 interface FFEvent {
   title: string;
@@ -123,7 +123,7 @@ export async function GET() {
           Referer: "https://www.forexfactory.com/",
           Accept: "application/json,text/plain,*/*",
         },
-        next: { revalidate: 300 },
+        next: { revalidate: 60 },
       },
     );
 
@@ -235,7 +235,7 @@ export async function GET() {
       },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
         },
       },
     );

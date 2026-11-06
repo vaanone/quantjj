@@ -69,9 +69,9 @@ export function EconomicCalendar() {
     };
 
     fetchEvents();
-    // Refresh every 5 minutes — events don't change often and the upstream
-    // is rate-limited.
-    const interval = setInterval(fetchEvents, 5 * 60 * 1000);
+    // Refresh every 1 minute so upcoming events and "today vs tomorrow"
+    // transitions stay current without user action.
+    const interval = setInterval(fetchEvents, 60 * 1000);
     return () => {
       cancelled = true;
       clearInterval(interval);
