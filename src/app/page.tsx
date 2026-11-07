@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -77,12 +77,45 @@ export default function Home() {
         next.set(fileName, { result, fileName, selectedSymbol: sym });
         return next;
       });
-      // Only switch selected file on first load — never during background refresh.
-      setSelectedFile((prev) => prev || fileName);
+
+      // Default selected file = XAUUSD file (preferred) — fall back to the
+      // first file received. This is checked on every load so that once the
+      // XAUUSD CSV arrives (which may be later than other files), the chart
+      // automatically switches to it. After the user manually picks a
+      // different symbol/file via the dropdown, we don't override their
+      // choice — the initial setSelectedFile(prev => prev || ...) is a
+      // no-op once a selection has been made.
+      const isXauusd = (result.symbols || []).some((s) =>
+        s.toUpperCase().includes("XAU"),
+      );
+      setSelectedFile((prev) => {
+        // User already picked something — keep it.
+        if (prev) return prev;
+        // First load — prefer XAUUSD if this is it, otherwise take it
+        // anyway and a later XAUUSD load will overwrite.
+        return fileName;
+      });
+      // If XAUUSD arrives and nothing is selected yet, switch to it.
+      // (We do this as a second setState pass so the prev-check above
+      // has already populated an initial value if needed.)
+      if (isXauusd) {
+        setSelectedFile((prev) => {
+          // If the user already has a non-XAUUSD file selected, switch to
+          // XAUUSD on the first auto-load. Once a manual selection is made
+          // (tracked by userTouchedSelectionRef), respect it.
+          if (userTouchedSelectionRef.current) return prev;
+          return fileName;
+        });
+      }
+
       setHasFirstLoad(true);
     },
     [],
   );
+
+  // Track whether the user has manually selected a file/symbol via the
+  // dropdown. Once true, auto-XAUUSD-default won't override their choice.
+  const userTouchedSelectionRef = useRef(false);
 
   const currentFile = files.get(selectedFile);
   const currentResult = currentFile?.result;
@@ -150,6 +183,9 @@ export default function Home() {
     (value: string) => {
       const [fileName, ...symbolParts] = value.split("::");
       const symbol = symbolParts.join("::");
+      // Mark that the user has made a manual selection — the auto-
+      // XAUUSD default won't fire anymore after this.
+      userTouchedSelectionRef.current = true;
       setFiles((prev) => {
         const next = new Map(prev);
         const f = next.get(fileName);
@@ -535,6 +571,8 @@ export default function Home() {
             allSymbols={allSymbols.map((s) => s.symbol)}
             multiSymbols={multiSymbols}
             onSymbolChange={(slot, sym) => {
+              // User picked a symbol in any chart slot — mark as touched.
+              userTouchedSelectionRef.current = true;
               if (slot === 0) {
                 // Slot 0 uses the main symbol — find the file containing
                 // this symbol and switch to it.
