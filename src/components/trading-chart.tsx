@@ -4,9 +4,9 @@ import { useEffect, useRef } from "react";
 import {
   createChart,
   CandlestickSeries,
+  LineSeries,
   CrosshairMode,
   LineStyle,
-  createSeriesMarkers,
   type IChartApi,
   type ISeriesApi,
   type IPriceLine,
@@ -62,6 +62,10 @@ export function TradingChart({
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const priceLinesRef = useRef<IPriceLine[]>([]);
   const alertLinesRef = useRef<IPriceLine[]>([]);
+  // Vertical-day-separator line series — one per day boundary, recreated
+  // whenever candles change. Stored as an array so we can remove them all
+  // on cleanup / refresh.
+  const daySepSeriesRef = useRef<ISeriesApi<"Line">[]>([]);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   // -- Create chart once -----------------------------------------------------
@@ -244,6 +248,7 @@ export function TradingChart({
       chartRef.current = null;
       candleSeriesRef.current = null;
       priceLinesRef.current = [];
+      daySepSeriesRef.current = [];
     };
   }, []);
 
@@ -276,26 +281,85 @@ export function TradingChart({
     // Reset the price scale so it auto-fits to the new symbol's price range.
     chartRef.current.priceScale("right").applyOptions({ autoScale: true });
 
-    // Day-separation vertical lines: insert a dashed vertical line marker at the
-    // first candle of each new UTC day. This visually separates trading days.
-    const dayMarkers = [];
+    // Day-separation vertical lines: draw a true full-height vertical
+    // dashed line at the first candle of each new UTC day.
+    //
+    // In lightweight-charts v5, marker shapes are limited to
+    // circle/square/arrowUp/arrowDown — there is no 'line' shape, so the
+    // previous code (shape: 'line') silently drew nothing. The proper way
+    // to get a vertical line is to add a separate LineSeries per day
+    // boundary, with two points that share (almost) the same time but
+    // different prices — producing a near-vertical segment that spans
+    // the visible price range.
+
+    // Find the price range across the visible candles so each day
+    // separator line spans from below the lowest low to above the highest
+    // high. This guarantees the line is always full-height.
+    let minLow = Infinity;
+    let maxHigh = -Infinity;
+    for (const c of candles) {
+      if (c.low < minLow) minLow = c.low;
+      if (c.high > maxHigh) maxHigh = c.high;
+    }
+    const pad = (maxHigh - minLow) * 0.05 || maxHigh * 0.01 || 1;
+    const yBottom = minLow - pad;
+    const yTop = maxHigh + pad;
+
+    // Remove any previous day-separator series (e.g. on symbol switch).
+    if (daySepSeriesRef.current.length > 0 && chartRef.current) {
+      for (const s of daySepSeriesRef.current) {
+        try { chartRef.current.removeSeries(s); } catch { /* ignore */ }
+      }
+      daySepSeriesRef.current = [];
+    }
+
+    const dayBoundaryTimes: UTCTimestamp[] = [];
     let lastDay = -1;
     for (const c of candles) {
       const d = new Date(c.time * 1000);
       const dayKey = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
       if (dayKey !== lastDay) {
-        dayMarkers.push({
-          time: c.time as UTCTimestamp,
-          position: "aboveBar" as const,
-          color: "#4b5563", // grey — visible but subtle
-          shape: "line" as const,
-          lineStyle: LineStyle.Dashed, // dotted/dashed vertical line
-        });
+        dayBoundaryTimes.push(c.time as UTCTimestamp);
         lastDay = dayKey;
       }
     }
-    if (dayMarkers.length > 0) {
-      createSeriesMarkers(candleSeriesRef.current, dayMarkers);
+
+    if (dayBoundaryTimes.length > 0 && chartRef.current) {
+      // Use ~half a candle width as the X offset between the two endpoints
+      // of the vertical line. Small enough to look vertical, large enough
+      // to satisfy lightweight-charts' strictly-ascending-time rule.
+      const tfSec = timeframe?.seconds ?? 3600;
+      const eps = Math.max(1, Math.floor(tfSec * 0.05));
+
+      for (const t of dayBoundaryTimes) {
+        const sepSeries = chartRef.current.addSeries(LineSeries, {
+          // Slightly brighter grey so the line is clearly visible against
+          // the dark chart background, but still subtle vs. the green/red
+          // S/R horizontal lines.
+          color: "#6b7280",
+          lineWidth: 2,
+          lineStyle: LineStyle.Dashed,
+          crosshairMarkerVisible: false,
+          lastValueVisible: false,
+          priceLineVisible: false,
+          pointMarkersVisible: false,
+          // Pin the auto-scale range so this series doesn't expand the
+          // price scale (the candle series already controls the range).
+          autoscaleInfoProvider: () => ({
+            priceRange: { minValue: yBottom, maxValue: yTop },
+          }) as any,
+        });
+        // Two points: just before the day boundary at yBottom, and at
+        // the day boundary at yTop. Renders as a near-vertical dashed
+        // line that visually marks the start of the new trading day.
+        const x0 = (t - eps) as UTCTimestamp;
+        const x1 = t as UTCTimestamp;
+        sepSeries.setData([
+          { time: x0, value: yBottom },
+          { time: x1, value: yTop },
+        ] as any);
+        daySepSeriesRef.current.push(sepSeries);
+      }
     }
 
     // First fit ALL content (resets both time + price scales), then zoom
@@ -309,7 +373,7 @@ export function TradingChart({
       const toTime = candles[candles.length - 1].time as UTCTimestamp;
       chartRef.current.timeScale().setVisibleRange({ from: fromTime, to: toTime });
     }
-  }, [candles, visibleCount]);
+  }, [candles, visibleCount, timeframe]);
 
   // -- Update S/R price lines (only the top-6: R I/II/III + S I/II/III) -----
   useEffect(() => {
