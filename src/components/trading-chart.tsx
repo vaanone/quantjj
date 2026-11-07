@@ -282,28 +282,16 @@ export function TradingChart({
     chartRef.current.priceScale("right").applyOptions({ autoScale: true });
 
     // Day-separation vertical lines: draw a true full-height vertical
-    // dashed line at the first candle of each new UTC day.
+    // dashed RED line at the first candle of each new UTC day, spanning
+    // the entire chart pane from the very top to the very bottom.
     //
-    // In lightweight-charts v5, marker shapes are limited to
-    // circle/square/arrowUp/arrowDown — there is no 'line' shape, so the
-    // previous code (shape: 'line') silently drew nothing. The proper way
-    // to get a vertical line is to add a separate LineSeries per day
-    // boundary, with two points that share (almost) the same time but
-    // different prices — producing a near-vertical segment that spans
-    // the visible price range.
-
-    // Find the price range across the visible candles so each day
-    // separator line spans from below the lowest low to above the highest
-    // high. This guarantees the line is always full-height.
-    let minLow = Infinity;
-    let maxHigh = -Infinity;
-    for (const c of candles) {
-      if (c.low < minLow) minLow = c.low;
-      if (c.high > maxHigh) maxHigh = c.high;
-    }
-    const pad = (maxHigh - minLow) * 0.05 || maxHigh * 0.01 || 1;
-    const yBottom = minLow - pad;
-    const yTop = maxHigh + pad;
+    // To make the line span the FULL chart height (including the 25%
+    // top/bottom scale margins of the candle price scale), we put each
+    // separator LineSeries on a SEPARATE invisible price scale whose
+    // own scaleMargins are {0, 0}. That scale autoscales to whatever Y
+    // values we give it (here 0..1), and since its margins are zero it
+    // maps that 0..1 range to the full pane height — giving a true
+    // top-to-bottom vertical line that doesn't affect the candle scale.
 
     // Remove any previous day-separator series (e.g. on symbol switch).
     if (daySepSeriesRef.current.length > 0 && chartRef.current) {
@@ -325,38 +313,55 @@ export function TradingChart({
     }
 
     if (dayBoundaryTimes.length > 0 && chartRef.current) {
-      // Use ~half a candle width as the X offset between the two endpoints
-      // of the vertical line. Small enough to look vertical, large enough
-      // to satisfy lightweight-charts' strictly-ascending-time rule.
+      // Use ~5% of timeframe seconds as the X offset between the two
+      // endpoints of the vertical line. Small enough to look vertical,
+      // large enough to satisfy lightweight-charts' strict ascending
+      // time rule.
       const tfSec = timeframe?.seconds ?? 3600;
       const eps = Math.max(1, Math.floor(tfSec * 0.05));
 
+      // Track whether we've configured the "day-sep" overlay scale yet.
+      // In lightweight-charts v5 you can't applyOptions to a custom price
+      // scale until at least one series is using it — the scale is created
+      // lazily when a series references its ID.
+      let sepScaleConfigured = false;
+
       for (const t of dayBoundaryTimes) {
         const sepSeries = chartRef.current.addSeries(LineSeries, {
-          // Slightly brighter grey so the line is clearly visible against
-          // the dark chart background, but still subtle vs. the green/red
-          // S/R horizontal lines.
-          color: "#6b7280",
-          lineWidth: 2,
+          // Red day-boundary marker — matches the support-line red so the
+          // chart palette stays consistent. Dashed style distinguishes it
+          // from the solid horizontal support lines.
+          color: "#ef4444",
+          lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           crosshairMarkerVisible: false,
           lastValueVisible: false,
           priceLineVisible: false,
           pointMarkersVisible: false,
-          // Pin the auto-scale range so this series doesn't expand the
-          // price scale (the candle series already controls the range).
-          autoscaleInfoProvider: () => ({
-            priceRange: { minValue: yBottom, maxValue: yTop },
-          }) as any,
+          // Put this series on the invisible full-height overlay scale
+          // so it doesn't affect the candle price scale's autoscale and
+          // spans the full chart pane height.
+          priceScaleId: "day-sep",
         });
-        // Two points: just before the day boundary at yBottom, and at
-        // the day boundary at yTop. Renders as a near-vertical dashed
-        // line that visually marks the start of the new trading day.
+
+        // Now that the "day-sep" scale exists, configure it ONCE to span
+        // the full pane height with no margins and no visible axis labels.
+        if (!sepScaleConfigured) {
+          chartRef.current.priceScale("day-sep").applyOptions({
+            scaleMargins: { top: 0, bottom: 0 },
+            visible: false,
+          });
+          sepScaleConfigured = true;
+        }
+
+        // Two points: just before the day boundary at y=0, and at the
+        // day boundary at y=1. The "day-sep" scale autoscales to 0..1
+        // and (with scaleMargins 0,0) maps that to the full chart height.
         const x0 = (t - eps) as UTCTimestamp;
         const x1 = t as UTCTimestamp;
         sepSeries.setData([
-          { time: x0, value: yBottom },
-          { time: x1, value: yTop },
+          { time: x0, value: 0 },
+          { time: x1, value: 1 },
         ] as any);
         daySepSeriesRef.current.push(sepSeries);
       }
