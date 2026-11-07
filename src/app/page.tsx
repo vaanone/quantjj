@@ -306,8 +306,146 @@ export default function Home() {
 
   return (
     <div className="flex h-screen flex-col bg-[#070D12] text-white">
-      {/* ============================================================= HEADER */}
-      <header className="flex items-center gap-2 border-b border-white/10 bg-[#0D141B] px-3 py-2">
+      {/* ============================================================== BODY */}
+      <main className="relative flex-1 overflow-hidden">
+        {/* Full-screen loading overlay — shown ONLY on the very first load.
+            After that, all refreshes/polling happen silently in the background. */}
+        {chartLoading && !hasFirstLoad && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#070D12]">
+            <div className="flex flex-col items-center gap-6">
+              <img src="/logo.png" alt="Vaan.One" className="h-16 w-16 rounded-lg object-contain opacity-80" />
+              <LoadingDots />
+            </div>
+          </div>
+        )}
+        {candles.length === 0 && !chartLoading ? (
+          <EmptyState onLoaded={handleLoaded} />
+        ) : chartLayout === 1 ? (
+          isLg ? (
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              <ResizablePanel defaultSize={75} minSize={50}>
+                <ChartArea
+                  candles={candles}
+                  lines={top6Lines}
+                  symbol={symbolLabel}
+                  timeframe={timeframe}
+                  alertPrices={alerts
+                    .filter((a) => a.symbol === symbolLabel)
+                    .map((a) => ({ price: a.price, triggered: a.triggered }))}
+                  livePrice={lastClose}
+                  
+                  lastUpdate={lastUpdate}
+                />
+              </ResizablePanel>
+              <ResizableHandle withHandle className="bg-white/10" />
+              <ResizablePanel defaultSize={25} minSize={18} maxSize={45}>
+                <LevelsPanel
+                  key={selectedFile}
+                  lines={top6Lines}
+                  lastClose={lastClose}
+                  symbol={symbolLabel}
+                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            <ChartArea
+              candles={candles}
+              lines={top6Lines}
+              symbol={symbolLabel}
+              timeframe={timeframe}
+              alertPrices={alerts
+                .filter((a) => a.symbol === symbolLabel)
+                .map((a) => ({ price: a.price, triggered: a.triggered }))}
+              livePrice={lastClose}
+              
+              lastUpdate={lastUpdate}
+            />
+          )
+        ) : (
+          /* Multi-chart grid layout */
+          <MultiChartGrid
+            layout={chartLayout}
+            allSymbols={allSymbols.map((s) => s.symbol)}
+            multiSymbols={multiSymbols}
+            onSymbolChange={(slot, sym) => {
+              // User picked a symbol in any chart slot — mark as touched.
+              userTouchedSelectionRef.current = true;
+              if (slot === 0) {
+                // Slot 0 uses the main symbol — find the file containing
+                // this symbol and switch to it.
+                for (const [fName, loaded] of files) {
+                  if (loaded.result.symbols.includes(sym)) {
+                    setFiles((prev) => {
+                      const next = new Map(prev);
+                      next.set(fName, { ...loaded, selectedSymbol: sym });
+                      return next;
+                    });
+                    setSelectedFile(fName);
+                    break;
+                  }
+                }
+              } else {
+                setMultiSymbols((prev) => ({ ...prev, [slot]: sym }));
+              }
+            }}
+            getSlotData={getChartSlotData}
+            timeframe={timeframe}
+            lastUpdate={lastUpdate}
+            slotSymbols={[symbolLabel, multiSymbols[1], multiSymbols[2], multiSymbols[3]]}
+          />
+        )}
+      </main>
+
+      {/* ============================================================ TOOLBAR (bottom — secondary info strip) */}
+      {candles.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-t border-white/10 bg-[#0D141B] px-4 py-1.5 text-[11px] text-white/70">
+          {/* Disclaimer — left side, small font, single line */}
+          <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
+            Daily Vaan.One Levels are updated manually every morning for educational and informational purposes only.
+          </p>
+          {/* Last Update timestamp — right side */}
+          <div className="ml-auto flex items-center gap-3">
+            {lastUpdate && (
+              <div className="flex flex-col items-start leading-tight">
+                <span className="text-[9px] uppercase tracking-wider text-white/30">
+                  Last Update @
+                </span>
+                <span className="font-mono text-xs text-white/50">
+                  {formatLastUpdate(lastUpdate)}
+                </span>
+              </div>
+            )}
+          </div>
+          <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 border-white/15 bg-white/5 px-2 text-[11px] text-white hover:bg-white/10 lg:hidden"
+              >
+                <PanelRight className="h-3.5 w-3.5" />
+                Levels
+                <Badge className="ml-1 h-4 px-1 text-[9px] font-mono">{top6Lines.length}</Badge>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[88vw] max-w-sm overflow-y-auto border-white/10 bg-[#0D141B] p-0 lg:hidden">
+              <SheetHeader className="border-b border-white/10 px-4 py-3">
+                <SheetTitle className="text-sm font-semibold text-white">
+                  Pivot Levels
+                </SheetTitle>
+              </SheetHeader>
+              <LevelsPanel
+                lines={top6Lines}
+                lastClose={lastClose}
+                symbol={symbolLabel}
+              />
+            </SheetContent>
+          </Sheet>
+        </div>
+      )}
+
+      {/* ============================================================= HEADER (bottom bar — logo, symbol, controls) */}
+      <header className="flex items-center gap-2 border-t border-white/10 bg-[#0D141B] px-3 py-2">
         {/* Back to home button */}
         <button
           onClick={() => setView("landing")}
@@ -460,144 +598,6 @@ export default function Home() {
           />
         </div>
       </header>
-
-      {/* ============================================================ TOOLBAR */}
-      {candles.length > 0 && (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-white/10 bg-[#0D141B] px-4 py-1.5 text-[11px] text-white/70">
-          {/* Disclaimer — left side, small font, single line */}
-          <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
-            Daily Vaan.One Levels are updated manually every morning for educational and informational purposes only.
-          </p>
-          {/* Last Update timestamp — right side */}
-          <div className="ml-auto flex items-center gap-3">
-            {lastUpdate && (
-              <div className="flex flex-col items-start leading-tight">
-                <span className="text-[9px] uppercase tracking-wider text-white/30">
-                  Last Update @
-                </span>
-                <span className="font-mono text-xs text-white/50">
-                  {formatLastUpdate(lastUpdate)}
-                </span>
-              </div>
-            )}
-          </div>
-          <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1.5 border-white/15 bg-white/5 px-2 text-[11px] text-white hover:bg-white/10 lg:hidden"
-              >
-                <PanelRight className="h-3.5 w-3.5" />
-                Levels
-                <Badge className="ml-1 h-4 px-1 text-[9px] font-mono">{top6Lines.length}</Badge>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[88vw] max-w-sm overflow-y-auto border-white/10 bg-[#0D141B] p-0 lg:hidden">
-              <SheetHeader className="border-b border-white/10 px-4 py-3">
-                <SheetTitle className="text-sm font-semibold text-white">
-                  Pivot Levels
-                </SheetTitle>
-              </SheetHeader>
-              <LevelsPanel
-                lines={top6Lines}
-                lastClose={lastClose}
-                symbol={symbolLabel}
-              />
-            </SheetContent>
-          </Sheet>
-        </div>
-      )}
-
-      {/* ============================================================== BODY */}
-      <main className="relative flex-1 overflow-hidden">
-        {/* Full-screen loading overlay — shown ONLY on the very first load.
-            After that, all refreshes/polling happen silently in the background. */}
-        {chartLoading && !hasFirstLoad && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#070D12]">
-            <div className="flex flex-col items-center gap-6">
-              <img src="/logo.png" alt="Vaan.One" className="h-16 w-16 rounded-lg object-contain opacity-80" />
-              <LoadingDots />
-            </div>
-          </div>
-        )}
-        {candles.length === 0 && !chartLoading ? (
-          <EmptyState onLoaded={handleLoaded} />
-        ) : chartLayout === 1 ? (
-          isLg ? (
-            <ResizablePanelGroup direction="horizontal" className="h-full">
-              <ResizablePanel defaultSize={75} minSize={50}>
-                <ChartArea
-                  candles={candles}
-                  lines={top6Lines}
-                  symbol={symbolLabel}
-                  timeframe={timeframe}
-                  alertPrices={alerts
-                    .filter((a) => a.symbol === symbolLabel)
-                    .map((a) => ({ price: a.price, triggered: a.triggered }))}
-                  livePrice={lastClose}
-                  
-                  lastUpdate={lastUpdate}
-                />
-              </ResizablePanel>
-              <ResizableHandle withHandle className="bg-white/10" />
-              <ResizablePanel defaultSize={25} minSize={18} maxSize={45}>
-                <LevelsPanel
-                  key={selectedFile}
-                  lines={top6Lines}
-                  lastClose={lastClose}
-                  symbol={symbolLabel}
-                />
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          ) : (
-            <ChartArea
-              candles={candles}
-              lines={top6Lines}
-              symbol={symbolLabel}
-              timeframe={timeframe}
-              alertPrices={alerts
-                .filter((a) => a.symbol === symbolLabel)
-                .map((a) => ({ price: a.price, triggered: a.triggered }))}
-              livePrice={lastClose}
-              
-              lastUpdate={lastUpdate}
-            />
-          )
-        ) : (
-          /* Multi-chart grid layout */
-          <MultiChartGrid
-            layout={chartLayout}
-            allSymbols={allSymbols.map((s) => s.symbol)}
-            multiSymbols={multiSymbols}
-            onSymbolChange={(slot, sym) => {
-              // User picked a symbol in any chart slot — mark as touched.
-              userTouchedSelectionRef.current = true;
-              if (slot === 0) {
-                // Slot 0 uses the main symbol — find the file containing
-                // this symbol and switch to it.
-                for (const [fName, loaded] of files) {
-                  if (loaded.result.symbols.includes(sym)) {
-                    setFiles((prev) => {
-                      const next = new Map(prev);
-                      next.set(fName, { ...loaded, selectedSymbol: sym });
-                      return next;
-                    });
-                    setSelectedFile(fName);
-                    break;
-                  }
-                }
-              } else {
-                setMultiSymbols((prev) => ({ ...prev, [slot]: sym }));
-              }
-            }}
-            getSlotData={getChartSlotData}
-            timeframe={timeframe}
-            lastUpdate={lastUpdate}
-            slotSymbols={[symbolLabel, multiSymbols[1], multiSymbols[2], multiSymbols[3]]}
-          />
-        )}
-      </main>
     </div>
   );
 }
