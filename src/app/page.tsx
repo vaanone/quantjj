@@ -55,6 +55,22 @@ export default function Home() {
   // Track whether the first load has completed. The loading overlay only
   // shows on the very first load — after that, all refreshes/polling
   // happen silently in the background (no overlay, no "Loading Chart").
+
+  // PWA launch: if the app was launched via the home-screen shortcut
+  // (URL contains ?open_chart=1), open the chart view immediately.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("open_chart") === "1") {
+      setView("chart");
+      // Clean the URL so subsequent refreshes don't auto-open chart.
+      params.delete("open_chart");
+      const cleanUrl =
+        window.location.pathname +
+        (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, []);
   const [hasFirstLoad, setHasFirstLoad] = useState(false);
   const [chartLayout, setChartLayout] = useState<1 | 2 | 3 | 4>(1);
   // Per-chart symbol selections (for multi-chart layouts).
