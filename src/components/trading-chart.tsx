@@ -328,10 +328,10 @@ export function TradingChart({
 
       for (const t of dayBoundaryTimes) {
         const sepSeries = chartRef.current.addSeries(LineSeries, {
-          // Red day-boundary marker — matches the support-line red so the
-          // chart palette stays consistent. Dashed style distinguishes it
-          // from the solid horizontal support lines.
-          color: "#ef4444",
+          // Neon cyan day-boundary marker — stands out clearly against the
+          // dark chart background. Dashed style + vertical orientation
+          // distinguishes it from the solid green/red horizontal S/R lines.
+          color: "#60D2D5",
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           crosshairMarkerVisible: false,
