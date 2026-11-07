@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { PanelRight } from "lucide-react";
+import { PanelRight, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -61,6 +61,32 @@ export default function Home() {
   // Index 0 = first chart (uses the main selectedFile), 1-3 = additional charts.
   const [multiSymbols, setMultiSymbols] = useState<Record<number, string>>({});
   const isLg = useMediaQuery("(min-width: 1024px)", true);
+
+  // ---------- Fullscreen app-mode toggle ----------
+  // Tracks whether the document is currently in browser fullscreen mode
+  // (entered via document.documentElement.requestFullscreen). When true,
+  // the chart takes the entire screen with no browser chrome (address
+  // bar, tabs, etc.) — true "app mode".
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    // Sync state if the user presses Esc or uses browser controls to
+    // exit fullscreen — we want the toggle button to reflect reality.
+    const onChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (typeof document === "undefined") return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => { /* ignore */ });
+    } else if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => { /* ignore */ });
+    }
+  }, []);
 
   const handleLoaded = useCallback(
     (result: ParseResult, fileName: string) => {
@@ -445,7 +471,17 @@ export default function Home() {
       )}
 
       {/* ============================================================= HEADER (bottom bar — logo, symbol, controls) */}
-      <header className="flex items-center gap-2 border-t border-white/10 bg-[#0D141B] px-3 py-2">
+      <header
+        className="flex items-center gap-2 border-t border-white/10 bg-[#0D141B] px-3 py-2"
+        style={{
+          // Respect iOS safe-area (home indicator) at the bottom so the
+          // header bar isn't cut off when installed as a PWA / in app mode.
+          paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
+          // Use safe-area insets on left/right for landscape notch devices.
+          paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
+          paddingRight: "max(0.75rem, env(safe-area-inset-right))",
+        }}
+      >
         {/* Back to home button */}
         <button
           onClick={() => setView("landing")}
@@ -596,6 +632,22 @@ export default function Home() {
             onLoadingChange={setChartLoading}
             compact
           />
+
+          {/* Fullscreen app-mode toggle — enters browser fullscreen so the
+              chart takes the entire screen with no address bar / tabs.
+              Click again (or press Esc) to exit. */}
+          <button
+            onClick={toggleFullscreen}
+            className="flex h-7 shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/5 p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:h-8"
+            title={isFullscreen ? "Exit Fullscreen (Esc)" : "Enter Fullscreen"}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-3.5 w-3.5" />
+            ) : (
+              <Maximize2 className="h-3.5 w-3.5" />
+            )}
+          </button>
         </div>
       </header>
     </div>

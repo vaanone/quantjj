@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -23,6 +23,25 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo.png",
   },
+  // PWA-friendly: lets the page be installed as a standalone app on
+  // iOS/Android home screen with no browser chrome.
+  appleWebApp: {
+    capable: true,
+    title: "Vaan.One",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+// App-like viewport: cover the whole screen (notches, safe areas),
+// prevent user zoom (so it feels like a native app, not a webpage).
+// Next.js 16 requires viewport to be in a separate `viewport` export.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#070D12",
 };
 
 export default function RootLayout({
