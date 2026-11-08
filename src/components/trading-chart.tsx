@@ -380,6 +380,21 @@ export function TradingChart({
       const toTime = candles[candles.length - 1].time as UTCTimestamp;
       chartRef.current.timeScale().setVisibleRange({ from: fromTime, to: toTime });
     }
+
+    // Re-apply rightOffset + barSpacing AFTER setVisibleRange.
+    // The fitContent() + setVisibleRange() calls above can reset the
+    // chart's barSpacing (e.g. fitContent shrinks it to fit ALL candles),
+    // which makes the rightOffset (measured in BARS) translate to a tiny
+    // pixel gap — way less than 5 candle widths visually.
+    //
+    // By re-applying rightOffset=5 AND barSpacing=12 here, we guarantee
+    // the chart always shows the last candle with ~5 candle widths of
+    // empty space to its right, regardless of how the prior calls
+    // manipulated the time scale.
+    chartRef.current.timeScale().applyOptions({
+      rightOffset: 5,
+      barSpacing: 12,
+    });
   }, [candles, visibleCount, timeframe]);
 
   // -- Update S/R price lines (only the top-6: R I/II/III + S I/II/III) -----
