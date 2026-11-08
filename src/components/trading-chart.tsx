@@ -108,11 +108,10 @@ export function TradingChart({
       timeScale: {
         borderColor: COLORS.border,
         // Right Offset — empty space (in number of bars) between the last
-        // candle and the right edge of the chart. Keep it small (5 bars)
-        // so the latest candle is comfortably visible with just enough
-        // breathing room for the price line label, but not so much that
-        // the chart canvas is wasted on empty space.
-        rightOffset: 5,
+        // candle and the right edge of the chart. Keep it at 3 bars so
+        // the latest candle has just enough breathing room for the price
+        // line label, without wasting chart canvas on empty space.
+        rightOffset: 3,
         timeVisible: true,
         secondsVisible: false,
         // Bar Spacing – horizontal distance between candles (wider = fewer candles visible)
@@ -385,14 +384,14 @@ export function TradingChart({
     // The fitContent() + setVisibleRange() calls above can reset the
     // chart's barSpacing (e.g. fitContent shrinks it to fit ALL candles),
     // which makes the rightOffset (measured in BARS) translate to a tiny
-    // pixel gap — way less than 5 candle widths visually.
+    // pixel gap — way less than 3 candle widths visually.
     //
-    // By re-applying rightOffset=5 AND barSpacing=12 here, we guarantee
-    // the chart always shows the last candle with ~5 candle widths of
+    // By re-applying rightOffset=3 AND barSpacing=12 here, we guarantee
+    // the chart always shows the last candle with ~3 candle widths of
     // empty space to its right, regardless of how the prior calls
     // manipulated the time scale.
     chartRef.current.timeScale().applyOptions({
-      rightOffset: 5,
+      rightOffset: 3,
       barSpacing: 12,
     });
   }, [candles, visibleCount, timeframe]);
