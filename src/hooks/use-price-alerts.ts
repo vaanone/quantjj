@@ -82,12 +82,13 @@ export function usePriceAlerts(symbol: string, currentPrice: number) {
     });
   }, [currentPrice, symbol]);
 
-  // Fire a browser notification + play an alert sound.
+  // Fire a browser notification + play an alert sound + send a push
+  // notification (for when the tab is closed / device is in standby).
   const fireNotification = (alert: PriceAlert, price: number) => {
     const title = `${alert.symbol} alert: price touched ${alert.price}`;
     const body = `Current price: ${price}. Alert level ${alert.price} has been reached.`;
 
-    // Browser notification.
+    // Browser notification (works only while tab is open).
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
       new Notification(title, { body });
     }
@@ -96,6 +97,20 @@ export function usePriceAlerts(symbol: string, currentPrice: number) {
     import("sonner").then(({ toast }) => {
       toast.success(title, { description: body, duration: 10000 });
     });
+
+    // Push notification (works even when tab is closed / device in standby).
+    // Fire-and-forget — we don't wait for the response, and we swallow
+    // errors so a failed push never blocks the alert from firing locally.
+    fetch("/api/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        body,
+        tag: `price-alert-${alert.symbol}-${alert.price}`,
+        url: "/",
+      }),
+    }).catch(() => { /* ignore network errors */ });
 
     // Play an alert sound using the Web Audio API (no external file needed).
     // Generates a simple double-beep tone — immediately audible even if

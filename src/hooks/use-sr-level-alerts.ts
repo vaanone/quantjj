@@ -83,7 +83,7 @@ function fireSRAlert(symbol: string, line: SRLine, price: number) {
   const title = `${symbol}: price touched ${line.label} (${line.price})`;
   const body = `${line.fullLabel} at ${line.price}. ${symbol} current price: ${price}.`;
 
-  // Browser notification.
+  // Browser notification (works only while tab is open).
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
     new Notification(title, { body });
   }
@@ -92,6 +92,21 @@ function fireSRAlert(symbol: string, line: SRLine, price: number) {
   import("sonner").then(({ toast }) => {
     toast.success(title, { description: body, duration: 10000 });
   });
+
+  // Push notification — fires even when tab is closed / device in standby.
+  // Fire-and-forget so a network failure doesn't break the local alert.
+  if (typeof fetch === "function") {
+    fetch("/api/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        body,
+        tag: `sr-alert-${symbol}-${line.label}-${line.price}`,
+        url: "/",
+      }),
+    }).catch(() => { /* ignore */ });
+  }
 
   // Play alert sound (double-beep).
   try {

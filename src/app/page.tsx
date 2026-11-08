@@ -18,6 +18,7 @@ import { LevelsPanel } from "@/components/levels-panel";
 import { AlertButton } from "@/components/alert-button";
 import { PriceTicker } from "@/components/price-ticker";
 import { EconomicCalendar } from "@/components/economic-calendar";
+import { PushNotificationsButton } from "@/components/push-notifications-button";
 import { TradingVisualCard } from "@/components/trading-visual-card";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePriceAlerts } from "@/hooks/use-price-alerts";
@@ -648,6 +649,11 @@ export default function Home() {
             onLoadingChange={setChartLoading}
             compact
           />
+
+          {/* Push notifications toggle — registers a Web Push subscription
+              so price alerts and S/R level alerts fire as native phone
+              notifications even when the chart tab is closed. */}
+          <PushNotificationsButton />
 
           {/* Fullscreen app-mode toggle — enters browser fullscreen so the
               chart takes the entire screen with no address bar / tabs.

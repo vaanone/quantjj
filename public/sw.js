@@ -1,10 +1,11 @@
-/* Vaan.One service worker — enables PWA install prompt and basic offline support.
+/* Vaan.One service worker — enables PWA install prompt, basic offline
+ * support, and Web Push notifications.
  *
  * Strategy: network-first for navigations (so chart data is always fresh),
  *           cache-first for static assets (icons, css, js).
  */
 
-const CACHE_VERSION = "vaanone-v1";
+const CACHE_VERSION = "vaanone-v2";
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
@@ -25,7 +26,8 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// Activate: clean up old caches.
+// Activate: clean up old caches + claim clients immediately so the SW
+// can receive push events as soon as it activates.
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
@@ -38,6 +40,73 @@ self.addEventListener("activate", (event) => {
         ),
       )
       .then(() => self.clients.claim()),
+  );
+});
+
+// ---------- Web Push handlers ----------
+
+// 'push' event fires when the push service delivers a message.
+// We parse the JSON payload and show a system notification.
+self.addEventListener("push", (event) => {
+  let payload = { title: "Vaan.One Alert", body: "Price alert triggered" };
+  try {
+    if (event.data) {
+      const text = event.data.text();
+      payload = JSON.parse(text);
+    }
+  } catch (e) {
+    // Not JSON — use the raw text as the body.
+    payload = { title: "Vaan.One Alert", body: event.data ? event.data.text() : "Price alert triggered" };
+  }
+
+  const options = {
+    body: payload.body,
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    tag: payload.tag || "vaan-alert",
+    renotify: true,
+    data: {
+      url: payload.url || "/",
+    },
+    vibrate: [200, 100, 200, 100, 200], // double-beep pattern on Android
+    requireInteraction: false, // auto-dismiss after ~5s; change to true for sticky alerts
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, options),
+  );
+});
+
+// 'notificationclick' — focus or open the chart when the user taps the
+// notification.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    (async () => {
+      const allClients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+
+      // If a tab is already open, focus it.
+      for (const client of allClients) {
+        if (client.url.includes(self.location.origin)) {
+          client.focus();
+          // Optionally navigate to the target URL.
+          if (targetUrl && client.url !== self.location.origin + targetUrl) {
+            client.navigate(targetUrl);
+          }
+          return;
+        }
+      }
+
+      // Otherwise open a new tab.
+      if (self.clients.openWindow) {
+        await self.clients.openWindow(targetUrl);
+      }
+    })(),
   );
 });
 
