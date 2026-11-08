@@ -509,7 +509,7 @@ export default function Home() {
         {/* App name — hidden on mobile to save space */}
         <div className="hidden shrink-0 sm:block">
           <h1 className="text-sm font-semibold leading-tight">Vaan.One</h1>
-          <p className="text-[10px] leading-tight text-white/40">Vaan Pivot</p>
+          <p className="text-[10px] leading-tight text-white/40">Vaan Pivot - A JJ TechHub Product</p>
         </div>
         </button>
 
@@ -985,7 +985,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             <img src="/logo.png" alt="Vaan.One" className="h-10 w-10 rounded-md object-contain" />
             <div>
               <h1 className="text-base font-bold leading-tight">Vaan.One</h1>
-              <p className="text-[11px] leading-tight text-white/40">Vaan Pivot</p>
+              <p className="text-[11px] leading-tight text-white/40">Vaan Pivot - A JJ TechHub Product</p>
             </div>
           </div>
           <div className="flex items-center gap-6">
