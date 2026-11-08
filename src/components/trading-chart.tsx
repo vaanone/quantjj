@@ -107,10 +107,12 @@ export function TradingChart({
       },
       timeScale: {
         borderColor: COLORS.border,
-        // Large right offset creates empty space between the last candle
-        // and the price scale — so S/R labels don't overlap candles.
-        // Right Margin – space between latest candle and price scale
-        rightOffset: 100,
+        // Right Offset — empty space (in number of bars) between the last
+        // candle and the right edge of the chart. Keep it small (5 bars)
+        // so the latest candle is comfortably visible with just enough
+        // breathing room for the price line label, but not so much that
+        // the chart canvas is wasted on empty space.
+        rightOffset: 5,
         timeVisible: true,
         secondsVisible: false,
         // Bar Spacing – horizontal distance between candles (wider = fewer candles visible)
