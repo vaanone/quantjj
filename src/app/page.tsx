@@ -1394,7 +1394,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             Daily Vaan Pivot Levels are updated manually every morning for educational and
             informational purposes only.
           </p>
-          <p className="text-[10px] font-medium text-white/40">Designed By JJ</p>
+          <p className="text-[10px] font-medium text-white/40">A JJ TechHub Product</p>
         </div>
       </footer>
     </div>
