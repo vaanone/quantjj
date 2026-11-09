@@ -102,7 +102,7 @@ export function EconomicCalendar() {
             Economic Calendar
           </span>
           <span className="font-mono text-xs text-white/40">
-            No upcoming US high-impact events this week
+            No high-impact US events today
           </span>
         </div>
       </div>
@@ -217,9 +217,7 @@ export function EconomicCalendar() {
           {/* Trailing helper chip — hidden on mobile, full-width row instead */}
           <div className="flex min-w-[140px] items-center justify-center rounded-md border border-dashed border-white/10 px-3 py-2 sm:flex">
             <span className="font-mono text-[10px] text-white/30">
-              {todayCount > 0
-                ? `${todayCount} today · ${events.length - todayCount} upcoming`
-                : `${events.length} upcoming`}
+              {events.length} today
             </span>
           </div>
         </div>

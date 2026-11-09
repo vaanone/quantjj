@@ -186,38 +186,18 @@ export async function GET() {
       });
 
     // Strategy:
-    //   - If today has high-impact USD events, show all of them plus the next
-    //     5 upcoming USD high-impact events.
-    //   - Otherwise show the next 8 upcoming USD high-impact events.
-    const usdHighToday = events.filter(
-      (e) => e.country === "USD" && e.impactLabel === "High" && e.isToday,
-    );
-
-    let selected: (CalendarEvent & { _timeMs: number })[];
-
-    if (usdHighToday.length > 0) {
-      const upcoming = events
-        .filter(
-          (e) =>
-            e.country === "USD" &&
-            e.impactLabel === "High" &&
-            !e.isToday &&
-            e._timeMs >= nowUtc,
-        )
-        .sort((a, b) => a._timeMs - b._timeMs)
-        .slice(0, 5);
-      selected = [...usdHighToday, ...upcoming];
-    } else {
-      selected = events
-        .filter(
-          (e) =>
-            e.country === "USD" &&
-            e.impactLabel === "High" &&
-            e._timeMs >= nowUtc,
-        )
-        .sort((a, b) => a._timeMs - b._timeMs)
-        .slice(0, 8);
-    }
+    //   Show ONLY today's high-impact USD events. If today has none,
+    //   return an empty list — the home page panel will then show a
+    //   "No high-impact US events today" empty state.
+    //   (No upcoming-event fallback — keeps the panel focused on TODAY.)
+    const selected: (CalendarEvent & { _timeMs: number })[] = events
+      .filter(
+        (e) =>
+          e.country === "USD" &&
+          e.impactLabel === "High" &&
+          e.isToday,
+      )
+      .sort((a, b) => a._timeMs - b._timeMs);
 
     // Sort the final list by event time, then strip the internal _timeMs field.
     const cleaned: CalendarEvent[] = selected
