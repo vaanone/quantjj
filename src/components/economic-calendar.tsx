@@ -94,20 +94,11 @@ export function EconomicCalendar() {
 
   const events = data?.events ?? [];
 
-  if (events.length === 0) {
-    return (
-      <div className="border-y border-white/10 bg-[#0D141B] py-3">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[#75D380]/60">
-            Economic Calendar
-          </span>
-          <span className="font-mono text-xs text-white/40">
-            No high-impact US events today
-          </span>
-        </div>
-      </div>
-    );
-  }
+  // If today has no high-impact USD events, hide the entire segment —
+  // don't render anything (no header, no "no events" message, no border).
+  // The panel will reappear automatically when an event day arrives
+  // (refreshes every 1 minute).
+  if (events.length === 0) return null;
 
   const todayCount = events.filter((e) => e.isToday).length;
 
