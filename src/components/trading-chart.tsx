@@ -304,8 +304,27 @@ export function TradingChart({
 
     const dayBoundaryTimes: UTCTimestamp[] = [];
     let lastDay = -1;
+    // Walk through every candle in chronological order and detect day
+    // boundaries based on the CSV file's calendar date (NOT UTC midnight,
+    // NOT the user's local timezone).
+    //
+    // How this works:
+    // - excel-parser.ts parses CSV date strings like "2026.10.01 00:00"
+    //   via Date.UTC(y, mo-1, d, h, mi, s) — so each candle's `time` is
+    //   a UTC epoch that represents the CSV's wall-clock date/time.
+    // - Calling getUTCFullYear/Month/Date on that epoch returns the
+    //   ORIGINAL CSV calendar date components (since the epoch was
+    //   constructed as if the CSV date were UTC).
+    // - We group candles by that CSV-day key and draw a separator at the
+    //   FIRST candle of each new CSV day.
+    //
+    // This means day separators line up exactly with the trader's MT5
+    // session day (e.g. midnight broker time), not with UTC midnight or
+    // the user's local midnight.
     for (const c of candles) {
       const d = new Date(c.time * 1000);
+      // Use getUTC* methods — since the timestamp was parsed as UTC from
+      // the CSV date string, these return the CSV calendar components.
       const dayKey = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
       if (dayKey !== lastDay) {
         dayBoundaryTimes.push(c.time as UTCTimestamp);

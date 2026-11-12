@@ -42,6 +42,11 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
   const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [autoLoading, setAutoLoading] = useState(false);
+  // Manual-loading state — set ONLY when the user clicks the refresh button
+  // (or other user-initiated actions). The compact button's spinner shows
+  // when this is true, NOT when `autoLoading` is true, so background
+  // 30-second polling stays completely silent (no spinner animation).
+  const [manualLoading, setManualLoading] = useState(false);
   // Track whether we've done the initial auto-load so we don't repeat it.
   const hasAutoLoadedRef = useRef(false);
   // Keep latest `files` and `loadedIds` in refs so the poll interval can read
@@ -237,23 +242,39 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
   // The Drive dropdown is hidden per user request. Auto-load + polling handle
   // everything automatically. This button is the "emergency" manual refresh
   // for when the user wants to force a re-fetch + re-load immediately.
+  //
+  // IMPORTANT: The spinner shows ONLY when the user has clicked this button
+  // (manualLoading). The 30-second background polling (autoLoading) is
+  // completely silent — no spinner, no animation, no disabled state — so
+  // users don't see the chart "flicker" every 30 seconds.
   if (compact) {
     return (
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => fetchFiles().then((fileList) => {
-          // After a manual refresh, auto-load any files not yet loaded.
-          const unloaded = fileList.filter(
-            (f) => !loadedIdsRef.current.has(f.id),
-          );
-          if (unloaded.length > 0) autoLoadAll(unloaded);
-        })}
-        disabled={loadingList || autoLoading}
+        onClick={() => {
+          // Mark this as a user-initiated (manual) load so the spinner
+          // shows. Cleared when the fetch + auto-load complete.
+          setManualLoading(true);
+          fetchFiles().then((fileList) => {
+            // After a manual refresh, auto-load any files not yet loaded.
+            const unloaded = fileList.filter(
+              (f) => !loadedIdsRef.current.has(f.id),
+            );
+            if (unloaded.length > 0) {
+              autoLoadAll(unloaded).finally(() => setManualLoading(false));
+            } else {
+              setManualLoading(false);
+            }
+          }).catch(() => setManualLoading(false));
+        }}
+        // Button stays clickable during background polling — only disabled
+        // during a user-initiated load to prevent double-clicks.
+        disabled={manualLoading}
         className="h-8 w-8 p-0 text-white/60 hover:bg-white/10 hover:text-white"
         title="Refresh Drive files"
       >
-        {loadingList || autoLoading ? (
+        {manualLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
           <RefreshCw className="h-4 w-4" />
