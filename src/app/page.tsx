@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { PanelRight } from "lucide-react";
+import { PanelRight, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -77,6 +77,81 @@ export default function Home() {
   // Index 0 = first chart (uses the main selectedFile), 1-3 = additional charts.
   const [multiSymbols, setMultiSymbols] = useState<Record<number, string>>({});
   const isLg = useMediaQuery("(min-width: 1024px)", true);
+  // Mobile detection — used to show the mobile-only fullscreen toggle
+  // and auto-attempt fullscreen on chart view entry.
+  const isMobile = useMediaQuery("(max-width: 768px)", true);
+
+  // ---------- Fullscreen state (mobile-only feature) ----------
+  // Tracks whether the document is currently in browser fullscreen mode.
+  // On mobile (Android Chrome, iOS Safari PWA), users can tap the
+  // fullscreen button to enter true app-mode (no address bar / tabs).
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const onChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (typeof document === "undefined") return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => { /* ignore */ });
+    } else if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {
+        // iOS Safari (non-PWA) doesn't support Fullscreen API — show a
+        // toast suggesting the user install the page as a PWA for true
+        // fullscreen app experience.
+        import("sonner").then(({ toast }) => {
+          toast.info("For true fullscreen, install as app", {
+            description: "Tap Share → Add to Home Screen on iPhone, or ⋮ → Install app on Android.",
+            duration: 8000,
+          });
+        });
+      });
+    }
+  }, []);
+
+  // ---------- Auto-attempt fullscreen on chart view entry (mobile only) ----------
+  // Most mobile browsers require a USER GESTURE before requestFullscreen()
+  // will work. We attach a one-time touchstart listener that fires the
+  // first time the user touches the chart view, then auto-removes itself.
+  // On iOS Safari (non-PWA) this will silently fail — those users get the
+  // toast hint when they tap the fullscreen button manually.
+  useEffect(() => {
+    if (!isMobile) return;
+    if (typeof document === "undefined") return;
+    // If already fullscreen (e.g. PWA standalone), nothing to do.
+    if (document.fullscreenElement) return;
+    // If running as PWA standalone, no need to request fullscreen —
+    // standalone mode already hides browser chrome.
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+    if (isStandalone) return;
+
+    let triggered = false;
+    const tryFullscreen = () => {
+      if (triggered) return;
+      triggered = true;
+      // Clean up listeners immediately so we don't fire twice.
+      document.removeEventListener("touchstart", tryFullscreen);
+      document.removeEventListener("click", tryFullscreen);
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {
+          // Silent fail — user can tap the button manually if they want.
+        });
+      }
+    };
+    // Attach to both touchstart (mobile) and click (mouse) for safety.
+    document.addEventListener("touchstart", tryFullscreen, { once: true, passive: true });
+    document.addEventListener("click", tryFullscreen, { once: true });
+    return () => {
+      document.removeEventListener("touchstart", tryFullscreen);
+      document.removeEventListener("click", tryFullscreen);
+    };
+  }, [isMobile, view]);
 
   const handleLoaded = useCallback(
     (result: ParseResult, fileName: string) => {
@@ -484,6 +559,29 @@ export default function Home() {
             onLoadingChange={setChartLoading}
             compact
           />
+
+          {/* Fullscreen toggle — MOBILE ONLY (md:hidden).
+              On Android Chrome: enters true browser fullscreen (no address
+                bar / tabs) via document.documentElement.requestFullscreen().
+              On iOS Safari (non-PWA): requestFullscreen() isn't supported,
+                so we show a toast suggesting "Add to Home Screen" for a
+                true standalone app experience.
+              On iOS/Android PWA (standalone mode): button is hidden since
+                the app already runs fullscreen. */}
+          {isMobile && (
+            <button
+              onClick={toggleFullscreen}
+              className="flex h-7 shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/5 p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:h-8"
+              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            >
+              {isFullscreen ? (
+                <Minimize2 className="h-3.5 w-3.5" />
+              ) : (
+                <Maximize2 className="h-3.5 w-3.5" />
+              )}
+            </button>
+          )}
         </div>
       </header>
 
