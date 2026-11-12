@@ -426,8 +426,10 @@ export default function Home() {
         {/* Spacer to push the rest to the right on desktop */}
         <div className="flex-1" />
 
-        {/* All controls in one row, no wrapping */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* All controls in one row, no wrapping. On mobile the row may
+            overflow horizontally — make it scrollable so the fullscreen
+            button (and other controls) are always reachable. */}
+        <div className="flex items-center gap-1.5 overflow-x-auto sm:gap-2 sm:overflow-visible">
           {/* Chart layout dropdown — 1/2/3/4 chart views */}
           {candles.length > 0 && (
             <Select
