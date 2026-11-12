@@ -157,24 +157,49 @@ const USER_LEVEL_COLUMNS: { letter: string; index: number }[] = [
 ];
 
 /**
- * Scans columns H–O of the raw rows and extracts the first non-empty numeric
- * value from each. These are the user's pre-computed support/resistance levels
- * (constant across all rows — S/R levels don't change per candle).
+ * Extract pre-computed S/R levels from columns H–O.
  *
- * If a header row exists, the header cell at each column index is used as the
- * level's display name (e.g. "R1", "S1"). Otherwise the Excel letter is used.
+ * IMPORTANT: Only scans rows belonging to TODAY (the most recent CSV
+ * calendar day in the file). If today's rows don't have S/R values
+ * yet (user hasn't updated them), returns an EMPTY array — so no
+ * lines are drawn on the chart until the user populates today's row
+ * with new S/R values.
+ *
+ * This matches the user's workflow: every morning they update the
+ * CSV with the day's new pivot levels. Until they do, yesterday's
+ * levels should NOT appear on today's candles.
+ *
+ * @param rows         All data rows (raw 2D array from XLSX/CSV).
+ * @param headerStart  Index of the first data row.
+ * @param todayRowIdxs Set of row indices belonging to today's CSV day.
+ *                     If null, scans ALL rows (backward compat).
+ *                     If empty Set, scans nothing → no levels → no lines.
  */
 function extractUserLevels(
   rows: unknown[][],
   headerStart: number,
+  todayRowIdxs: Set<number> | null = null,
 ): UserLevel[] {
   const levels: UserLevel[] = [];
   if (rows.length === 0) return levels;
 
+  // Determine which row indices to scan.
+  // - todayRowIdxs === null  → scan ALL rows (backward compat).
+  // - todayRowIdxs.size === 0 → scan NOTHING (today has no S/R values yet).
+  // - todayRowIdxs.size > 0 → scan only today's rows.
+  const scanIndices: number[] = [];
+  if (todayRowIdxs === null) {
+    for (let i = headerStart; i < rows.length; i++) scanIndices.push(i);
+  } else {
+    for (const i of todayRowIdxs) {
+      if (i >= headerStart && i < rows.length) scanIndices.push(i);
+    }
+  }
+
   for (const { letter, index } of USER_LEVEL_COLUMNS) {
-    // Skip if no row has this many columns.
-    const hasColumn = rows.some(
-      (r) => Array.isArray(r) && r.length > index,
+    // Skip if no scan-eligible row has this many columns.
+    const hasColumn = scanIndices.some(
+      (i) => Array.isArray(rows[i]) && rows[i].length > index,
     );
     if (!hasColumn) continue;
 
@@ -184,17 +209,16 @@ function extractUserLevels(
       const headerRow = rows[headerStart - 1];
       if (headerRow && headerRow[index] != null) {
         const headerVal = String(headerRow[index]).trim();
-        // Use the header text only if it's non-numeric (avoid using a data
-        // value as the name when there's no real header).
         if (headerVal !== "" && toNumber(headerVal) === null) {
           name = headerVal;
         }
       }
     }
 
-    // Scan data rows for the first non-empty numeric value.
+    // Scan ONLY today's rows (or all rows if no date filter) for the
+    // first non-empty numeric value.
     let price: number | null = null;
-    for (let i = headerStart; i < rows.length; i++) {
+    for (const i of scanIndices) {
       const row = rows[i];
       if (!row || row.length <= index) continue;
       const val = toNumber(row[index]);
@@ -379,6 +403,11 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
   if (columnMap.volume !== undefined) detectedColumns[columnMap.volume] = "volume";
 
   const candles: Candle[] = [];
+  // Parallel array tracking each candle's row index + CSV day key.
+  // Used after the loop to build a set of "today's rows" for S/R
+  // extraction — so levels are only drawn from today's data, not
+  // yesterday's stale values.
+  const candleRowInfo: { rowIndex: number; dayKey: number }[] = [];
   let symbol = "";
 
   for (let i = headerStart; i < rows.length; i++) {
@@ -436,6 +465,12 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
       ...(volume !== null && volume > 0 ? { volume } : undefined),
       ...(rowSymbol ? { symbol: rowSymbol } : undefined),
     });
+
+    // Track this candle's row index + CSV day key so we can later
+    // build a set of "today's rows" for S/R level extraction.
+    const d = new Date(time * 1000);
+    const dk = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+    candleRowInfo.push({ rowIndex: i, dayKey: dk });
   }
 
   // Collect all unique symbols (sorted) for the symbol-switcher dropdown.
@@ -487,8 +522,27 @@ export function parseBuffer(buffer: ArrayBuffer, filename: string): ParseResult 
   // value to display.
   const finalSymbols = symbols.length > 0 ? symbols : [symbol];
 
-  // Extract pre-computed S/R levels from columns J–O.
-  const userLevels = extractUserLevels(rows, headerStart);
+  // Extract pre-computed S/R levels from columns H–O.
+  //
+  // IMPORTANT: Only extract levels from TODAY's rows (the most recent
+  // CSV calendar day in the file). If today's rows don't have S/R
+  // values yet (user hasn't updated them), no levels are returned and
+  // NO lines are drawn on the chart. This prevents yesterday's stale
+  // levels from appearing on today's candles.
+  let todayRowIdxs: Set<number> | null = null;
+  if (dedup.length > 0) {
+    const lastCandle = dedup[dedup.length - 1];
+    const d = new Date(lastCandle.time * 1000);
+    const todayDayKey =
+      d.getUTCFullYear() * 10000 +
+      (d.getUTCMonth() + 1) * 100 +
+      d.getUTCDate();
+    todayRowIdxs = new Set<number>();
+    for (const info of candleRowInfo) {
+      if (info.dayKey === todayDayKey) todayRowIdxs.add(info.rowIndex);
+    }
+  }
+  const userLevels = extractUserLevels(rows, headerStart, todayRowIdxs);
 
   return {
     candles: dedup,
