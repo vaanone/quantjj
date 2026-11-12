@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { PanelRight, Maximize2, Minimize2 } from "lucide-react";
+import { PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -18,7 +18,6 @@ import { LevelsPanel } from "@/components/levels-panel";
 import { AlertButton } from "@/components/alert-button";
 import { PriceTicker } from "@/components/price-ticker";
 import { EconomicCalendar } from "@/components/economic-calendar";
-import { PushNotificationsButton } from "@/components/push-notifications-button";
 import { TradingVisualCard } from "@/components/trading-visual-card";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePriceAlerts } from "@/hooks/use-price-alerts";
@@ -78,32 +77,6 @@ export default function Home() {
   // Index 0 = first chart (uses the main selectedFile), 1-3 = additional charts.
   const [multiSymbols, setMultiSymbols] = useState<Record<number, string>>({});
   const isLg = useMediaQuery("(min-width: 1024px)", true);
-
-  // ---------- Fullscreen app-mode toggle ----------
-  // Tracks whether the document is currently in browser fullscreen mode
-  // (entered via document.documentElement.requestFullscreen). When true,
-  // the chart takes the entire screen with no browser chrome (address
-  // bar, tabs, etc.) — true "app mode".
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  useEffect(() => {
-    // Sync state if the user presses Esc or uses browser controls to
-    // exit fullscreen — we want the toggle button to reflect reality.
-    const onChange = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
-    };
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
-
-  const toggleFullscreen = useCallback(() => {
-    if (typeof document === "undefined") return;
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => { /* ignore */ });
-    } else if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(() => { /* ignore */ });
-    }
-  }, []);
 
   const handleLoaded = useCallback(
     (result: ParseResult, fileName: string) => {
@@ -511,27 +484,6 @@ export default function Home() {
             onLoadingChange={setChartLoading}
             compact
           />
-
-          {/* Push notifications toggle — registers a Web Push subscription
-              so price alerts and S/R level alerts fire as native phone
-              notifications even when the chart tab is closed. */}
-          <PushNotificationsButton />
-
-          {/* Fullscreen app-mode toggle — enters browser fullscreen so the
-              chart takes the entire screen with no address bar / tabs.
-              Click again (or press Esc) to exit. */}
-          <button
-            onClick={toggleFullscreen}
-            className="flex h-7 shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/5 p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:h-8"
-            title={isFullscreen ? "Exit Fullscreen (Esc)" : "Enter Fullscreen"}
-            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          >
-            {isFullscreen ? (
-              <Minimize2 className="h-3.5 w-3.5" />
-            ) : (
-              <Maximize2 className="h-3.5 w-3.5" />
-            )}
-          </button>
         </div>
       </header>
 
