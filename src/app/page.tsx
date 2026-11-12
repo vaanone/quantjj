@@ -591,7 +591,7 @@ export default function Home() {
         >
           {/* Disclaimer — left side, small font, single line */}
           <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
-            Daily Vaan.One Levels are updated manually every morning for educational and informational purposes only.
+            Disclaimer: This website is for educational purposes only. Trade at your own risk.
           </p>
           {/* Last Update timestamp — right side */}
           <div className="ml-auto flex items-center gap-3">
@@ -1367,7 +1367,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
           </a>
           {/* Right: disclaimer — hidden on small screens to save space */}
           <p className="hidden text-[9px] leading-tight text-white/30 md:block">
-            Daily Vaan Pivot Levels — educational &amp; informational only.
+            Disclaimer: This website is for educational purposes only. Trade at your own risk.
           </p>
         </div>
       </footer>
