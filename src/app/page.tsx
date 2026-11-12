@@ -1342,7 +1342,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
       </section>
 
       {/* ====== FOOTER (fixed at bottom — stable while page scrolls) ======
-          Compact single-row layout: logo + name | email | disclaimer | brand
+          Compact single-row layout: logo + name | email | disclaimer
           Reduced height (py-2 instead of py-8). Always visible while scrolling. */}
       <footer
         className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#0D141B]/95 backdrop-blur-md"
@@ -1365,12 +1365,10 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
           >
             valan@outlook.com
           </a>
-          {/* Middle-right: disclaimer — hidden on small screens to save space */}
+          {/* Right: disclaimer — hidden on small screens to save space */}
           <p className="hidden text-[9px] leading-tight text-white/30 md:block">
             Daily Vaan Pivot Levels — educational &amp; informational only.
           </p>
-          {/* Right: JJ TechHub brand */}
-          <p className="text-[10px] font-medium text-white/50">A JJ TechHub Product</p>
         </div>
       </footer>
     </div>
