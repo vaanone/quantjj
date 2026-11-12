@@ -487,54 +487,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ============================================================ TOOLBAR (top — secondary info strip) */}
-      {candles.length > 0 && (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-white/10 bg-[#0D141B] px-4 py-1.5 text-[11px] text-white/70">
-          {/* Disclaimer — left side, small font, single line */}
-          <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
-            Daily Vaan.One Levels are updated manually every morning for educational and informational purposes only.
-          </p>
-          {/* Last Update timestamp — right side */}
-          <div className="ml-auto flex items-center gap-3">
-            {lastUpdate && (
-              <div className="flex flex-col items-start leading-tight">
-                <span className="text-[9px] uppercase tracking-wider text-white/30">
-                  Last Update @
-                </span>
-                <span className="font-mono text-xs text-white/50">
-                  {formatLastUpdate(lastUpdate)}
-                </span>
-              </div>
-            )}
-          </div>
-          <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1.5 border-white/15 bg-white/5 px-2 text-[11px] text-white hover:bg-white/10 lg:hidden"
-              >
-                <PanelRight className="h-3.5 w-3.5" />
-                Levels
-                <Badge className="ml-1 h-4 px-1 text-[9px] font-mono">{top6Lines.length}</Badge>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[88vw] max-w-sm overflow-y-auto border-white/10 bg-[#0D141B] p-0 lg:hidden">
-              <SheetHeader className="border-b border-white/10 px-4 py-3">
-                <SheetTitle className="text-sm font-semibold text-white">
-                  Pivot Levels
-                </SheetTitle>
-              </SheetHeader>
-              <LevelsPanel
-                lines={top6Lines}
-                lastClose={lastClose}
-                symbol={symbolLabel}
-              />
-            </SheetContent>
-          </Sheet>
-        </div>
-      )}
-
       {/* ============================================================== BODY (chart) */}
       <main className="relative flex-1 overflow-hidden">
         {/* Full-screen loading overlay — shown ONLY on the very first load.
@@ -624,6 +576,64 @@ export default function Home() {
           />
         )}
       </main>
+
+      {/* ============================================================ BOTTOM BAR (Last Update + disclaimer + mobile Levels) */}
+      {candles.length > 0 && (
+        <div
+          className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-t border-white/10 bg-[#0D141B] px-4 py-1.5 text-[11px] text-white/70"
+          style={{
+            // Respect iOS safe-area (home indicator) at the bottom so the
+            // bottom bar isn't cut off when installed as a PWA / in app mode.
+            paddingBottom: "max(0.375rem, env(safe-area-inset-bottom))",
+            paddingLeft: "max(1rem, env(safe-area-inset-left))",
+            paddingRight: "max(1rem, env(safe-area-inset-right))",
+          }}
+        >
+          {/* Disclaimer — left side, small font, single line */}
+          <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
+            Daily Vaan.One Levels are updated manually every morning for educational and informational purposes only.
+          </p>
+          {/* Last Update timestamp — right side */}
+          <div className="ml-auto flex items-center gap-3">
+            {lastUpdate && (
+              <div className="flex flex-col items-start leading-tight">
+                <span className="text-[9px] uppercase tracking-wider text-white/30">
+                  Last Update @
+                </span>
+                <span className="font-mono text-xs text-white/50">
+                  {formatLastUpdate(lastUpdate)}
+                </span>
+              </div>
+            )}
+          </div>
+          <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 border-white/15 bg-white/5 px-2 text-[11px] text-white hover:bg-white/10 lg:hidden"
+              >
+                <PanelRight className="h-3.5 w-3.5" />
+                Levels
+                <Badge className="ml-1 h-4 px-1 text-[9px] font-mono">{top6Lines.length}</Badge>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[88vw] max-w-sm overflow-y-auto border-white/10 bg-[#0D141B] p-0 lg:hidden">
+              <SheetHeader className="border-b border-white/10 px-4 py-3">
+                <SheetTitle className="text-sm font-semibold text-white">
+                  Pivot Levels
+                </SheetTitle>
+              </SheetHeader>
+              <LevelsPanel
+                lines={top6Lines}
+                lastClose={lastClose}
+                symbol={symbolLabel}
+              />
+            </SheetContent>
+          </Sheet>
+        </div>
+      )}
+
     </div>
   );
 }
