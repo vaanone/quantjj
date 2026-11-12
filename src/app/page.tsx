@@ -939,7 +939,9 @@ function LoadingDots() {
 // ============================================================ LANDING PAGE
 function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart: () => void; xauusdCandles?: Candle[]; xauusdLevels?: UserLevel[] }) {
   return (
-    <div className="min-h-screen bg-[#070D12] text-white">
+    <div className="min-h-screen bg-[#070D12] text-white pb-12">
+      {/* pb-12 reserves space at the bottom so the fixed footer
+          doesn't overlap the last section's content. */}
       {/* ====== NAV ====== */}
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0D141B]/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
@@ -1339,24 +1341,36 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
         </div>
       </section>
 
-      {/* ====== FOOTER ====== */}
-      <footer className="border-t border-white/10 px-4 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 text-center">
+      {/* ====== FOOTER (fixed at bottom — stable while page scrolls) ======
+          Compact single-row layout: logo + name | email | disclaimer | brand
+          Reduced height (py-2 instead of py-8). Always visible while scrolling. */}
+      <footer
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#0D141B]/95 backdrop-blur-md"
+        style={{
+          // Respect iOS safe-area (home indicator) so the footer isn't
+          // cut off when installed as a PWA / in app mode.
+          paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
+        }}
+      >
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2 text-center sm:text-left">
+          {/* Left: logo + brand name */}
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Vaan.One" className="h-6 w-6 rounded-md object-contain" />
-            <span className="text-xs font-mono text-white/40">Vaan.One</span>
+            <img src="/logo.png" alt="Vaan.One" className="h-4 w-4 rounded object-contain" />
+            <span className="font-mono text-[10px] text-white/50">Vaan.One</span>
           </div>
+          {/* Middle-left: email */}
           <a
             href="mailto:valan@outlook.com"
-            className="text-xs text-[#75D380] transition-colors hover:text-[#75D380]"
+            className="text-[10px] text-[#75D380] transition-colors hover:text-[#75D380]"
           >
             valan@outlook.com
           </a>
-          <p className="text-[10px] text-white/30">
-            Daily Vaan Pivot Levels are updated manually every morning for educational and
-            informational purposes only.
+          {/* Middle-right: disclaimer — hidden on small screens to save space */}
+          <p className="hidden text-[9px] leading-tight text-white/30 md:block">
+            Daily Vaan Pivot Levels — educational &amp; informational only.
           </p>
-          <p className="text-[10px] font-medium text-white/40">A JJ TechHub Product</p>
+          {/* Right: JJ TechHub brand */}
+          <p className="text-[10px] font-medium text-white/50">A JJ TechHub Product</p>
         </div>
       </footer>
     </div>
