@@ -396,7 +396,12 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-[#070D12] text-white">
+    // h-dvh = 100dvh (dynamic viewport height). On mobile this adapts as the
+    // address bar shows/hides, so the header, chart, and bottom bar ALL stay
+    // visible with no clipping — unlike h-screen (100vh) which includes the
+    // area behind the address bar and pushes the bottom bar off-screen.
+    // Fallback to h-screen for any very old browser lacking dvh support.
+    <div className="flex h-dvh flex-col bg-[#070D12] text-white">
       {/* ============================================================= HEADER (top bar — logo, symbol, controls) */}
       <header
         className="flex items-center gap-2 border-b border-white/10 bg-[#0D141B] px-3 py-2"
