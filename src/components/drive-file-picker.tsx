@@ -35,6 +35,17 @@ interface DriveFile {
 // How often to poll the Drive folder for new files (ms).
 const POLL_INTERVAL = 30000; // 30 seconds
 
+// Load order: XAUUSD files first. The chart's default symbol is XAUUSD,
+// so fetching its CSV before the others means the app opens STRAIGHT into
+// the XAUUSD chart — no other symbol renders first and gets switched away
+// from a moment later. (The page also holds its loading overlay until the
+// XAUUSD file arrives, so the swap is never visible.)
+const isXauusdFile = (f: DriveFile) => /XAUUSD/i.test(f.name);
+const withXauusdFirst = (list: DriveFile[]): DriveFile[] => [
+  ...list.filter(isXauusdFile),
+  ...list.filter((f) => !isXauusdFile(f)),
+];
+
 export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compact = false }: DriveFilePickerProps) {
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [loadingList, setLoadingList] = useState(false);
@@ -175,8 +186,9 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
       hasAutoLoadedRef.current = true;
 
       // Load all files silently — the loading overlay handles the UX.
+      // XAUUSD goes first so the first chart shown is XAUUSD itself.
       setAutoLoading(true);
-      for (const file of fileList) {
+      for (const file of withXauusdFirst(fileList)) {
         if (cancelled) break;
         if (loadedIdsRef.current.has(file.id)) continue;
         await loadFile(file, true); // silent=true
@@ -214,9 +226,10 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
       }
 
       if (filesToLoad.length > 0) {
-        // Silent load — no toast, no loading overlay.
+        // Silent load — no toast, no loading overlay. XAUUSD first so an
+        // updated gold CSV applies to the chart as soon as possible.
         setAutoLoading(true);
-        for (const file of filesToLoad) {
+        for (const file of withXauusdFirst(filesToLoad)) {
           await loadFile(file, true); // silent=true
         }
         setAutoLoading(false);
@@ -235,7 +248,7 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
       toast.info("All files already loaded");
       return;
     }
-    await autoLoadAll(unloaded);
+    await autoLoadAll(withXauusdFirst(unloaded));
   }, [autoLoadAll]);
 
   // ====== Compact mode (header — refresh button only) ======

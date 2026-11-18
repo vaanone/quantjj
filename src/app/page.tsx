@@ -153,6 +153,17 @@ export default function Home() {
     };
   }, [isMobile, view]);
 
+  // Track whether the user has manually selected a file/symbol via the
+  // dropdown. Once true, auto-XAUUSD-default won't override their choice.
+  const userTouchedSelectionRef = useRef(false);
+  // Whether the XAUUSD file has arrived yet. The first-load overlay is
+  // held until it does, so opening the app goes STRAIGHT into the XAUUSD
+  // chart — another symbol never renders first and gets swapped away.
+  const sawXauusdRef = useRef(false);
+  // Whether ANY file has arrived — used by the fallback in
+  // handleLoadingChange for folders that contain no XAUUSD file at all.
+  const loadedAnyFileRef = useRef(false);
+
   const handleLoaded = useCallback(
     (result: ParseResult, fileName: string) => {
       const primarySymbol = result.symbol || result.symbols[0] || "";
@@ -169,26 +180,27 @@ export default function Home() {
         return next;
       });
 
-      // Default selected file = XAUUSD file (preferred) — fall back to the
-      // first file received. This is checked on every load so that once the
-      // XAUUSD CSV arrives (which may be later than other files), the chart
-      // automatically switches to it. After the user manually picks a
-      // different symbol/file via the dropdown, we don't override their
-      // choice — the initial setSelectedFile(prev => prev || ...) is a
-      // no-op once a selection has been made.
       const isXauusd = (result.symbols || []).some((s) =>
         s.toUpperCase().includes("XAU"),
       );
+      if (isXauusd) sawXauusdRef.current = true;
+      loadedAnyFileRef.current = true;
+
+      // Default selected file = XAUUSD file (preferred, and it is fetched
+      // first by DriveFilePicker so it normally IS the first to arrive) —
+      // fall back to the first file received for folders without XAUUSD.
+      // After the user manually picks a different symbol/file via the
+      // dropdown, we don't override their choice — the initial
+      // setSelectedFile(prev => prev || ...) is a no-op once a selection
+      // has been made.
       setSelectedFile((prev) => {
         // User already picked something — keep it.
         if (prev) return prev;
-        // First load — prefer XAUUSD if this is it, otherwise take it
-        // anyway and a later XAUUSD load will overwrite.
+        // First load — take it; if this isn't XAUUSD a later XAUUSD load
+        // will overwrite (only while the user hasn't picked manually).
         return fileName;
       });
-      // If XAUUSD arrives and nothing is selected yet, switch to it.
-      // (We do this as a second setState pass so the prev-check above
-      // has already populated an initial value if needed.)
+      // If XAUUSD arrives, switch to it.
       if (isXauusd) {
         setSelectedFile((prev) => {
           // If the user already has a non-XAUUSD file selected, switch to
@@ -197,16 +209,26 @@ export default function Home() {
           if (userTouchedSelectionRef.current) return prev;
           return fileName;
         });
+        // Reveal the chart ONLY once XAUUSD is what's on it. Dropping the
+        // overlay on the first file received (as before) let a different
+        // symbol flash in first, then visibly switch to XAUUSD.
+        setHasFirstLoad(true);
       }
-
-      setHasFirstLoad(true);
+      // Non-XAUUSD loads deliberately do NOT flip hasFirstLoad here — if
+      // XAUUSD never arrives, handleLoadingChange reveals the fallback.
     },
     [],
   );
 
-  // Track whether the user has manually selected a file/symbol via the
-  // dropdown. Once true, auto-XAUUSD-default won't override their choice.
-  const userTouchedSelectionRef = useRef(false);
+  // Loading-state gate: when ALL Drive loading finishes and no XAUUSD file
+  // was among the loaded files, reveal the chart with the fallback symbol
+  // instead of keeping the loading overlay up forever.
+  const handleLoadingChange = useCallback((isLoading: boolean) => {
+    setChartLoading(isLoading);
+    if (!isLoading && loadedAnyFileRef.current && !sawXauusdRef.current) {
+      setHasFirstLoad(true);
+    }
+  }, []);
 
   const currentFile = files.get(selectedFile);
   const currentResult = currentFile?.result;
@@ -563,7 +585,7 @@ export default function Home() {
           <DriveFilePicker
             onLoaded={handleLoaded}
             onLastUpdate={setLastUpdate}
-            onLoadingChange={setChartLoading}
+            onLoadingChange={handleLoadingChange}
             compact
           />
 
