@@ -47,29 +47,21 @@ const COLORS = {
   support: "#ef4444",    // red — solid line
 };
 
-// --- Responsive bar spacing ----------------------------------------------
-// The chart forces a fixed bar spacing, which — on a narrow phone canvas
-// (~330px) — meant only ~25 candles fit on screen while a wide PC canvas
-// (~990px) fit ~80. Since the day-break (period separator) vertical lines
-// are drawn at fixed candle positions, the two devices showed DIFFERENT
-// day-break lines (the morning day-break visible on PC was off-screen on
-// mobile).
+// --- Identical viewport on every device ------------------------------------
+// The day-break (period separator) vertical lines are anchored to candle
+// times. If devices show DIFFERENT numbers of candles (e.g. ~68 on a PC pane
+// vs ~61 on a phone pane), the same line lands at a different relative
+// position on each screen — which looked like the line was "in a different
+// place" on mobile vs PC.
 //
-// To make the SAME day-break lines appear on mobile as on PC, we shrink
-// the bar spacing on narrow screens so the phone shows roughly the SAME
-// number of candles as PC. PC (>= 800px) keeps its readable 12px bars
-// unchanged ("use the PC version"); phones use a smaller spacing so ~80
-// candles (and therefore the same day-break lines) fit.
-const PC_BAR_SPACING = 12;
-const MIN_BAR_SPACING = 4;
-const TARGET_BARS = 80; // ~what PC shows at 12px in a ~960px canvas
-const DESKTOP_WIDTH_THRESHOLD = 800;
-
-function responsiveBarSpacing(width: number): number {
-  if (width >= DESKTOP_WIDTH_THRESHOLD) return PC_BAR_SPACING;
-  const computed = Math.floor(width / TARGET_BARS);
-  return Math.max(MIN_BAR_SPACING, Math.min(PC_BAR_SPACING, computed));
-}
+// Fix: instead of guessing a per-width barSpacing, we pin the EXACT logical
+// range — the same fixed number of candles (plus right offset) on every
+// device. The chart derives barSpacing from that range (990px pane ≈ 12px
+// bars — the existing PC look; a 332px phone pane ≈ 4px bars), so every
+// screen shows the identical candle window and the day-break lines sit at
+// the identical spot. PC's appearance is unchanged.
+const VISIBLE_BARS = 80; // ~what PC showed at 12px in a ~990px pane
+const RIGHT_OFFSET = 3;  // empty bars right of the last candle
 
 export function TradingChart({
   candles,
@@ -135,12 +127,16 @@ export function TradingChart({
         // candle and the right edge of the chart. Keep it at 3 bars so
         // the latest candle has just enough breathing room for the price
         // line label, without wasting chart canvas on empty space.
-        rightOffset: 3,
+        rightOffset: RIGHT_OFFSET,
         timeVisible: true,
         secondsVisible: false,
-        // Bar Spacing – horizontal distance between candles (wider = fewer candles visible)
+        // Bar Spacing – horizontal distance between candles (wider = fewer candles visible).
+        // Initial value only — once data loads we pin an exact logical range
+        // (VISIBLE_BARS) which derives the real spacing per device.
         barSpacing: 12,
-        minBarSpacing: 4,
+        // Allow bars to get thin enough that the fixed 80-bar window fits a
+        // narrow phone pane (~330px) without the range being clamped.
+        minBarSpacing: 2,
         // Draw a vertical separator line at each day boundary.
         ticksVisible: true,
         tickMarkFormatter: (time: number, tickMarkType: number) => {
@@ -256,16 +252,21 @@ export function TradingChart({
     // Resize observer ------------------------------------------------------
     const resize = () => {
       if (containerRef.current && chartRef.current) {
-        const w = containerRef.current.clientWidth;
         chartRef.current.applyOptions({
-          width: w,
+          width: containerRef.current.clientWidth,
           height: containerRef.current.clientHeight,
         });
-        // Re-apply responsive bar spacing on every resize (including
-        // device rotation) so the day-break lines stay consistent with PC.
-        chartRef.current.timeScale().applyOptions({
-          barSpacing: responsiveBarSpacing(w),
-        });
+        // Re-assert the CURRENT logical range after a size change. Without
+        // this, a wider/narrower pane keeps the bar spacing and silently
+        // changes HOW MANY candles are visible — which would move the
+        // day-break lines to a different relative position per device.
+        // Re-applying the same range keeps the same candles on screen and
+        // just re-derives the bar spacing for the new width.
+        const ts = chartRef.current.timeScale();
+        const range = ts.getVisibleLogicalRange();
+        if (range) {
+          ts.setVisibleLogicalRange(range);
+        }
       }
     };
     const ro = new ResizeObserver(resize);
@@ -417,33 +418,26 @@ export function TradingChart({
       }
     }
 
-    // First fit ALL content (resets both time + price scales), then zoom
-    // the time axis to show only the last N candles.
-    chartRef.current.timeScale().fitContent();
-
-    // Set the visible range to show only the last `visibleCount` candles.
-    if (visibleCount && visibleCount < candles.length) {
-      const fromIdx = candles.length - visibleCount;
-      const fromTime = candles[fromIdx].time as UTCTimestamp;
-      const toTime = candles[candles.length - 1].time as UTCTimestamp;
-      chartRef.current.timeScale().setVisibleRange({ from: fromTime, to: toTime });
-    }
-
-    // Re-apply rightOffset + barSpacing AFTER setVisibleRange.
-    // The fitContent() + setVisibleRange() calls above can reset the
-    // chart's barSpacing (e.g. fitContent shrinks it to fit ALL candles),
-    // which makes the rightOffset (measured in BARS) translate to a tiny
-    // pixel gap — way less than 3 candle widths visually.
+    // Pin the viewport to an EXACT logical range: the last VISIBLE_BARS
+    // candles plus RIGHT_OFFSET empty slots. Every device — PC, tablet,
+    // phone — therefore shows the IDENTICAL candle window (only the px per
+    // bar differs), so the day-break vertical lines land at the exact same
+    // relative position everywhere. This replaces the old sequence
+    // (fitContent → setVisibleRange by time → re-apply barSpacing), which
+    // anchored imprecisely and showed a different number of candles per
+    // device width.
     //
-    // By re-applying rightOffset=3 AND a responsive barSpacing here, we
-    // guarantee the chart always shows the last candle with ~3 candle
-    // widths of empty space to its right, regardless of how the prior
-    // calls manipulated the time scale. The barSpacing is responsive so
-    // mobile shows ~the same candle count (and day-break lines) as PC.
-    const containerWidth = containerRef.current?.clientWidth ?? 1000;
-    chartRef.current.timeScale().applyOptions({
-      rightOffset: 3,
-      barSpacing: responsiveBarSpacing(containerWidth),
+    // The LAST-N selector can only shrink the window (e.g. a future "LAST
+    // 50"), never grow it beyond VISIBLE_BARS, so the PC look stays fixed.
+    const targetBars = Math.min(visibleCount ?? VISIBLE_BARS, VISIBLE_BARS);
+    // Each day-sep series injects one extra time point (t - eps) into the
+    // shared time scale, so logical indices run past the candle count.
+    // Anchor the range on the TRUE last point, or the window sits a few
+    // slots off and the last candle gets clipped at the right edge.
+    const lastLogical = candles.length - 1 + dayBoundaryTimes.length;
+    chartRef.current.timeScale().setVisibleLogicalRange({
+      from: lastLogical - targetBars - RIGHT_OFFSET,
+      to: lastLogical + RIGHT_OFFSET,
     });
   }, [candles, visibleCount, timeframe]);
 
