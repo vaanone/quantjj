@@ -500,7 +500,7 @@ export default function Home() {
           {/* Symbol dropdown — only shown in single-chart mode */}
           {activeSymbolValue && chartLayout === 1 && (
             <Select value={dropdownValue} onValueChange={handleDropdownChange}>
-              <SelectTrigger className="h-7 w-auto min-w-[70px] max-w-[120px] gap-1 border-white/15 bg-white/5 px-1.5 font-mono text-xs font-bold tracking-wide text-white hover:bg-white/10 sm:h-8 sm:min-w-[110px] sm:max-w-[220px] sm:px-2 sm:text-sm">
+              <SelectTrigger className="h-7 w-auto min-w-[80px] max-w-[170px] gap-1 border-white/15 bg-white/5 px-1.5 font-mono text-xs font-bold tracking-wide text-white hover:bg-white/10 sm:h-8 sm:min-w-[110px] sm:max-w-[220px] sm:px-2 sm:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="max-h-72 border-white/15 bg-[#15161d] text-white">
@@ -915,7 +915,7 @@ function ChartSlot({
           value={symbol}
           onValueChange={(v) => onSymbolChange(slot, v)}
         >
-          <SelectTrigger className="h-6 w-auto min-w-[60px] max-w-[100px] gap-1 border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-bold text-white hover:bg-white/10">
+          <SelectTrigger className="h-6 w-auto min-w-[70px] max-w-[150px] gap-1 border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-bold text-white hover:bg-white/10">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="max-h-60 border-white/15 bg-[#15161d] text-white">
