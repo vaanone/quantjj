@@ -424,7 +424,7 @@ export default function Home() {
         {/* App name — hidden on mobile to save space */}
         <div className="hidden shrink-0 sm:block">
           <h1 className="text-sm font-semibold leading-tight">Vaan.One</h1>
-          <p className="text-[10px] leading-tight text-white/40">Vaan Pivot - A JJ TechHub Product</p>
+          <p className="text-[10px] leading-tight text-white/70">Vaan Pivot - A JJ TechHub Product</p>
         </div>
         </button>
 
@@ -695,17 +695,17 @@ export default function Home() {
           }}
         >
           {/* Disclaimer — left side, small font, single line */}
-          <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/30 sm:block">
+          <p className="hidden whitespace-nowrap text-[10px] leading-tight text-white/60 sm:block">
             Disclaimer: This website is for educational purposes only. Trade at your own risk.
           </p>
           {/* Last Update timestamp — right side */}
           <div className="ml-auto flex items-center gap-3">
             {lastUpdate && (
               <div className="flex flex-col items-start leading-tight">
-                <span className="text-[9px] uppercase tracking-wider text-white/30">
+                <span className="text-[9px] uppercase tracking-wider text-white/60">
                   Last Update @
                 </span>
-                <span className="font-mono text-xs text-white/50">
+                <span className="font-mono text-xs text-white/85">
                   {formatLastUpdate(lastUpdate)}
                 </span>
               </div>
@@ -787,7 +787,7 @@ function ChartArea({
       {/* Pivot line update timestamp — bottom-left of chart */}
       {lastUpdate && (
         <div className="pointer-events-none absolute bottom-8 left-3 select-none">
-          <span className="font-mono text-[10px] text-white/40">
+          <span className="font-mono text-[10px] text-white/65">
             Vaan.One Pivot line Updated at {formatLastUpdate(lastUpdate)}
           </span>
         </div>
@@ -1054,7 +1054,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             <img src="/logo.png" alt="Vaan.One" className="h-10 w-10 rounded-md object-contain" />
             <div>
               <h1 className="text-base font-bold leading-tight">Vaan.One</h1>
-              <p className="text-[11px] leading-tight text-white/40">Vaan Pivot - A JJ TechHub Product</p>
+              <p className="text-[11px] leading-tight text-white/70">Vaan Pivot - A JJ TechHub Product</p>
             </div>
           </div>
           <div className="flex items-center gap-6">
@@ -1471,7 +1471,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             valan@outlook.com
           </a>
           {/* Right: disclaimer — hidden on small screens to save space */}
-          <p className="hidden text-[9px] leading-tight text-white/30 md:block">
+          <p className="hidden text-[9px] leading-tight text-white/60 md:block">
             Disclaimer: This website is for educational purposes only. Trade at your own risk.
           </p>
         </div>

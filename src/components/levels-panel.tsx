@@ -93,7 +93,7 @@ export function LevelsPanel({ lines, lastClose, symbol }: LevelsPanelProps) {
         )}
       </section>
 
-      <p className="text-[10px] leading-relaxed text-white/30">
+      <p className="text-[10px] leading-relaxed text-white/60">
         Showing only the 3 nearest resistances (green) and 3 nearest supports (red) to the
         current price. Tier I is the closest, III is the farthest.
       </p>
