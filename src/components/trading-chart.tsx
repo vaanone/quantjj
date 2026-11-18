@@ -114,9 +114,15 @@ export function TradingChart({
         rightOffset: 3,
         timeVisible: true,
         secondsVisible: false,
-        // Bar Spacing – horizontal distance between candles (wider = fewer candles visible)
+        // Bar Spacing – horizontal distance between candles. Set as an initial
+        // default only; the effect below uses setVisibleLogicalRange to fit the
+        // last `visibleCount` candles to the container width, which makes
+        // lightweight-charts auto-compute the real barSpacing (wider on desktop,
+        // thinner on mobile) so BOTH devices show the SAME candle range and the
+        // SAME day-break lines. minBarSpacing is set low so 100 candles can fit
+        // even on a narrow phone (e.g. 332px / 103 ≈ 3.2px per bar).
         barSpacing: 12,
-        minBarSpacing: 4,
+        minBarSpacing: 2,
         // Draw a vertical separator line at each day boundary.
         ticksVisible: true,
         tickMarkFormatter: (time: number, tickMarkType: number) => {
@@ -387,32 +393,36 @@ export function TradingChart({
       }
     }
 
-    // First fit ALL content (resets both time + price scales), then zoom
-    // the time axis to show only the last N candles.
-    chartRef.current.timeScale().fitContent();
-
-    // Set the visible range to show only the last `visibleCount` candles.
+    // Show the last `visibleCount` candles, fitted to the container width.
+    //
+    // We use setVisibleLogicalRange (bar-index based) instead of forcing a
+    // fixed barSpacing. A fixed barSpacing (the previous approach) meant a
+    // wide desktop canvas (~990px) showed ~80 bars while a narrow phone
+    // (~330px) showed only ~25 — so completely different day-break lines
+    // were in view on each device.
+    //
+    // setVisibleLogicalRange tells lightweight-charts "show exactly these N
+    // bars"; the library then auto-computes barSpacing = containerWidth /
+    // (visibleCount + rightOffset). Bars are wider on desktop and thinner on
+    // mobile, but the VISIBLE CONTENT (and therefore the day-break lines) is
+    // identical across devices. rightOffset (3, set in createChart options)
+    // keeps 3 bars of empty space to the right of the last candle.
+    //
+    // On container resize (ResizeObserver -> applyOptions width), the chart
+    // preserves this logical range and just re-fits barSpacing, so rotating
+    // the device keeps the same candles (and day breaks) visible.
     if (visibleCount && visibleCount < candles.length) {
       const fromIdx = candles.length - visibleCount;
-      const fromTime = candles[fromIdx].time as UTCTimestamp;
-      const toTime = candles[candles.length - 1].time as UTCTimestamp;
-      chartRef.current.timeScale().setVisibleRange({ from: fromTime, to: toTime });
+      chartRef.current.timeScale().setVisibleLogicalRange({
+        from: fromIdx,
+        to: candles.length - 1,
+      });
+    } else {
+      // Fewer candles than the visible cap — show everything.
+      chartRef.current.timeScale().fitContent();
     }
-
-    // Re-apply rightOffset + barSpacing AFTER setVisibleRange.
-    // The fitContent() + setVisibleRange() calls above can reset the
-    // chart's barSpacing (e.g. fitContent shrinks it to fit ALL candles),
-    // which makes the rightOffset (measured in BARS) translate to a tiny
-    // pixel gap — way less than 3 candle widths visually.
-    //
-    // By re-applying rightOffset=3 AND barSpacing=12 here, we guarantee
-    // the chart always shows the last candle with ~3 candle widths of
-    // empty space to its right, regardless of how the prior calls
-    // manipulated the time scale.
-    chartRef.current.timeScale().applyOptions({
-      rightOffset: 3,
-      barSpacing: 12,
-    });
+    // NOTE: do NOT re-apply a fixed barSpacing here — that would override
+    // the fit and reintroduce the desktop/mobile day-break mismatch.
   }, [candles, visibleCount, timeframe]);
 
   // -- Update S/R price lines (only the top-6: R I/II/III + S I/II/III) -----
