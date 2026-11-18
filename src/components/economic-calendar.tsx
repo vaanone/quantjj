@@ -114,8 +114,8 @@ export function EconomicCalendar() {
           <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#75D380]">
             Economic Calendar
           </span>
-          <span className="font-mono text-[10px] text-white/40">·</span>
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">
+          <span className="font-mono text-[10px] text-white/60">·</span>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-white/65">
             US 3 ★ High Impact
           </span>
         </div>
@@ -125,7 +125,7 @@ export function EconomicCalendar() {
               {todayCount} TODAY
             </span>
           )}
-          <span className="font-mono text-[10px] text-white/30">
+          <span className="font-mono text-[10px] text-white/60">
             IST · Source: Forex Factory
           </span>
         </div>
@@ -188,15 +188,15 @@ export function EconomicCalendar() {
 
                 {/* Forecast / Previous */}
                 <div className="mt-0.5 flex items-center gap-3 font-mono text-[10px]">
-                  <span className="text-white/40">
+                  <span className="text-white/60">
                     F:{" "}
                     <span className={e.forecast ? "text-[#75D380]" : "text-white/30"}>
                       {e.forecast || "—"}
                     </span>
                   </span>
-                  <span className="text-white/40">
+                  <span className="text-white/60">
                     P:{" "}
-                    <span className={e.previous ? "text-white/70" : "text-white/30"}>
+                    <span className={e.previous ? "text-white/80" : "text-white/30"}>
                       {e.previous || "—"}
                     </span>
                   </span>
@@ -207,7 +207,7 @@ export function EconomicCalendar() {
 
           {/* Trailing helper chip — hidden on mobile, full-width row instead */}
           <div className="flex min-w-[140px] items-center justify-center rounded-md border border-dashed border-white/10 px-3 py-2 sm:flex">
-            <span className="font-mono text-[10px] text-white/30">
+            <span className="font-mono text-[10px] text-white/60">
               {events.length} today
             </span>
           </div>
