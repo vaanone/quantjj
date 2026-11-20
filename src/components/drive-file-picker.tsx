@@ -74,17 +74,18 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
     onLoadingChange?.(loadingList || autoLoading);
   }, [loadingList, autoLoading, onLoadingChange]);
 
-  // Fetch the list of CSV files from our API route.
+  // Fetch the list of CSV files from our API route (Amazon VPS when
+  // CSV_BASE_URL is configured server-side, Google Drive as a fallback).
   const fetchFiles = useCallback(async (silent = false) => {
     if (!silent) setLoadingList(true);
     setError(null);
     try {
-      const res = await fetch("/api/drive-files");
+      const res = await fetch("/api/csv-files");
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Failed to fetch files");
         if (compact && !silent) {
-          toast.error("Drive API not configured", {
+          toast.error("CSV source not configured", {
             description: data.error?.slice(0, 120),
           });
         }
@@ -118,7 +119,7 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
       setLoadingFile(file.id);
       try {
         const res = await fetch(
-          `/api/drive-file?id=${file.id}&name=${encodeURIComponent(file.name)}`,
+          `/api/csv-file?name=${encodeURIComponent(file.name)}&id=${encodeURIComponent(file.id)}`,
         );
         if (!res.ok) {
           const data = await res.json().catch(() => ({ error: "Download failed" }));
