@@ -82,6 +82,9 @@ export function TradingChart({
   // whenever candles change. Stored as an array so we can remove them all
   // on cleanup / refresh.
   const daySepSeriesRef = useRef<ISeriesApi<"Line">[]>([]);
+  // S/R line series — one horizontal segment per level, scoped to today's
+  // bars only (not full-chart-width). Recreated on lines/candles change.
+  const srSeriesRef = useRef<ISeriesApi<"Line">[]>([]);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   // -- Create chart once -----------------------------------------------------
@@ -281,6 +284,7 @@ export function TradingChart({
       candleSeriesRef.current = null;
       priceLinesRef.current = [];
       daySepSeriesRef.current = [];
+      srSeriesRef.current = [];
     };
   }, []);
 
@@ -441,27 +445,66 @@ export function TradingChart({
     });
   }, [candles, visibleCount, timeframe]);
 
-  // -- Update S/R price lines (only the top-6: R I/II/III + S I/II/III) -----
+  // -- Update S/R lines (top-6: R I/II/III + S I/II/III) -------------------
+  // Drawn as day-bounded horizontal segments spanning ONLY today's bars
+  // (the most recent CSV calendar day in the file), NOT full-chart-width.
+  // At each day open the segment resets to the new day's first bar, and
+  // until the user populates today's S/R columns (H-O) `lines` is empty so
+  // nothing draws — matching the "reset on day open, wait until I update
+  // the range, then show for the full day" workflow.
   useEffect(() => {
-    if (!candleSeriesRef.current) return;
+    if (!chartRef.current) return;
 
-    for (const line of priceLinesRef.current) {
-      candleSeriesRef.current.removePriceLine(line);
+    // Remove previous S/R series (on lines/candles change or symbol switch).
+    for (const s of srSeriesRef.current) {
+      chartRef.current.removeSeries(s);
     }
-    priceLinesRef.current = [];
+    srSeriesRef.current = [];
 
-    lines.forEach((srLine) => {
-      const line = candleSeriesRef.current!.createPriceLine({
-        price: srLine.price,
+    if (lines.length === 0 || candles.length === 0) return;
+
+    // Today = the calendar day of the most recent bar (CSV/broker time,
+    // since timestamps were parsed as UTC from the CSV date string).
+    const lastCandle = candles[candles.length - 1];
+    const ld = new Date(lastCandle.time * 1000);
+    const todayKey =
+      ld.getUTCFullYear() * 10000 + (ld.getUTCMonth() + 1) * 100 + ld.getUTCDate();
+    let dayStart = lastCandle.time;
+    let dayEnd = lastCandle.time;
+    for (const c of candles) {
+      const cd = new Date(c.time * 1000);
+      const ck =
+        cd.getUTCFullYear() * 10000 + (cd.getUTCMonth() + 1) * 100 + cd.getUTCDate();
+      if (ck === todayKey) {
+        if (c.time < dayStart) dayStart = c.time;
+        if (c.time > dayEnd) dayEnd = c.time;
+      }
+    }
+    // If today has only one bar so far, extend the end by one timeframe so a
+    // visible segment still draws.
+    const tfSec = timeframe?.seconds ?? 3600;
+    if (dayEnd <= dayStart) dayEnd = dayStart + tfSec;
+
+    for (const srLine of lines) {
+      // priceLineVisible: false — a series price line is full-chart-width in
+      // v5, which would defeat the day-bounding. The 2-point segment carries
+      // the line; lastValueVisible keeps a label on the right price axis.
+      const series = chartRef.current.addSeries(LineSeries, {
         color: srLine.type === "resistance" ? COLORS.resistance : COLORS.support,
         lineWidth: 1,
         lineStyle: LineStyle.Solid,
-        axisLabelVisible: true, // show label on price scale (right side)
-        title: srLine.label, // "RI", "SI", "RII", ...
+        crosshairMarkerVisible: false,
+        lastValueVisible: true,
+        priceLineVisible: false,
+        title: srLine.label,
       });
-      priceLinesRef.current.push(line);
-    });
-  }, [lines]);
+      series.setData([
+        { time: dayStart as UTCTimestamp, value: srLine.price },
+        { time: dayEnd as UTCTimestamp, value: srLine.price },
+      ] as any);
+      srSeriesRef.current.push(series);
+    }
+  }, [lines, candles, timeframe]);
 
   // -- Update alert price lines (dashed, orange/gray for triggered) ----------
   useEffect(() => {
