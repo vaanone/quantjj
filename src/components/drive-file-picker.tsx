@@ -32,8 +32,8 @@ interface DriveFile {
   modifiedTime?: string | null;
 }
 
-// How often to poll the Drive folder for new files (ms).
-const POLL_INTERVAL = 30000; // 30 seconds
+// How often to poll for new/updated CSV files (ms).
+const POLL_INTERVAL = 60000; // 1 minute
 
 // Load order: XAUUSD files first. The chart's default symbol is XAUUSD,
 // so fetching its CSV before the others means the app opens STRAIGHT into
@@ -56,7 +56,7 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
   // Manual-loading state — set ONLY when the user clicks the refresh button
   // (or other user-initiated actions). The compact button's spinner shows
   // when this is true, NOT when `autoLoading` is true, so background
-  // 30-second polling stays completely silent (no spinner animation).
+  // 1-minute polling stays completely silent (no spinner animation).
   const [manualLoading, setManualLoading] = useState(false);
   // Track whether we've done the initial auto-load so we don't repeat it.
   const hasAutoLoadedRef = useRef(false);
@@ -115,11 +115,12 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
   // Download and parse a single file. Returns true on success.
   // `silent` suppresses toast notifications (used during initial auto-load).
   const loadFile = useCallback(
-    async (file: DriveFile, silent = false): Promise<boolean> => {
+    async (file: DriveFile, silent = false, opts?: { forceFresh?: boolean }): Promise<boolean> => {
       setLoadingFile(file.id);
       try {
+        const forceFreshQs = opts?.forceFresh ? "&forceFresh=1" : "";
         const res = await fetch(
-          `/api/csv-file?name=${encodeURIComponent(file.name)}&id=${encodeURIComponent(file.id)}`,
+          `/api/csv-file?name=${encodeURIComponent(file.name)}&id=${encodeURIComponent(file.id)}${forceFreshQs}`,
         );
         if (!res.ok) {
           const data = await res.json().catch(() => ({ error: "Download failed" }));
@@ -184,6 +185,13 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
     (async () => {
       const fileList = await fetchFiles();
       if (cancelled || fileList.length === 0) return;
+      // Seed the baseline modifiedTime per file so the FIRST poll (60s in) can
+      // detect updates. Without this modifiedTimesRef starts empty, the first
+      // poll sees prevTime=undefined for every file, and any change in the
+      // first minute after mount is missed until the next change.
+      for (const f of fileList) {
+        if (f.modifiedTime) modifiedTimesRef.current[f.id] = f.modifiedTime;
+      }
       hasAutoLoadedRef.current = true;
 
       // Load all files silently — the loading overlay handles the UX.
@@ -229,9 +237,13 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
       if (filesToLoad.length > 0) {
         // Silent load — no toast, no loading overlay. XAUUSD first so an
         // updated gold CSV applies to the chart as soon as possible.
+        // forceFresh bypasses the 10-min VPS content cache: the poll already
+        // confirmed modifiedTime changed, so we MUST re-download the actual
+        // bytes rather than serve the stale cached copy (which was the bug —
+        // the chart never refreshed until a manual re-launch).
         setAutoLoading(true);
         for (const file of withXauusdFirst(filesToLoad)) {
-          await loadFile(file, true); // silent=true
+          await loadFile(file, true, { forceFresh: true }); // silent, bypass cache
         }
         setAutoLoading(false);
       }
@@ -258,9 +270,9 @@ export function DriveFilePicker({ onLoaded, onLastUpdate, onLoadingChange, compa
   // for when the user wants to force a re-fetch + re-load immediately.
   //
   // IMPORTANT: The spinner shows ONLY when the user has clicked this button
-  // (manualLoading). The 30-second background polling (autoLoading) is
+  // (manualLoading). The 1-minute background polling (autoLoading) is
   // completely silent — no spinner, no animation, no disabled state — so
-  // users don't see the chart "flicker" every 30 seconds.
+  // users don't see the chart "flicker" every minute.
   if (compact) {
     return (
       <Button
