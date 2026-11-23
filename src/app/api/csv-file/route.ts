@@ -7,8 +7,12 @@ export const dynamic = "force-dynamic";
 // CSV_BASE_URL is set, otherwise Google Drive).
 //
 // Query params:
-//   name — the CSV file name (required for VPS; also used for display).
-//   id   — the Drive file ID (only used by the Drive fallback).
+//   name       — the CSV file name (required for VPS; also used for display).
+//   id         — the Drive file ID (only used by the Drive fallback).
+//   forceFresh — "1" to bypass the in-memory cache and re-download from the
+//                source. Used by the polling loop after it detected a
+//                modifiedTime change, so an updated CSV is actually fetched
+//                instead of serving the stale cached copy.
 //
 // Serves from an in-memory cache first, then the source, with a stale-cache
 // fallback so the chart stays usable if the VPS is briefly unreachable.
@@ -16,8 +20,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const name = searchParams.get("name") || "unknown.csv";
   const id = searchParams.get("id") || name; // VPS: id == name; Drive: real id
+  const forceFresh = searchParams.get("forceFresh") === "1";
 
-  const result = await fetchFile({ id, name });
+  const result = await fetchFile({ id, name }, { forceFresh });
 
   if ("error" in result) {
     return NextResponse.json(
