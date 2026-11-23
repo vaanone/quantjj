@@ -28,7 +28,7 @@
 //      `python3 -m http.server`) — parse <a href="*.csv"> links.
 //
 // ---- modifiedTime ----
-//   Used by the 30-second polling loop to detect updated files. We fetch it
+//   Used by the 1-minute polling loop to detect updated files. We fetch it
 //   via a HEAD request (`Last-Modified` header) per file when the listing
 //   itself doesn't carry it. With only a handful of files this is cheap.
 // =============================================================================
@@ -214,10 +214,17 @@ function looksLikeCsv(text: string): boolean {
   return firstLine.includes(",") && !firstLine.includes("<");
 }
 
-async function fetchVpsFile(name: string): Promise<{ content: string; status: "HIT" | "MISS" | "STALE" } | { error: string }> {
-  // 1. Fresh cache hit.
-  const cached = vpsGetCached(name);
-  if (cached) return { content: cached, status: "HIT" };
+async function fetchVpsFile(
+  name: string,
+  opts?: { forceFresh?: boolean },
+): Promise<{ content: string; status: "HIT" | "MISS" | "STALE" } | { error: string }> {
+  // 1. Fresh cache hit — skipped when the caller forces a fresh download
+  //    (the polling loop does this once it has confirmed modifiedTime changed,
+  //    so we re-fetch the actual bytes instead of serving a stale cached copy).
+  if (!opts?.forceFresh) {
+    const cached = vpsGetCached(name);
+    if (cached) return { content: cached, status: "HIT" };
+  }
 
   // 2. Fetch from VPS.
   const url = `${VPS_BASE}/${encodeURIComponent(name)}`;
@@ -312,9 +319,15 @@ async function driveFetchDirect(fileId: string): Promise<string | null> {
     return null;
   }
 }
-async function fetchDriveFile(id: string): Promise<{ content: string; status: "HIT" | "MISS" | "STALE" } | { error: string }> {
-  const cached = driveGetCached(id);
-  if (cached) return { content: cached, status: "HIT" };
+async function fetchDriveFile(
+  id: string,
+  opts?: { forceFresh?: boolean },
+): Promise<{ content: string; status: "HIT" | "MISS" | "STALE" } | { error: string }> {
+  // Skip cache when the caller forces a fresh download (see fetchVpsFile).
+  if (!opts?.forceFresh) {
+    const cached = driveGetCached(id);
+    if (cached) return { content: cached, status: "HIT" };
+  }
   let content = await driveFetchAlt(id);
   if (content === null) content = await driveFetchDirect(id);
   if (content === null) {
@@ -335,6 +348,7 @@ export async function listFiles(): Promise<{ files: CsvFile[]; error?: string }>
 
 export async function fetchFile(
   file: { id: string; name: string },
+  opts?: { forceFresh?: boolean },
 ): Promise<{ content: string; status: "HIT" | "MISS" | "STALE" } | { error: string }> {
-  return useVps() ? fetchVpsFile(file.name) : fetchDriveFile(file.id);
+  return useVps() ? fetchVpsFile(file.name, opts) : fetchDriveFile(file.id, opts);
 }
