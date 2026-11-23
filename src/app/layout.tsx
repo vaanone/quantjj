@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Inter } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -71,6 +72,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        {/* Google Analytics — Google tag for container G-H71WV7PKE7.
+            Placed once in the root layout so it is present on every route
+            (no per-page duplication, per Google's "one Google tag per page"
+            rule). next/script with strategy="afterInteractive" defers loading
+            until after hydration, so analytics never blocks first paint. */}
+        <Script
+          src="https://www.googletagmanager.com/gtm.js?id=G-H71WV7PKE7"
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+          `}
+        </Script>
+      </head>
       <body
         className={`${inter.variable} ${geistMono.variable} antialiased`}
         style={{ backgroundColor: "#070D12", color: "#EFF3F3" }}
