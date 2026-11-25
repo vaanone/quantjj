@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { PanelRight, Maximize2, Minimize2 } from "lucide-react";
+import { PanelRight, Maximize2, Minimize2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -1489,9 +1489,10 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
           <div className="flex items-center gap-2">
             <a
               href="mailto:valan@outlook.com"
-              className="text-[10px] text-[#75D380] transition-colors hover:text-[#75D380]"
+              aria-label="Email valan@outlook.com"
+              className="text-white/50 transition-colors hover:text-[#75D380]"
             >
-              valan@outlook.com
+              <Mail className="h-4 w-4" aria-hidden="true" />
             </a>
             {/* Telegram channel — logo only; click opens the channel in a new
                 tab. Inline SVG because lucide-react ships no Telegram glyph. */}
