@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
 const YAHOO_SYMBOLS: Record<string, string> = {
-  XAUUSD: "GC=F",
   EURUSD: "EURUSD=X",
   GBPUSD: "GBPUSD=X",
   USDCHF: "USDCHF=X",
