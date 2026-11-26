@@ -400,21 +400,21 @@ export default function Home() {
     return data.symbol;
   };
 
-  // Find XAUUSD candles + S/R levels from loaded files for the landing page visual.
-  const xauusdData = (() => {
+  // Landing-page visual: use the first loaded file's candles + S/R levels.
+  // (Was XAUUSD-specific; generalized once XAUUSD was retired from the app.)
+  const landingData = (() => {
     for (const [, loaded] of files) {
-      if (loaded.result.symbols.some((s) => s.toUpperCase().includes("XAU"))) {
-        return {
-          candles: loaded.result.candles.slice(-200),
-          userLevels: loaded.result.userLevels ?? [],
-        };
-      }
+      return {
+        symbol: loaded.result.symbol || loaded.result.symbols[0] || "",
+        candles: loaded.result.candles.slice(-200),
+        userLevels: loaded.result.userLevels ?? [],
+      };
     }
     return null;
   })();
 
   if (view === "landing") {
-    return <LandingPage onOpenChart={() => setView("chart")} xauusdCandles={xauusdData?.candles} xauusdLevels={xauusdData?.userLevels} />;
+    return <LandingPage onOpenChart={() => setView("chart")} landingSymbol={landingData?.symbol} landingCandles={landingData?.candles} landingLevels={landingData?.userLevels} />;
   }
 
   return (
@@ -1064,7 +1064,7 @@ function LoadingDots() {
 }
 
 // ============================================================ LANDING PAGE
-function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart: () => void; xauusdCandles?: Candle[]; xauusdLevels?: UserLevel[] }) {
+function LandingPage({ onOpenChart, landingSymbol, landingCandles, landingLevels }: { onOpenChart: () => void; landingSymbol?: string; landingCandles?: Candle[]; landingLevels?: UserLevel[] }) {
   return (
     <div className="min-h-screen bg-[#070D12] text-white pb-12">
       {/* pb-12 reserves space at the bottom so the fixed footer
@@ -1153,9 +1153,9 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
           </div>
         </div>
 
-          {/* Animated trading visualization with real XAUUSD data */}
+          {/* Animated trading visualization with real loaded-symbol data */}
           <div className="relative mx-auto mt-12 max-w-3xl">
-            <TradingVisualCard candles={xauusdCandles} userLevels={xauusdLevels} />
+            <TradingVisualCard symbol={landingSymbol} candles={landingCandles} userLevels={landingLevels} />
           </div>
       </section>
 
@@ -1194,7 +1194,6 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             </h4>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
-                { sym: "XAUUSD", name: "Gold" },
                 { sym: "EURUSD", name: "Euro / US Dollar" },
                 { sym: "GBPUSD", name: "British Pound / US Dollar" },
                 { sym: "USDCHF", name: "US Dollar / Swiss Franc" },
@@ -1406,7 +1405,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             </circle>
 
             {/* Labels */}
-            <text x="60" y="108" fill="rgba(212,175,55,0.6)" fontSize="7" fontFamily="monospace" fontWeight="bold">XAUUSD</text>
+            <text x="60" y="108" fill="rgba(212,175,55,0.6)" fontSize="7" fontFamily="monospace" fontWeight="bold">VAAN</text>
             <text x="150" y="28" fill="rgba(34,197,94,0.5)" fontSize="6" fontFamily="monospace">EURUSD</text>
             <text x="150" y="158" fill="rgba(239,68,68,0.5)" fontSize="6" fontFamily="monospace">GBPUSD</text>
             <text x="250" y="108" fill="rgba(212,175,55,0.6)" fontSize="7" fontFamily="monospace" fontWeight="bold">PIVOT</text>
@@ -1434,7 +1433,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
           <div className="space-y-3">
             <FaqItem
               q="What are Vaan Pivot Levels?"
-              a="Vaan Pivot Levels are daily support and resistance price levels calculated using a customized pivot methodology. They identify potential intraday reversal zones for trading instruments like XAUUSD, EURUSD, GBPUSD, and USDCHF."
+              a="Vaan Pivot Levels are daily support and resistance price levels calculated using a customized pivot methodology. They identify potential intraday reversal zones for trading instruments like EURUSD, GBPUSD, and USDCHF."
             />
             <FaqItem
               q="When are the levels updated?"
@@ -1450,7 +1449,7 @@ function LandingPage({ onOpenChart, xauusdCandles, xauusdLevels }: { onOpenChart
             />
             <FaqItem
               q="Which trading symbols are available?"
-              a="XAUUSD (Gold), EURUSD (Euro / US Dollar), GBPUSD (British Pound / US Dollar), and USDCHF (US Dollar / Swiss Franc)."
+              a="EURUSD (Euro / US Dollar), GBPUSD (British Pound / US Dollar), and USDCHF (US Dollar / Swiss Franc)."
             />
             <FaqItem
               q="How do I view the live chart?"
@@ -1558,7 +1557,7 @@ function EquityCurveCard() {
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Vaan.One" className="h-5 w-5 rounded object-contain" />
           <span className="font-mono text-xs font-semibold text-white/80">
-            Master Equity Curve · XAUUSD
+            Master Equity Curve
           </span>
         </div>
         <span className="rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-400">
