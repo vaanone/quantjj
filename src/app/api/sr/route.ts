@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
+import { createHash, timingSafeEqual } from "crypto";
+import { ADMIN_SALT, ADMIN_PW_HASH } from "@/lib/admin-auth";
 
 // Storage: the S/R levels are kept as data/sr-levels.json in the repo itself.
-// - READ (GET): the repo is public, so we fetch the raw file (no auth needed).
-//   If GITHUB_TOKEN is set, we use the Contents API instead for a guaranteed
-//   fresh copy (raw.githubusercontent.com CDN-caches for ~5 min).
-// - WRITE (POST/DELETE): uses the GitHub Contents API, which requires a
-//   Personal Access Token stored in the GITHUB_TOKEN env var (set once in the
-//   Vercel project settings). Each save commits the updated JSON to main.
+// - READ (GET): public, no password — the homepage shows the same data.
+//   If GITHUB_TOKEN is set we use the Contents API for a guaranteed fresh copy
+//   (raw.githubusercontent.com CDN-caches for ~5 min), otherwise the raw file.
+// - WRITE (POST/DELETE): requires the admin password (checked against a
+//   salted SHA-256 hash — the password itself is never stored in the repo) and
+//   uses the GitHub Contents API, which requires a Personal Access Token
+//   stored in the GITHUB_TOKEN env var (set once in the Vercel project
+//   settings). Each save commits the updated JSON to main.
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,12 +25,12 @@ export interface SRLevel {
   id: string;
   date: string;
   symbol: string;
-  support1: number;
-  resistance1: number;
-  support2: number;
-  resistance2: number;
-  support3: number;
-  resistance3: number;
+  support1: number | null;
+  resistance1: number | null;
+  support2: number | null;
+  resistance2: number | null;
+  support3: number | null;
+  resistance3: number | null;
 }
 
 function token(): string | undefined {
@@ -43,6 +47,15 @@ function apiHeaders(auth: boolean): Record<string, string> {
     if (t) h.Authorization = `Bearer ${t}`;
   }
   return h;
+}
+
+// Verify the admin password sent in the "x-admin-password" header.
+function checkAdminPassword(pw: string | null): boolean {
+  if (!pw) return false;
+  const hash = createHash("sha256").update(ADMIN_SALT + pw).digest("hex");
+  const a = Buffer.from(hash, "utf8");
+  const b = Buffer.from(ADMIN_PW_HASH, "utf8");
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 // GET: return the current levels array.
@@ -123,9 +136,12 @@ function makeId(date: string, symbol: string): string {
   return `${date}-${symbol.toUpperCase().replace(/[^A-Z0-9]/g, "")}`;
 }
 
-function toNum(v: unknown): number {
+// Parse a level value: missing/empty → null (level not set yet), otherwise a
+// finite number. Anything unparseable is treated as not set.
+function toOptNum(v: unknown): number | null {
+  if (v === null || v === undefined || v === "") return null;
   const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+  return Number.isFinite(n) ? n : null;
 }
 
 function cleanEntry(input: Record<string, unknown>): SRLevel {
@@ -136,18 +152,21 @@ function cleanEntry(input: Record<string, unknown>): SRLevel {
     id,
     date,
     symbol,
-    support1: toNum(input.support1),
-    resistance1: toNum(input.resistance1),
-    support2: toNum(input.support2),
-    resistance2: toNum(input.resistance2),
-    support3: toNum(input.support3),
-    resistance3: toNum(input.resistance3),
+    support1: toOptNum(input.support1),
+    resistance1: toOptNum(input.resistance1),
+    support2: toOptNum(input.support2),
+    resistance2: toOptNum(input.resistance2),
+    support3: toOptNum(input.support3),
+    resistance3: toOptNum(input.resistance3),
   };
 }
 
-// POST: upsert an entry (add or update by date + symbol).
+// POST: upsert an entry (add or update by date + symbol). Requires password.
 export async function POST(request: Request) {
   try {
+    if (!checkAdminPassword(request.headers.get("x-admin-password"))) {
+      return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+    }
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
@@ -174,9 +193,12 @@ export async function POST(request: Request) {
   }
 }
 
-// DELETE: remove an entry by id, or by date+symbol.
+// DELETE: remove an entry by id, or by date+symbol. Requires password.
 export async function DELETE(request: Request) {
   try {
+    if (!checkAdminPassword(request.headers.get("x-admin-password"))) {
+      return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+    }
     const { searchParams } = new URL(request.url);
     let id = searchParams.get("id") || "";
     const date = searchParams.get("date") || "";

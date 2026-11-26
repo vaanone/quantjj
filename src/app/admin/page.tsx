@@ -1,25 +1,40 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Mail } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { ADMIN_SALT, ADMIN_PW_HASH } from "@/lib/admin-auth";
 
 interface SRLevel {
   id: string;
   date: string;
   symbol: string;
-  support1: number;
-  resistance1: number;
-  support2: number;
-  resistance2: number;
-  support3: number;
-  resistance3: number;
+  support1: number | null;
+  resistance1: number | null;
+  support2: number | null;
+  resistance2: number | null;
+  support3: number | null;
+  resistance3: number | null;
 }
 
-const KNOWN_SYMBOLS = ["EURUSD", "GBPUSD", "USDCHF"];
+const KNOWN_SYMBOLS = ["ADANIGREEN", "HINDALCO"];
 
-function fmt(n: number): string {
-  if (!n) return "—";
+// Password gate: the page stays locked until the correct password is entered.
+// The password is checked against the same salted hash the server checks, so
+// it never needs to be sent just to unlock — but it IS sent with every
+// save/delete (x-admin-password header) and the server enforces it again.
+const PW_SESSION_KEY = "sr-admin-pw";
+
+async function hashPassword(pw: string): Promise<string> {
+  const data = new TextEncoder().encode(ADMIN_SALT + pw);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function fmt(n: number | null): string {
+  if (n === null || n === undefined || !n) return "—";
   return n >= 100 ? n.toFixed(2) : n.toFixed(5);
 }
 
@@ -32,7 +47,7 @@ function todayISO(): string {
 
 export default function AdminPage() {
   const [date, setDate] = useState(todayISO());
-  const [symbol, setSymbol] = useState("EURUSD");
+  const [symbol, setSymbol] = useState("ADANIGREEN");
   const [s1, setS1] = useState("");
   const [r1, setR1] = useState("");
   const [s2, setS2] = useState("");
@@ -42,6 +57,54 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [entries, setEntries] = useState<SRLevel[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Password gate state.
+  const [pw, setPw] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [unlocking, setUnlocking] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
+
+  // Auto-unlock if a verified password from this browser session is stored.
+  useEffect(() => {
+    const saved = sessionStorage.getItem(PW_SESSION_KEY);
+    if (!saved) return;
+    hashPassword(saved)
+      .then((h) => {
+        if (h === ADMIN_PW_HASH) {
+          setPw(saved);
+          setUnlocked(true);
+        } else {
+          sessionStorage.removeItem(PW_SESSION_KEY);
+        }
+      })
+      .catch(() => sessionStorage.removeItem(PW_SESSION_KEY));
+  }, []);
+
+  function lock() {
+    sessionStorage.removeItem(PW_SESSION_KEY);
+    setPw("");
+    setPwError("");
+    setUnlocked(false);
+  }
+
+  async function handleUnlock(e: React.FormEvent) {
+    e.preventDefault();
+    setUnlocking(true);
+    setPwError("");
+    try {
+      const h = await hashPassword(pw);
+      if (h === ADMIN_PW_HASH) {
+        sessionStorage.setItem(PW_SESSION_KEY, pw);
+        setUnlocked(true);
+      } else {
+        setPwError("Incorrect password — try again.");
+      }
+    } catch {
+      setPwError("Password check failed in this browser.");
+    } finally {
+      setUnlocking(false);
+    }
+  }
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
@@ -71,7 +134,7 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/sr", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-admin-password": pw },
         body: JSON.stringify({
           date,
           symbol,
@@ -83,6 +146,11 @@ export default function AdminPage() {
           resistance3: r3,
         }),
       });
+      if (res.status === 401) {
+        lock();
+        toast.error("Password rejected — please unlock again.");
+        return;
+      }
       const data = await res.json();
       if (res.ok && data.ok) {
         toast.success(`Saved ${symbol} for ${date}`);
@@ -101,7 +169,15 @@ export default function AdminPage() {
   async function handleDelete(entry: SRLevel) {
     if (!confirm(`Delete ${entry.symbol} (${entry.date})?`)) return;
     try {
-      const res = await fetch(`/api/sr?id=${encodeURIComponent(entry.id)}`, { method: "DELETE" });
+      const res = await fetch(`/api/sr?id=${encodeURIComponent(entry.id)}`, {
+        method: "DELETE",
+        headers: { "x-admin-password": pw },
+      });
+      if (res.status === 401) {
+        lock();
+        toast.error("Password rejected — please unlock again.");
+        return;
+      }
       const data = await res.json();
       if (res.ok && data.ok) {
         toast.success("Deleted.");
@@ -115,15 +191,16 @@ export default function AdminPage() {
   }
 
   // Prefill the form when clicking an existing entry (to edit it).
+  // Levels that were never entered (null) become empty inputs.
   function editEntry(entry: SRLevel) {
     setDate(entry.date);
     setSymbol(entry.symbol);
-    setS1(String(entry.support1 || ""));
-    setR1(String(entry.resistance1 || ""));
-    setS2(String(entry.support2 || ""));
-    setR2(String(entry.resistance2 || ""));
-    setS3(String(entry.support3 || ""));
-    setR3(String(entry.resistance3 || ""));
+    setS1(entry.support1 == null ? "" : String(entry.support1));
+    setR1(entry.resistance1 == null ? "" : String(entry.resistance1));
+    setS2(entry.support2 == null ? "" : String(entry.support2));
+    setR2(entry.resistance2 == null ? "" : String(entry.resistance2));
+    setS3(entry.support3 == null ? "" : String(entry.support3));
+    setR3(entry.resistance3 == null ? "" : String(entry.resistance3));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -139,22 +216,67 @@ export default function AdminPage() {
               <p className="text-[11px] leading-tight text-white/70">Support &amp; Resistance Levels</p>
             </div>
           </div>
-          <a
-            href="/"
-            className="rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-white/80 transition-colors hover:bg-white/10"
-          >
-            ← View Site
-          </a>
+          <div className="flex items-center gap-2">
+            {unlocked && (
+              <button
+                onClick={lock}
+                className="flex items-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-white/80 transition-colors hover:bg-white/10"
+              >
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                Lock
+              </button>
+            )}
+            <a
+              href="/"
+              className="rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-white/80 transition-colors hover:bg-white/10"
+            >
+              ← View Site
+            </a>
+          </div>
         </div>
       </nav>
 
       <main className="mx-auto max-w-4xl px-6 py-10 pb-24">
+        {!unlocked ? (
+          /* PASSWORD GATE */
+          <div className="mx-auto max-w-sm pt-10">
+            <form
+              onSubmit={handleUnlock}
+              className="rounded-xl border border-white/10 bg-white/[0.02] p-6 text-center"
+            >
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-[#75D380]/30 bg-[#75D380]/10">
+                <Lock className="h-5 w-5 text-[#75D380]" aria-hidden="true" />
+              </div>
+              <h2 className="mb-1 text-xl font-bold">Admin Access</h2>
+              <p className="mb-5 text-sm text-white/60">
+                Enter the admin password to manage the levels.
+              </p>
+              <input
+                type="password"
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+                autoFocus
+                placeholder="Password"
+                className="mb-3 w-full rounded-md border border-white/15 bg-[#0D141B] px-3 py-2 text-center text-sm text-white outline-none focus:border-[#75D380]"
+              />
+              {pwError && <p className="mb-3 text-sm text-red-400">{pwError}</p>}
+              <button
+                type="submit"
+                disabled={unlocking || !pw}
+                className="w-full rounded-md bg-[#75D380] px-4 py-2.5 text-sm font-semibold text-[#070D12] transition-colors hover:bg-[#85E390] disabled:opacity-50"
+              >
+                {unlocking ? "Checking…" : "Unlock"}
+              </button>
+            </form>
+          </div>
+        ) : (
+          <>
         {/* FORM */}
         <section className="mb-12">
           <h2 className="mb-1 text-2xl font-bold">Enter Levels</h2>
           <p className="mb-6 text-sm text-white/60">
-            Fill in the date, symbol, and the three Support / Resistance pairs. Saving updates the
-            live site immediately.
+            Fill in the date and symbol, then the three Support / Resistance pairs. Levels can be
+            left blank and filled in later — saving updates the live site immediately.
           </p>
 
           <form
@@ -212,7 +334,7 @@ export default function AdminPage() {
                     inputMode="decimal"
                     value={row.sVal}
                     onChange={(e) => row.setS(e.target.value)}
-                    placeholder="e.g. 1.0480"
+                    placeholder="e.g. 1048.50"
                     className="w-full rounded-md border border-white/15 bg-[#0D141B] px-3 py-2 font-mono text-sm text-white outline-none focus:border-[#75D380]"
                   />
                 </label>
@@ -226,7 +348,7 @@ export default function AdminPage() {
                     inputMode="decimal"
                     value={row.rVal}
                     onChange={(e) => row.setR(e.target.value)}
-                    placeholder="e.g. 1.0560"
+                    placeholder="e.g. 1075.00"
                     className="w-full rounded-md border border-white/15 bg-[#0D141B] px-3 py-2 font-mono text-sm text-white outline-none focus:border-red-400"
                   />
                 </label>
@@ -308,6 +430,8 @@ export default function AdminPage() {
             </div>
           )}
         </section>
+          </>
+        )}
       </main>
 
       {/* FOOTER */}

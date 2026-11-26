@@ -10,16 +10,16 @@ interface SRLevel {
   id: string;
   date: string;
   symbol: string;
-  support1: number;
-  resistance1: number;
-  support2: number;
-  resistance2: number;
-  support3: number;
-  resistance3: number;
+  support1: number | null;
+  resistance1: number | null;
+  support2: number | null;
+  resistance2: number | null;
+  support3: number | null;
+  resistance3: number | null;
 }
 
-function fmt(n: number): string {
-  if (!n) return "—";
+function fmt(n: number | null): string {
+  if (n === null || n === undefined || !n) return "—";
   return n >= 100 ? n.toFixed(2) : n.toFixed(5);
 }
 
@@ -124,8 +124,8 @@ export default function Home() {
             Know Your Levels. Trade with Confidence.
           </p>
           <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/60 sm:text-lg">
-            Vaan Pivot Levels are daily Support and Resistance price levels (I, II, III) for EURUSD,
-            GBPUSD and USDCHF. Updated every morning at 5:30 AM IST.
+            Vaan Pivot Levels are daily Support and Resistance price levels (I, II, III) for
+            ADANIGREEN and HINDALCO. Updated every morning at 5:30 AM IST.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a href="#levels">
@@ -195,7 +195,7 @@ export default function Home() {
           <div className="space-y-3">
             <FaqItem
               q="What are Vaan Pivot Levels?"
-              a="Vaan Pivot Levels are daily support and resistance price levels calculated using a customized pivot methodology. They identify potential intraday reversal zones for trading instruments like EURUSD, GBPUSD, and USDCHF."
+              a="Vaan Pivot Levels are daily support and resistance price levels calculated using a customized pivot methodology. They identify potential intraday reversal zones for instruments like ADANIGREEN and HINDALCO."
             />
             <FaqItem
               q="When are the levels updated?"
@@ -211,7 +211,7 @@ export default function Home() {
             />
             <FaqItem
               q="Which trading symbols are available?"
-              a="EURUSD (Euro / US Dollar), GBPUSD (British Pound / US Dollar), and USDCHF (US Dollar / Swiss Franc)."
+              a="ADANIGREEN (Adani Green Energy) and HINDALCO (Hindalco Industries) — both traded on the NSE (National Stock Exchange of India)."
             />
             <FaqItem
               q="How do I see today's levels?"
@@ -270,11 +270,26 @@ export default function Home() {
 
 // ============================================================ S/R CARD
 function SRCard({ entry }: { entry: SRLevel }) {
+  // An entry whose levels were never filled in yet (all null).
+  const pending =
+    entry.support1 == null &&
+    entry.resistance1 == null &&
+    entry.support2 == null &&
+    entry.resistance2 == null &&
+    entry.support3 == null &&
+    entry.resistance3 == null;
   return (
     <div className="animate-fade-in-up rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-colors hover:border-[#75D380]/30">
-      <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
+      <div className="mb-4 flex items-center justify-between gap-2 border-b border-white/10 pb-3">
         <span className="font-mono text-lg font-bold text-[#75D380]">{entry.symbol}</span>
-        <span className="text-xs text-white/50">{entry.date}</span>
+        <div className="flex items-center gap-2">
+          {pending && (
+            <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-amber-300">
+              levels pending
+            </span>
+          )}
+          <span className="text-xs text-white/50">{entry.date}</span>
+        </div>
       </div>
       <div className="space-y-1.5">
         {/* Resistances (top — red) */}
@@ -304,7 +319,7 @@ function SRRow({
   tone,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   tone: "support" | "resistance";
 }) {
   const isSupport = tone === "support";
