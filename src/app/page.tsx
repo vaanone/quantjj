@@ -291,29 +291,28 @@ function SRCard({ entry }: { entry: SRLevel }) {
           <span className="text-xs text-white/50">{entry.date}</span>
         </div>
       </div>
-      <div className="space-y-1.5">
-        {/* Resistances (top — red) */}
-        <SRRow label="Resistance III" value={entry.resistance3} tone="resistance" />
-        <SRRow label="Resistance II" value={entry.resistance2} tone="resistance" />
-        <SRRow label="Resistance I" value={entry.resistance1} tone="resistance" />
-        {/* Divider */}
-        <div className="my-2 flex items-center gap-2">
-          <div className="h-px flex-1 bg-white/10" />
-          <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">
-            {entry.symbol}
-          </span>
-          <div className="h-px flex-1 bg-white/10" />
-        </div>
-        {/* Supports (bottom — green) */}
-        <SRRow label="Support I" value={entry.support1} tone="support" />
-        <SRRow label="Support II" value={entry.support2} tone="support" />
-        <SRRow label="Support III" value={entry.support3} tone="support" />
+      {/* Paired rows — Resistance on the left, Support on the right, one row per level */}
+      <div className="space-y-2">
+        {(
+          [
+            { n: "I", r: entry.resistance1, s: entry.support1 },
+            { n: "II", r: entry.resistance2, s: entry.support2 },
+            { n: "III", r: entry.resistance3, s: entry.support3 },
+          ] as const
+        ).map((row) => (
+          <div key={row.n} className="grid grid-cols-2 gap-2">
+            <LevelCell label={`Resistance ${row.n}`} value={row.r} tone="resistance" />
+            <LevelCell label={`Support ${row.n}`} value={row.s} tone="support" />
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-function SRRow({
+// One half of a paired level row (label above, value below — fits side by
+// side even on narrow phones).
+function LevelCell({
   label,
   value,
   tone,
@@ -326,12 +325,14 @@ function SRRow({
   const color = isSupport ? "text-[#75D380]" : "text-red-400";
   const dot = isSupport ? "bg-[#75D380]" : "bg-red-400";
   return (
-    <div className="flex items-center justify-between rounded-md bg-[#0D141B] px-3 py-2">
-      <div className="flex items-center gap-2">
-        <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-        <span className="text-xs text-white/60">{label}</span>
+    <div className="rounded-md bg-[#0D141B] px-2.5 py-2">
+      <div className="flex items-center gap-1.5">
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
+        <span className="truncate text-[10px] uppercase tracking-wider text-white/50">
+          {label}
+        </span>
       </div>
-      <span className={`font-mono text-sm font-semibold ${color}`}>{fmt(value)}</span>
+      <div className={`mt-1 font-mono text-sm font-semibold ${color}`}>{fmt(value)}</div>
     </div>
   );
 }
