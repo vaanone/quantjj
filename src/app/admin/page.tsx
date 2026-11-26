@@ -38,6 +38,12 @@ function fmt(n: number | null): string {
   return n >= 100 ? n.toFixed(2) : n.toFixed(5);
 }
 
+// A stored 0 means "auto-reset to zero" (the daily 1 AM IST cron) — edit it
+// as an empty input, same as a level that was never entered.
+function inputVal(v: number | null): string {
+  return v == null || v === 0 ? "" : String(v);
+}
+
 function todayISO(): string {
   // Use IST (Asia/Kolkata) so "today" matches the user's trading day.
   const now = new Date();
@@ -55,6 +61,7 @@ export default function AdminPage() {
   const [s3, setS3] = useState("");
   const [r3, setR3] = useState("");
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [entries, setEntries] = useState<SRLevel[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -190,17 +197,52 @@ export default function AdminPage() {
     }
   }
 
+  // Manual "reset now" — same effect as the daily 1 AM IST auto-reset, but
+  // immediate: every symbol's current levels become 0 (shown as pending).
+  async function handleResetAll() {
+    if (
+      !confirm(
+        "Reset ALL levels to 0 now?\n\nThe live site will show every symbol as pending until you enter new levels.",
+      )
+    ) {
+      return;
+    }
+    setResetting(true);
+    try {
+      const res = await fetch("/api/cron/reset?force=1", {
+        method: "POST",
+        headers: { "x-admin-password": pw },
+      });
+      if (res.status === 401) {
+        lock();
+        toast.error("Password rejected — please unlock again.");
+        return;
+      }
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        toast.success(`Reset done — ${data.zeroed.length + data.created.length} symbol(s) zeroed.`);
+        await fetchEntries();
+      } else {
+        toast.error(`Reset failed: ${data.error || res.status}`);
+      }
+    } catch {
+      toast.error("Network error — could not reset.");
+    } finally {
+      setResetting(false);
+    }
+  }
+
   // Prefill the form when clicking an existing entry (to edit it).
-  // Levels that were never entered (null) become empty inputs.
+  // Levels that were never entered (null) or auto-reset (0) become empty inputs.
   function editEntry(entry: SRLevel) {
     setDate(entry.date);
     setSymbol(entry.symbol);
-    setS1(entry.support1 == null ? "" : String(entry.support1));
-    setR1(entry.resistance1 == null ? "" : String(entry.resistance1));
-    setS2(entry.support2 == null ? "" : String(entry.support2));
-    setR2(entry.resistance2 == null ? "" : String(entry.resistance2));
-    setS3(entry.support3 == null ? "" : String(entry.support3));
-    setR3(entry.resistance3 == null ? "" : String(entry.resistance3));
+    setS1(inputVal(entry.support1));
+    setR1(inputVal(entry.resistance1));
+    setS2(inputVal(entry.support2));
+    setR2(inputVal(entry.resistance2));
+    setS3(inputVal(entry.support3));
+    setR3(inputVal(entry.resistance3));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -367,7 +409,20 @@ export default function AdminPage() {
 
         {/* EXISTING ENTRIES */}
         <section>
-          <h2 className="mb-4 text-xl font-bold">Saved Levels</h2>
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-bold">Saved Levels</h2>
+            <button
+              onClick={handleResetAll}
+              disabled={resetting}
+              className="rounded border border-red-500/30 bg-red-600/10 px-2.5 py-1 text-xs text-red-400 transition-colors hover:bg-red-600/20 disabled:opacity-50"
+            >
+              {resetting ? "Resetting…" : "Reset all to 0"}
+            </button>
+          </div>
+          <p className="mb-4 text-xs text-white/40">
+            Levels auto-reset to 0 every day at 1:00 AM IST; 0 shows as pending (—) on the live
+            site until new levels are saved.
+          </p>
           {loading ? (
             <p className="text-sm text-white/50">Loading…</p>
           ) : entries.length === 0 ? (

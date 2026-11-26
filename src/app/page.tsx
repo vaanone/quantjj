@@ -270,14 +270,16 @@ export default function Home() {
 
 // ============================================================ S/R CARD
 function SRCard({ entry }: { entry: SRLevel }) {
-  // An entry whose levels were never filled in yet (all null).
+  // An entry whose levels are not filled in yet — null (never entered) or 0
+  // (zeroed by the daily 1 AM IST auto-reset).
+  const unset = (v: number | null) => v == null || v === 0;
   const pending =
-    entry.support1 == null &&
-    entry.resistance1 == null &&
-    entry.support2 == null &&
-    entry.resistance2 == null &&
-    entry.support3 == null &&
-    entry.resistance3 == null;
+    unset(entry.support1) &&
+    unset(entry.resistance1) &&
+    unset(entry.support2) &&
+    unset(entry.resistance2) &&
+    unset(entry.support3) &&
+    unset(entry.resistance3);
   return (
     <div className="animate-fade-in-up rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-colors hover:border-[#75D380]/30">
       <div className="mb-4 flex items-center justify-between gap-2 border-b border-white/10 pb-3">
