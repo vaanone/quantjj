@@ -20,16 +20,5 @@
     "resistance2": 0,
     "support3": 0,
     "resistance3": 0
-  },
-  {
-    "id": "2026-11-26-TESTSYM",
-    "date": "2026-11-26",
-    "symbol": "TESTSYM",
-    "support1": 2300,
-    "resistance1": 2345,
-    "support2": 3448,
-    "resistance2": 3456,
-    "support3": 4532,
-    "resistance3": 4356
   }
 ]
