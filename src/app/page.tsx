@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Mail } from "lucide-react";
+import { Mail, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceTicker } from "@/components/price-ticker";
 import { EconomicCalendar } from "@/components/economic-calendar";
@@ -71,9 +71,11 @@ export default function Home() {
             <a href="#faq" className="hidden text-sm text-white/60 hover:text-white sm:block">FAQ</a>
             <a
               href="/admin"
-              className="rounded-md border border-[#75D380]/30 bg-[#75D380]/10 px-3 py-1.5 text-sm font-medium text-[#75D380] transition-colors hover:bg-[#75D380]/20"
+              aria-label="Admin"
+              title="Admin"
+              className="flex items-center justify-center rounded-md border border-[#75D380]/30 bg-[#75D380]/10 p-2 text-[#75D380] transition-colors hover:bg-[#75D380]/20"
             >
-              Admin
+              <Settings className="h-5 w-5" aria-hidden="true" />
             </a>
           </div>
         </div>
